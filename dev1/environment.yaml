@@ -1,0 +1,8 @@
+channels:
+  - conda-forge
+dependencies:
+  - 'numpy<2'
+  - zarr  # loads dependencies
+  - pip:
+      - "--editable=git+https://github.com/will-moore/ome-zarr-py.git@zarr_v3_support#egg=ome-zarr"
+      - "--editable=git+https://github.com/zarr-developers/zarr-python.git@v3#egg=zarr"
