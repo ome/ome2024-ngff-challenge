@@ -4,15 +4,7 @@ import zarr
 import sys
 import os
 
-from zarr.codecs import (
-    BloscCodec,
-    BytesCodec,
-    GzipCodec,
-    ShardingCodec,
-    ShardingCodecIndexLocation,
-    TransposeCodec,
-    ZstdCodec,
-)
+import tensorstore as ts
 
 import argparse
 parser = argparse.ArgumentParser()
@@ -27,6 +19,39 @@ ns = parser.parse_args()
 if os.path.exists(ns.output_path):
     print(f"{ns.output_path} exists. Exiting")
     sys.exit(1)
+
+
+def convert_array(input_path, output_path):
+    read = ts.open({
+        'driver': 'zarr',
+        'kvstore': {
+            'driver': 'file',
+            'path': input_path,
+        },
+    }).result()
+
+    shape = read.shape
+    chunks= read.schema.chunk_layout.read_chunk.shape
+
+    write = ts.open({
+        "driver": "zarr3",
+        "kvstore": {
+            "driver": "file",
+            "path": output_path
+        },
+        "metadata": {
+            "shape": shape,
+            "chunk_grid": {"name": "regular", "configuration": {"chunk_shape": chunks}},
+            "chunk_key_encoding": {"name": "default"},
+            "codecs": [{"name": "blosc", "configuration": {"cname": "lz4", "clevel": 5}}],
+            "data_type": read.dtype,
+        },
+        "create": True,
+    }).result()
+
+    future = write.write(read)
+    future.result()
+
 
 store_class = zarr.store.LocalStore
 if ns.input_path.startswith("http"):
@@ -49,12 +74,7 @@ root.attrs["multiscales"][0]["version"] = "0.5-dev"
 multiscales = read_root.attrs.get("multiscales")
 for ds in multiscales[0]["datasets"]:
     ds_path = ds["path"]
-    data = zarr.load(store=read_store, path=ds_path)
-    print('array', ds_path, data.shape)
-    shard_shape = [64] * data.ndim
-    chunk_shape = [64] * data.ndim
-    a = root.create_array(str(ds_path), shape=data.shape, chunk_shape=shard_shape, dtype=data.dtype,
-                          codecs=[ShardingCodec(chunk_shape=chunk_shape, codecs=[BytesCodec(), BloscCodec()])])
-    # These 2 lines are equivalent to e.g. a[:,:] = data (for any number of dimensions)
-    # s = [np.s_[:]] * len
-    a[:, :] = data
+    convert_array(
+        os.path.join(ns.input_path, ds_path),
+        os.path.join(ns.output_path, ds_path)
+    )

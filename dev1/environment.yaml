@@ -1,6 +1,7 @@
 channels:
   - conda-forge
 dependencies:
+  - tensorstore
   - 'numpy<2'
   - zarr  # loads dependencies
   - pip:
