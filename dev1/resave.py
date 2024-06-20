@@ -14,7 +14,7 @@ ns = parser.parse_args()
 
 
 # remote fails - see below
-# path = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr"
+sample = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr"
 
 if os.path.exists(ns.output_path):
     print(f"{ns.output_path} exists. Exiting")
@@ -23,12 +23,15 @@ if os.path.exists(ns.output_path):
 
 def convert_array(input_path, output_path):
     read = ts.open({
-        'driver': 'zarr',
+       'driver': 'zarr',
         'kvstore': {
-            'driver': 'file',
-            'path': input_path,
+            'driver': 's3',
+            'endpoint': 'https://uk1s3.embassy.ebi.ac.uk',
+            'bucket': 'idr',
+            'path': 'zarr/v0.4/idr0062A/6001240.zarr/0',
+            'aws_region': 'us-east-1',
         },
-    }).result()
+        }).result()
 
     shape = read.shape
     chunks= read.schema.chunk_layout.read_chunk.shape
@@ -51,6 +54,9 @@ def convert_array(input_path, output_path):
 
     future = write.write(read)
     future.result()
+
+convert_array(None, ns.output_path)
+sys.exit(1)
 
 
 store_class = zarr.store.LocalStore
