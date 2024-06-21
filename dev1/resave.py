@@ -65,10 +65,11 @@ read_root = zarr.open_group(store=read_store, zarr_format=2)
 write_store = zarr.store.LocalStore(ns.output_path, mode="w")
 root = zarr.Group.create(write_store)
 # copy NGFF attrs
-for key in read_root.attrs.keys():
-    root.attrs[key] = read_root.attrs[key]
-# update version
-root.attrs["multiscales"][0]["version"] = "0.5-dev"
+for key, value in read_root.attrs.items():
+    # update version - needs to happen before writing to root.attrs
+    if key == "multiscales":
+        value[0]["version"] = "0.5-dev"
+    root.attrs[key] = value
 
 # convert arrays
 multiscales = read_root.attrs.get("multiscales")
