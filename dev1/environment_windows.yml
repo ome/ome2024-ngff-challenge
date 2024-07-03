@@ -1,0 +1,12 @@
+name: ome2024-ngff-challenge-ts
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - numpy<2
+  - zarr  # loads dependencies
+  - pip
+  - pip:
+      - tensorstore
+      - "--editable=git+https://github.com/will-moore/ome-zarr-py.git@zarr_v3_support#egg=ome-zarr"
+      - "--editable=git+https://github.com/zarr-developers/zarr-python.git@v3#egg=zarr"

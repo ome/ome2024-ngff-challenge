@@ -1,0 +1,13 @@
+name: ome2024-ngff-challenge-v2_3
+channels:
+ - ome
+ - conda-forge
+ - defaults
+dependencies:
+ - python=3.10
+ - numpy
+ - zarr==2.18
+ - ome-zarr==0.9
+ - pip
+ - pip:
+   - zarrita
