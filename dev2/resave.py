@@ -18,7 +18,7 @@ if os.path.exists(ns.output_path):
     sys.exit(1)
 
 
-def convert_array(input_path, output_path):
+def convert_array(input_path, output_path, dimension_names):
     read = ts.open({
         'driver': 'zarr',
         'kvstore': {
@@ -67,6 +67,7 @@ def convert_array(input_path, output_path):
             "chunk_key_encoding": {"name": "default"},
             "codecs": codecs,
             "data_type": read.dtype,
+            "dimension_names": dimension_names,
         },
         "create": True,
     }).result()
@@ -86,14 +87,17 @@ read_root = zarr.open_group(store=read_store, zarr_format=2)
 # Create new Image...
 write_store = zarr.store.LocalStore(ns.output_path, mode="w")
 root = zarr.Group.create(write_store)
+dimension_names = None
 # top-level version...
 ome_attrs = {"version": "0.5-dev2"}
 for key, value in read_root.attrs.items():
     # ...replaces all other versions - remove
     if "version" in value:
         del (value["version"])
-    if key == "multiscales" and "version" in value[0]:
-        del (value[0]["version"])
+    if key == "multiscales":
+        dimension_names = [axis["name"] for axis in value[0]["axes"]]
+        if "version" in value[0]:
+            del (value[0]["version"])
     ome_attrs[key] = value
 # dev2: everything is under 'ome' key
 root.attrs["ome"] = ome_attrs
@@ -104,5 +108,6 @@ for ds in multiscales[0]["datasets"]:
     ds_path = ds["path"]
     convert_array(
         os.path.join(ns.input_path, ds_path),
-        os.path.join(ns.output_path, ds_path)
+        os.path.join(ns.output_path, ds_path),
+        dimension_names,
     )
