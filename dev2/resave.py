@@ -48,12 +48,12 @@ def convert_array(input_path, output_path, dimension_names):
         }
     }
 
-    codecs = [sharding_codec]
+    # codecs = [sharding_codec]
 
     # Alternative without sharding...
-    # blosc_codec = {"name": "blosc", "configuration": {
-    #     "cname": "lz4", "clevel": 5}}
-    # codecs = [blosc_codec]
+    blosc_codec = {"name": "blosc", "configuration": {
+        "cname": "lz4", "clevel": 5}}
+    codecs = [blosc_codec]
 
     write = ts.open({
         "driver": "zarr3",
