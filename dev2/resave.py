@@ -14,8 +14,10 @@ ns = parser.parse_args()
 
 
 if os.path.exists(ns.output_path):
-    print(f"{ns.output_path} exists. Exiting")
-    sys.exit(1)
+    # print(f"{ns.output_path} exists. Exiting")
+    # sys.exit(1)
+    import shutil
+    shutil.rmtree(ns.output_path)
 
 
 def convert_array(input_path, output_path, dimension_names):
@@ -75,6 +77,35 @@ def convert_array(input_path, output_path, dimension_names):
     future = write.write(read)
     future.result()
 
+# Create new Image...
+def convert_image(read_root, input_path, output_path):
+    write_store = zarr.store.LocalStore(output_path, mode="w")
+    root = zarr.Group.create(write_store)
+    dimension_names = None
+    # top-level version...
+    ome_attrs = {"version": "0.5-dev2"}
+    for key, value in read_root.attrs.items():
+        # ...replaces all other versions - remove
+        if "version" in value:
+            del (value["version"])
+        if key == "multiscales":
+            dimension_names = [axis["name"] for axis in value[0]["axes"]]
+            if "version" in value[0]:
+                del (value[0]["version"])
+        ome_attrs[key] = value
+    # dev2: everything is under 'ome' key
+    root.attrs["ome"] = ome_attrs
+
+    # convert arrays
+    multiscales = read_root.attrs.get("multiscales")
+    for ds in multiscales[0]["datasets"]:
+        ds_path = ds["path"]
+        convert_array(
+            os.path.join(input_path, ds_path),
+            os.path.join(output_path, ds_path),
+            dimension_names,
+        )
+
 
 store_class = zarr.store.LocalStore
 if ns.input_path.startswith("http"):
@@ -84,30 +115,45 @@ read_store = store_class(ns.input_path, mode="r")
 # Needs zarr_format=2 or we get ValueError("store mode does not support writing")
 read_root = zarr.open_group(store=read_store, zarr_format=2)
 
-# Create new Image...
-write_store = zarr.store.LocalStore(ns.output_path, mode="w")
-root = zarr.Group.create(write_store)
-dimension_names = None
-# top-level version...
-ome_attrs = {"version": "0.5-dev2"}
-for key, value in read_root.attrs.items():
-    # ...replaces all other versions - remove
-    if "version" in value:
-        del (value["version"])
-    if key == "multiscales":
-        dimension_names = [axis["name"] for axis in value[0]["axes"]]
-        if "version" in value[0]:
-            del (value[0]["version"])
-    ome_attrs[key] = value
-# dev2: everything is under 'ome' key
-root.attrs["ome"] = ome_attrs
+# image...
+if read_root.attrs.get("multiscales"):
+    convert_image(read_root, ns.input_path, ns.output_path)
 
-# convert arrays
-multiscales = read_root.attrs.get("multiscales")
-for ds in multiscales[0]["datasets"]:
-    ds_path = ds["path"]
-    convert_array(
-        os.path.join(ns.input_path, ds_path),
-        os.path.join(ns.output_path, ds_path),
-        dimension_names,
-    )
+# plate...
+elif read_root.attrs.get("plate"):
+    # convert Wells..
+    write_store = zarr.store.LocalStore(ns.output_path, mode="w")
+    root = zarr.Group.create(write_store)
+
+    ome_attrs = {"version": "0.5-dev2"}
+    for key, value in read_root.attrs.items():
+        # ...replaces all other versions - remove
+        if "version" in value:
+            del (value["version"])
+        ome_attrs[key] = value
+    # dev2: everything is under 'ome' key
+    root.attrs["ome"] = ome_attrs
+
+    plate_attrs = read_root.attrs.get("plate")
+    for well in plate_attrs.get("wells"):
+        well_path = well["path"]
+        well_v2 = zarr.open_group(store=read_store, path=well_path, zarr_format=2)
+        well_group = root.create_group(well_path)
+        # well_attrs = { k:v for (k,v) in well_v2.attrs.items()}
+        # TODO: do we store 'version' in well?
+        well_attrs = {}
+        for key, value in well_v2.attrs.items():
+            if "version" in value:
+                del (value["version"])
+            well_attrs[key] = value
+        well_group.attrs["ome"] = well_attrs
+
+        for img in well_attrs["well"]["images"]:
+            img_path = well_path + "/" + img["path"]
+            out_path = os.path.join(ns.output_path, img_path)
+            input_path = os.path.join(ns.input_path, img_path)
+            print("img_path", img_path)
+            img_v2 = zarr.open_group(store=read_store, path=img_path, zarr_format=2)
+            # print('img_v2', { k:v for (k,v) in img_v2.attrs.items()})
+            print(input_path, out_path)
+            convert_image(img_v2, input_path, out_path)
