@@ -8,25 +8,65 @@ import tensorstore as ts
 
 import argparse
 parser = argparse.ArgumentParser()
+parser.add_argument("--input-bucket")
+parser.add_argument("--input-endpoint")
+parser.add_argument("--input-anon", action="store_true")
+parser.add_argument("--input-region", default="us-east-1")
+parser.add_argument("--input-overwrite", action="store_true")
+parser.add_argument("--output-bucket")
+parser.add_argument("--output-endpoint")
+parser.add_argument("--output-anon", action="store_true")
+parser.add_argument("--output-region", default="us-east-1")
+parser.add_argument("--output-overwrite", action="store_true")
 parser.add_argument("input_path")
 parser.add_argument("output_path")
 ns = parser.parse_args()
 
 
 if os.path.exists(ns.output_path):
-    # print(f"{ns.output_path} exists. Exiting")
-    # sys.exit(1)
-    import shutil
-    shutil.rmtree(ns.output_path)
+    if ns.input_overwrite:
+        import shutil
+        shutil.rmtree(ns.output_path)
+    else:
+        print(f"{ns.output_path} exists. Exiting")
+        sys.exit(1)
 
 
-def convert_array(input_path, output_path, dimension_names):
+def create_configs(ns):
+    configs = []
+    for selection in ("input", "output"):
+        anon = getattr(ns, f"{selection}_anon")
+        bucket = getattr(ns, f"{selection}_bucket")
+        endpoint = getattr(ns, f"{selection}_endpoint")
+        region = getattr(ns, f"{selection}_region")
+
+        if bucket:
+            store = {
+                'driver': 's3',
+                'bucket': bucket,
+                'aws_region': region,
+            }
+            if anon:
+                store['aws_credentials'] = { 'anonymous': anon }
+            if endpoint:
+                store["endpoint"] = endpoint
+        else:
+            store = {
+                'driver': 'file',
+            }
+        configs.append(store)
+    return configs
+
+CONFIGS = create_configs(ns)
+
+def convert_array(input_path: str, output_path: str, dimension_names):
+
+    CONFIGS[0]["path"] = input_path
+    CONFIGS[1]["path"] = output_path
+
     read = ts.open({
         'driver': 'zarr',
-        'kvstore': {
-            'driver': 'file',
-            'path': input_path,
-        },
+        'kvstore': CONFIGS[0],
     }).result()
 
     shape = read.shape
@@ -59,10 +99,8 @@ def convert_array(input_path, output_path, dimension_names):
 
     write = ts.open({
         "driver": "zarr3",
-        "kvstore": {
-            "driver": "file",
-            "path": output_path
-        },
+        "kvstore": CONFIGS[1],
+        "delete_existing": ns.output_overwrite,
         "metadata": {
             "shape": shape,
             "chunk_grid": {"name": "regular", "configuration": {"chunk_shape": bigger_chunk}},
@@ -77,10 +115,7 @@ def convert_array(input_path, output_path, dimension_names):
     future = write.write(read)
     future.result()
 
-# Create new Image...
-def convert_image(read_root, input_path, output_path):
-    write_store = zarr.store.LocalStore(output_path, mode="w")
-    root = zarr.Group.create(write_store)
+def convert_image(read_root, input_path, write_root, output_path):
     dimension_names = None
     # top-level version...
     ome_attrs = {"version": "0.5-dev2"}
@@ -94,7 +129,7 @@ def convert_image(read_root, input_path, output_path):
                 del (value[0]["version"])
         ome_attrs[key] = value
     # dev2: everything is under 'ome' key
-    root.attrs["ome"] = ome_attrs
+    write_root.attrs["ome"] = ome_attrs
 
     # convert arrays
     multiscales = read_root.attrs.get("multiscales")
@@ -107,23 +142,38 @@ def convert_image(read_root, input_path, output_path):
         )
 
 
-store_class = zarr.store.LocalStore
-if ns.input_path.startswith("http"):
-    # TypeError: Can't instantiate abstract class RemoteStore with abstract methods get_partial_values, list, list_dir, list_prefix, set_partial_values
-    store_class = zarr.store.RemoteStore
-read_store = store_class(ns.input_path, mode="r")
+
+STORES = []
+for config, path, mode in (
+        (CONFIGS[0], ns.input_path, "r"),
+        (CONFIGS[1], ns.output_path, "w")
+    ):
+    if config["bucket"]:
+        store_class = zarr.store.RemoteStore
+        anon = config.get("aws_credentials", {}).get("anonymous", False)
+        store = store_class(
+            url=f's3://{config["bucket"]}/{path}',
+            anon=anon,
+            endpoint_url=config.get("endpoint", None),
+            mode=mode,
+        )
+    else:
+        store_class = zarr.store.LocalStore
+        store = store_class(path, mode=mode)
+    STORES.append(store)
+
 # Needs zarr_format=2 or we get ValueError("store mode does not support writing")
-read_root = zarr.open_group(store=read_store, zarr_format=2)
+read_root = zarr.open_group(store=STORES[0], zarr_format=2)
+
+write_store = STORES[1]
+write_root = zarr.Group.create(write_store)
 
 # image...
 if read_root.attrs.get("multiscales"):
-    convert_image(read_root, ns.input_path, ns.output_path)
+    convert_image(read_root, ns.input_path, write_root, ns.output_path)
 
 # plate...
 elif read_root.attrs.get("plate"):
-    # convert Wells..
-    write_store = zarr.store.LocalStore(ns.output_path, mode="w")
-    root = zarr.Group.create(write_store)
 
     ome_attrs = {"version": "0.5-dev2"}
     for key, value in read_root.attrs.items():
@@ -132,13 +182,13 @@ elif read_root.attrs.get("plate"):
             del (value["version"])
         ome_attrs[key] = value
     # dev2: everything is under 'ome' key
-    root.attrs["ome"] = ome_attrs
+    write_root.attrs["ome"] = ome_attrs
 
     plate_attrs = read_root.attrs.get("plate")
     for well in plate_attrs.get("wells"):
         well_path = well["path"]
         well_v2 = zarr.open_group(store=read_store, path=well_path, zarr_format=2)
-        well_group = root.create_group(well_path)
+        well_group = write_root.create_group(well_path)
         # well_attrs = { k:v for (k,v) in well_v2.attrs.items()}
         # TODO: do we store 'version' in well?
         well_attrs = {}
