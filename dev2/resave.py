@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import random
 import numpy as np
 import zarr
 import sys
@@ -12,24 +13,15 @@ parser.add_argument("--input-bucket")
 parser.add_argument("--input-endpoint")
 parser.add_argument("--input-anon", action="store_true")
 parser.add_argument("--input-region", default="us-east-1")
-parser.add_argument("--input-overwrite", action="store_true")
 parser.add_argument("--output-bucket")
 parser.add_argument("--output-endpoint")
 parser.add_argument("--output-anon", action="store_true")
 parser.add_argument("--output-region", default="us-east-1")
 parser.add_argument("--output-overwrite", action="store_true")
+parser.add_argument("--sharding", action="store_true")
 parser.add_argument("input_path")
 parser.add_argument("output_path")
 ns = parser.parse_args()
-
-
-if os.path.exists(ns.output_path):
-    if ns.input_overwrite:
-        import shutil
-        shutil.rmtree(ns.output_path)
-    else:
-        print(f"{ns.output_path} exists. Exiting")
-        sys.exit(1)
 
 
 def create_configs(ns):
@@ -72,36 +64,37 @@ def convert_array(input_path: str, output_path: str, dimension_names):
     shape = read.shape
     chunks = read.schema.chunk_layout.read_chunk.shape
 
-    # # bigger_chunk includes 2 of the regular chunks
-    # bigger_chunk = list(chunks[:])
-    # bigger_chunk[0] = bigger_chunk[0] * 2
+    if ns.sharding:
+        # bigger_chunk includes 2 of the regular chunks
+        bigger_chunk = list(chunks[:])
+        bigger_chunk[0] = bigger_chunk[0] * 2
 
-    # # sharding breaks bigger_chunk down into regular chunks
-    # # https://google.github.io/tensorstore/driver/zarr3/index.html#json-driver/zarr3/Codec/sharding_indexed
-    # sharding_codec = {
-    #     "name": "sharding_indexed",
-    #     "configuration": {
-    #         "chunk_shape": chunks,
-    #         "codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
-    #                    {"name": "gzip", "configuration": {"level": 5}}],
-    #         "index_codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
-    #                          {"name": "crc32c"}],
-    #         "index_location": "end"
-    #     }
-    # }
+        # sharding breaks bigger_chunk down into regular chunks
+        # https://google.github.io/tensorstore/driver/zarr3/index.html#json-driver/zarr3/Codec/sharding_indexed
+        sharding_codec = {
+            "name": "sharding_indexed",
+            "configuration": {
+                "chunk_shape": chunks,
+                "codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
+                           {"name": "gzip", "configuration": {"level": 5}}],
+                "index_codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
+                                 {"name": "crc32c"}],
+                "index_location": "end"
+            }
+        }
 
-    # codecs = [sharding_codec]
-    # chunks = bigger_chunk
+        codecs = [sharding_codec]
+        chunks = bigger_chunk
 
-    # Alternative without sharding...
-    blosc_codec = {"name": "blosc", "configuration": {
-        "cname": "lz4", "clevel": 5}}
-    codecs = [blosc_codec]
+    else:
+        # Alternative without sharding...
+        blosc_codec = {"name": "blosc", "configuration": {
+          "cname": "lz4", "clevel": 5}}
+        codecs = [blosc_codec]
 
-    write = ts.open({
+    base_config = {
         "driver": "zarr3",
         "kvstore": CONFIGS[1],
-        "delete_existing": ns.output_overwrite,
         "metadata": {
             "shape": shape,
             "chunk_grid": {"name": "regular", "configuration": {"chunk_shape": chunks}},
@@ -109,12 +102,30 @@ def convert_array(input_path: str, output_path: str, dimension_names):
             "codecs": codecs,
             "data_type": read.dtype,
             "dimension_names": dimension_names,
-        },
-        "create": True,
-    }).result()
+        }
+    }
+
+    write_config = base_config.copy()
+    write_config["create"] = True
+    write_config["delete_existing"] = ns.output_overwrite
+
+    verify_config = base_config.copy()
+
+    write = ts.open(write_config).result()
 
     future = write.write(read)
     future.result()
+
+    verify = ts.open(verify_config).result()
+    print(f"Verifying <{output_path}>\t{read.shape}\t", end="")
+    for x in range(10):
+        r = tuple([random.randint(0, y-1) for y in read.shape])
+        before = read[r].read().result()
+        after = verify[r].read().result()
+        assert before == after
+        print(".", end="")
+    print("ok")
+
 
 def convert_image(read_root, input_path, write_root, output_path):
     dimension_names = None
@@ -161,6 +172,21 @@ for config, path, mode in (
     else:
         store_class = zarr.store.LocalStore
         store = store_class(path, mode=mode)
+
+        if STORES:
+            # If more than one element, then we are configuring
+            # the output path. If this is local, then delete.
+            #
+            # TODO: This should really be an option on zarr-python
+            # as with tensorstore.
+            if os.path.exists(ns.output_path):
+                if ns.output_overwrite:
+                    import shutil
+                    shutil.rmtree(ns.output_path)
+                else:
+                    print(f"{ns.output_path} exists. Exiting")
+                    sys.exit(1)
+
     STORES.append(store)
 
 # Needs zarr_format=2 or we get ValueError("store mode does not support writing")
