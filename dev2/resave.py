@@ -72,25 +72,26 @@ def convert_array(input_path: str, output_path: str, dimension_names):
     shape = read.shape
     chunks = read.schema.chunk_layout.read_chunk.shape
 
-    # bigger_chunk includes 2 of the regular chunks
-    bigger_chunk = list(chunks[:])
-    bigger_chunk[0] = bigger_chunk[0] * 2
+    # # bigger_chunk includes 2 of the regular chunks
+    # bigger_chunk = list(chunks[:])
+    # bigger_chunk[0] = bigger_chunk[0] * 2
 
-    # sharding breaks bigger_chunk down into regular chunks
-    # https://google.github.io/tensorstore/driver/zarr3/index.html#json-driver/zarr3/Codec/sharding_indexed
-    sharding_codec = {
-        "name": "sharding_indexed",
-        "configuration": {
-            "chunk_shape": chunks,
-            "codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
-                       {"name": "gzip", "configuration": {"level": 5}}],
-            "index_codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
-                             {"name": "crc32c"}],
-            "index_location": "end"
-        }
-    }
+    # # sharding breaks bigger_chunk down into regular chunks
+    # # https://google.github.io/tensorstore/driver/zarr3/index.html#json-driver/zarr3/Codec/sharding_indexed
+    # sharding_codec = {
+    #     "name": "sharding_indexed",
+    #     "configuration": {
+    #         "chunk_shape": chunks,
+    #         "codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
+    #                    {"name": "gzip", "configuration": {"level": 5}}],
+    #         "index_codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
+    #                          {"name": "crc32c"}],
+    #         "index_location": "end"
+    #     }
+    # }
 
     # codecs = [sharding_codec]
+    # chunks = bigger_chunk
 
     # Alternative without sharding...
     blosc_codec = {"name": "blosc", "configuration": {
@@ -103,7 +104,7 @@ def convert_array(input_path: str, output_path: str, dimension_names):
         "delete_existing": ns.output_overwrite,
         "metadata": {
             "shape": shape,
-            "chunk_grid": {"name": "regular", "configuration": {"chunk_shape": bigger_chunk}},
+            "chunk_grid": {"name": "regular", "configuration": {"chunk_shape": chunks}},
             "chunk_key_encoding": {"name": "default"},
             "codecs": codecs,
             "data_type": read.dtype,
@@ -205,5 +206,4 @@ elif read_root.attrs.get("plate"):
             print("img_path", img_path)
             img_v2 = zarr.open_group(store=read_store, path=img_path, zarr_format=2)
             # print('img_v2', { k:v for (k,v) in img_v2.attrs.items()})
-            print(input_path, out_path)
             convert_image(img_v2, input_path, out_path)
