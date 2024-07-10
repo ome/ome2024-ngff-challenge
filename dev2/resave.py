@@ -149,7 +149,7 @@ for config, path, mode in (
         (CONFIGS[0], ns.input_path, "r"),
         (CONFIGS[1], ns.output_path, "w")
     ):
-    if config["bucket"]:
+    if "bucket" in config:
         store_class = zarr.store.RemoteStore
         anon = config.get("aws_credentials", {}).get("anonymous", False)
         store = store_class(
@@ -188,7 +188,7 @@ elif read_root.attrs.get("plate"):
     plate_attrs = read_root.attrs.get("plate")
     for well in plate_attrs.get("wells"):
         well_path = well["path"]
-        well_v2 = zarr.open_group(store=read_store, path=well_path, zarr_format=2)
+        well_v2 = zarr.open_group(store=STORES[0], path=well_path, zarr_format=2)
         well_group = write_root.create_group(well_path)
         # well_attrs = { k:v for (k,v) in well_v2.attrs.items()}
         # TODO: do we store 'version' in well?
