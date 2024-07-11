@@ -24,6 +24,9 @@ parser.add_argument("output_path")
 ns = parser.parse_args()
 
 
+NGFF_VERSION = "0.5"
+
+
 def create_configs(ns):
     configs = []
     for selection in ("input", "output"):
@@ -130,7 +133,7 @@ def convert_array(input_path: str, output_path: str, dimension_names):
 def convert_image(read_root, input_path, write_root, output_path):
     dimension_names = None
     # top-level version...
-    ome_attrs = {"version": "0.5-dev2"}
+    ome_attrs = {"version": NGFF_VERSION}
     for key, value in read_root.attrs.items():
         # ...replaces all other versions - remove
         if "version" in value:
@@ -202,7 +205,7 @@ if read_root.attrs.get("multiscales"):
 # plate...
 elif read_root.attrs.get("plate"):
 
-    ome_attrs = {"version": "0.5-dev2"}
+    ome_attrs = {"version": NGFF_VERSION}
     for key, value in read_root.attrs.items():
         # ...replaces all other versions - remove
         if "version" in value:
@@ -230,6 +233,7 @@ elif read_root.attrs.get("plate"):
             out_path = os.path.join(ns.output_path, img_path)
             input_path = os.path.join(ns.input_path, img_path)
             print("img_path", img_path)
-            img_v2 = zarr.open_group(store=read_store, path=img_path, zarr_format=2)
+            img_v2 = zarr.open_group(store=STORES[0], path=img_path, zarr_format=2)
+            image_group = write_root.create_group(img_path)
             # print('img_v2', { k:v for (k,v) in img_v2.attrs.items()})
-            convert_image(img_v2, input_path, out_path)
+            convert_image(img_v2, input_path, image_group, out_path)
