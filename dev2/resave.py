@@ -226,6 +226,7 @@ elif read_root.attrs.get("plate"):
             if "version" in value:
                 del (value["version"])
             well_attrs[key] = value
+            well_attrs["version"] = "0.5"
         well_group.attrs["ome"] = well_attrs
 
         for img in well_attrs["well"]["images"]:
