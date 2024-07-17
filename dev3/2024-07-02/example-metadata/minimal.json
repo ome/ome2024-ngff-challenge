@@ -42,7 +42,7 @@
                 "_:b0"
             ],
             "preparation_method": [
-                "_b:1"
+                "_:b1"
             ]
         },
         {
@@ -59,4 +59,4 @@
             "organism_classification": "NCBI:txid7227"
         }
     ]
- } 
+ }

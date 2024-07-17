@@ -14,7 +14,7 @@ json-ld playground: https://json-ld.org/playground/
 
 The json payload below follows the RO-Crate guidance. It contains an object per 'thing that was imaged' (instance of schema:BioChemEntity), linked to its NCBI taxon*, an object per 'imaging technique' which has a type of the relevant FBBI imagining technique.
 
-*note that the NCBI taxon may also be 'non organismal' for synthetic entities. 
+*note that the NCBI taxon may also be 'non organismal' for synthetic entities.
 
 ```
 {
@@ -61,7 +61,7 @@ The json payload below follows the RO-Crate guidance. It contains an object per 
                 "_:b0"
             ],
             "preparation_method": [
-                "_b:1"
+                "_:b1"
             ]
         },
         {
@@ -78,7 +78,7 @@ The json payload below follows the RO-Crate guidance. It contains an object per 
             "organism_classification": "NCBI:txid7227"
         }
     ]
- } 
+ }
 ```
 
 The json-ld can be converted to a very basic RDF graph, but requires a '@base' to be added to the context to provide a root for the relative URIs for the files ( json-ld playground example: https://tinyurl.com/2jxlbtlj). The following image is a basic Entity-Relation style diagram:
@@ -91,7 +91,7 @@ The json-ld can be converted to a very basic RDF graph, but requires a '@base' t
 
 Following REMBI guidance, one of the key objects that contains data is the 'Specimen' - this contains information about how the Biosample was prepared for imaging. We can therefore extend the metadata model to have a new object to contain information on the preparation protocol (which together with the biosample forms the Specimen that was imaged).
 
- 
+
 <img src="./images/graph-min-specimen-biosample.svg">
 
 
@@ -143,7 +143,7 @@ The metadata json file would look like:
                 "_:b0"
             ],
             "preparation_method": [
-                "_b:1"
+                "_:b1"
             ],
             "biological_entity": [
                 "_:b2"
@@ -171,7 +171,7 @@ The metadata json file would look like:
         }
     ]
  }
- 
+
 ```
 
 
