@@ -43,7 +43,7 @@
                 "_:b0"
             ],
             "preparation_method": [
-                "_b:1"
+                "_:b1"
             ],
             "biological_entity": [
                 "_:b2"
@@ -71,4 +71,3 @@
         }
     ]
  }
- 
