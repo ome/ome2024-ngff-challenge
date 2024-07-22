@@ -1,0 +1,115 @@
+{
+    "@context": [
+        "https://w3id.org/ro/crate/1.1/context",
+        {
+            "organism_classification": "https://schema.org/taxonomicRange",
+            "BioChemEntity": "https://schema.org/BioChemEntity",
+            "channel": "https://w3id.org/reproduceme#Channel",
+            "obo": "http://purl.obolibrary.org/obo/",
+            "FBcv": "http://ontobee.org/ontology/FBcv",
+            "acquisiton_method": {
+                "@reverse": "https://schema.org/result",
+                "@type": "@id"
+            },
+            "biological_entity": "https://schema.org/about",
+            "biosample": "http://purl.obolibrary.org/obo/OBI_0002648",
+            "preparation_method": "https://www.wikidata.org/wiki/Property:P1537",
+            "specimen": "http://purl.obolibrary.org/obo/HSO_0000308"            
+        }
+    ],
+    "@graph": [
+        {
+            "@type": "CreativeWork",
+            "@id": "ro-crate-metadata.json",
+            "conformsTo": {
+                "@id": "https://w3id.org/ro/crate/1.1"
+            },
+            "about": {
+                "@id": "./"
+            }
+        },
+        {
+            "@id": "./",
+            "@type": "Dataset",
+            "name": "Light microscopy photo of a fly",
+            "description": "Light microscopy photo of a fruit fly.",
+            "licence": "https://creativecommons.org/licenses/by/4.0/",
+            "hasPart": {
+                "@id": "./dros-mel-image.zarr/"
+            }
+        },
+        {
+            "@id": "./dros-mel-image.zarr/",
+            "@type": "Dataset",
+            "name": "OME-ZARR files",
+            "description": "the ome zarr files of the fly.",
+            "biosample": [
+                "_b:01"
+            ]
+        },
+        {
+            "@id": "_:b01",
+            "@type": [
+                "biosample"
+            ],
+            "biological_entity": [
+                "_:b2"
+            ]
+        },
+        {
+            "@id": "_:b02",
+            "@type": [
+                "FBcv:0003045"
+            ],
+            "biosample": [
+                "_:b01"
+            ]
+            "preparation_method": [
+                "_:b1"
+            ],
+            "channel": [
+                "_:c1",
+                "_:c2"
+            ]
+        },
+        {
+            "@id": "_:b0",
+            "@type": [
+                "http://purl.obolibrary.org/obo/FBbi_00000243"
+            ],
+            "specimen": [
+                "_:b02"
+            ]
+        },
+        {
+            "@id": "_:b1",
+            "@type": [
+                "obo:OBI_0000272"
+            ],
+            "description": "The fruit flies were individually encased in epoxy resin..."
+        },
+        {
+            "@id": "_:b2",
+            "@type": [
+                "BioChemEntity"
+            ],
+            "organism_classification": "NCBI:txid7227"
+        },
+        {
+            "@id": "_:c1",
+            "@type": [
+                "channel"
+            ],
+            "content": "http://purl.obolibrary.org/obo/MI_1032",
+            "biological_entity": "http://snomed.info/id/312239001"
+        },
+        {
+            "@id": "_:c2",
+            "@type": [
+                "channel"
+            ],
+            "content": "http://purl.obolibrary.org/obo/NCIT_C122989",
+            "biological_entity": "http://purl.obolibrary.org/obo/GO_0005634"
+        }
+    ]
+ }
