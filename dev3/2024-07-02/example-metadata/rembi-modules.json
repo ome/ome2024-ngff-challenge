@@ -4,7 +4,7 @@
         {
             "organism_classification": "https://schema.org/taxonomicRange",
             "BioChemEntity": "https://schema.org/BioChemEntity",
-            "channel": "https://w3id.org/reproduceme#Channel",
+            "channel": "https://www.openmicroscopy.org/Schemas/Documentation/Generated/OME-2016-06/ome_xsd.html#Channel",
             "obo": "http://purl.obolibrary.org/obo/",
             "FBcv": "http://ontobee.org/ontology/FBcv",
             "acquisiton_method": {
@@ -59,7 +59,7 @@
         {
             "@id": "_:b02",
             "@type": [
-                "FBcv:0003045"
+                "FBcv:FBcv_0003405"
             ],
             "biosample": [
                 "_:b01"
