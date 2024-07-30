@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import pathlib
 import random
+import shutil
 import numpy as np
 import json
 import tqdm
@@ -33,6 +34,71 @@ ns = parser.parse_args()
 
 
 NGFF_VERSION = "0.5"
+
+#
+# Helpers
+#
+
+class TSMetrics:
+    """
+    Instances of this class capture the current tensorstore metrics.
+
+    If an existing instance is passed in on creation, it will be stored
+    in order to deduct prevoius values from those measured by this instance.
+    """
+
+    CHUNK_CACHE_READS = '/tensorstore/cache/chunk_cache/reads'
+    CHUNK_CACHE_WRITES = '/tensorstore/cache/chunk_cache/writes'
+
+    FILES_BATCH_READ = '/tensorstore/kvstore/file/batch_read'
+    FILES_BYTES_READ = '/tensorstore/kvstore/file/bytes_read'
+    FILES_BYTES_WRITTEN = '/tensorstore/kvstore/file/bytes_written'
+
+    OTHER = [
+        '/tensorstore/cache/hit_count'
+        '/tensorstore/cache/kvs_cache_read'
+        '/tensorstore/cache/miss_count'
+        '/tensorstore/kvstore/file/delete_range'
+        '/tensorstore/kvstore/file/open_read'
+        '/tensorstore/kvstore/file/read'
+        '/tensorstore/kvstore/file/write'
+        '/tensorstore/thread_pool/active'
+        '/tensorstore/thread_pool/max_delay_ns'
+        '/tensorstore/thread_pool/started'
+        '/tensorstore/thread_pool/steal_count'
+        '/tensorstore/thread_pool/task_providers'
+        '/tensorstore/thread_pool/total_queue_time_ns'
+        '/tensorstore/thread_pool/work_time_ns'
+    ]
+    def __init__(self, start=None):
+        self.start = start
+        self.data = ts.experimental_collect_matching_metrics()
+
+    def value(self, key):
+        rv = None
+        for item in self.data:
+            k = item["name"]
+            v = item["values"]
+            if k == key:
+                if len(v) > 1:
+                    raise Exception(f"Multiple values for {key}: {v}")
+                rv = v[0]["value"]
+                break
+        if rv is None:
+            raise Exception(f"unknown key: {key} from {self.data}")
+
+        if self.start is not None:
+            orig = self.start.value(key)
+        else:
+            orig = 0
+
+        return (rv - orig)
+
+    def read(self):
+        return self.value(self.FILES_BYTES_READ)
+
+    def written(self):
+        return self.value(self.FILES_BYTES_WRITTEN)
 
 
 def create_configs(ns):
@@ -128,70 +194,6 @@ def convert_array(input_path: str, output_path: str, dimension_names:list, chunk
 
     write = ts.open(write_config).result()
 
-    """
-  41   │ cat<<EOF
-  42   │ Reencode 4496763-v2.zarr/0 to 4496763-v3-reencode
-  43   │     read:  ~152.78ms @ 3.60GB/s
-  44   │     write: ~648.93ms @ 0.77GB/s
-  45   │     total: 801.71ms
-  46   │     size:  550.78MB to 502.71MB (838.86MB uncompressed)
-  47   │ EOF
-    """
-
-    class TSMetrics:
-
-        CHUNK_CACHE_READS = '/tensorstore/cache/chunk_cache/reads'
-        CHUNK_CACHE_WRITES = '/tensorstore/cache/chunk_cache/writes'
-
-        FILES_BATCH_READ = '/tensorstore/kvstore/file/batch_read'
-        FILES_BYTES_READ = '/tensorstore/kvstore/file/bytes_read'
-        FILES_BYTES_WRITTEN = '/tensorstore/kvstore/file/bytes_written'
-
-        OTHER = [
-            '/tensorstore/cache/hit_count'
-            '/tensorstore/cache/kvs_cache_read'
-            '/tensorstore/cache/miss_count'
-            '/tensorstore/kvstore/file/delete_range'
-            '/tensorstore/kvstore/file/open_read'
-            '/tensorstore/kvstore/file/read'
-            '/tensorstore/kvstore/file/write'
-            '/tensorstore/thread_pool/active'
-            '/tensorstore/thread_pool/max_delay_ns'
-            '/tensorstore/thread_pool/started'
-            '/tensorstore/thread_pool/steal_count'
-            '/tensorstore/thread_pool/task_providers'
-            '/tensorstore/thread_pool/total_queue_time_ns'
-            '/tensorstore/thread_pool/work_time_ns'
-        ]
-        def __init__(self, start=None):
-            self.start = start
-            self.data = ts.experimental_collect_matching_metrics()
-
-        def value(self, key):
-            rv = None
-            for item in self.data:
-                k = item["name"]
-                v = item["values"]
-                if k == key:
-                    if len(v) > 1:
-                        raise Exception(f"Multiple values for {key}: {v}")
-                    rv = v[0]["value"]
-                    break
-            if rv is None:
-                raise Exception(f"unknown key: {key} from {self.data}")
-
-            if self.start is not None:
-                orig = self.start.value(key)
-            else:
-                orig = 0
-
-            return (rv - orig)
-
-        def read(self):
-            return self.value(self.FILES_BYTES_READ)
-
-        def written(self):
-            return self.value(self.FILES_BYTES_WRITTEN)
 
     before = TSMetrics()
     start = time.time()
@@ -283,89 +285,103 @@ def convert_image(read_root, input_path, write_root, output_path,
             )
 
 
+def main():
 
-STORES = []
-for config, path, mode in (
-        (CONFIGS[0], ns.input_path, "r"),
-        (CONFIGS[1], ns.output_path, "w")
-    ):
-    if "bucket" in config:
-        store_class = zarr.store.RemoteStore
-        anon = config.get("aws_credentials", {}).get("anonymous", False)
-        store = store_class(
-            url=f's3://{config["bucket"]}/{path}',
-            anon=anon,
-            endpoint_url=config.get("endpoint", None),
-            mode=mode,
-        )
+    STORES = []
+    for config, path, mode in (
+            (CONFIGS[0], ns.input_path, "r"),
+            (CONFIGS[1], ns.output_path, "w")
+        ):
+        if "bucket" in config:
+            store_class = zarr.store.RemoteStore
+            anon = config.get("aws_credentials", {}).get("anonymous", False)
+            store = store_class(
+                url=f's3://{config["bucket"]}/{path}',
+                anon=anon,
+                endpoint_url=config.get("endpoint", None),
+                mode=mode,
+            )
+        else:
+            store_class = zarr.store.LocalStore
+            store = store_class(path, mode=mode)
+
+            if STORES:
+                # If more than one element, then we are configuring
+                # the output path. If this is local, then delete.
+                #
+                # TODO: This should really be an option on zarr-python
+                # as with tensorstore.
+                if os.path.exists(ns.output_path):
+                    if ns.output_overwrite:
+                        if os.path.isfile(ns.output_path):
+                            os.remove(ns.output_path)
+                        else:
+                            shutil.rmtree(ns.output_path)
+                    else:
+                        print(f"{ns.output_path} exists. Exiting")
+                        sys.exit(1)
+
+        STORES.append(store)
+
+    # Needs zarr_format=2 or we get ValueError("store mode does not support writing")
+    read_root = zarr.open_group(store=STORES[0], zarr_format=2)
+
+    if ns.output_write_details:
+        write_root = None
     else:
-        store_class = zarr.store.LocalStore
-        store = store_class(path, mode=mode)
+        write_store = STORES[1]
+        write_root = zarr.Group.create(write_store)
 
-        if STORES:
-            # If more than one element, then we are configuring
-            # the output path. If this is local, then delete.
-            #
-            # TODO: This should really be an option on zarr-python
-            # as with tensorstore.
-            if os.path.exists(ns.output_path):
-                if ns.output_overwrite:
-                    import shutil
-                    shutil.rmtree(ns.output_path)
-                else:
-                    print(f"{ns.output_path} exists. Exiting")
-                    sys.exit(1)
+    # image...
+    if read_root.attrs.get("multiscales"):
+        convert_image(read_root, ns.input_path, write_root, ns.output_path, ns.output_read_details, ns.output_write_details)
 
-    STORES.append(store)
+    # plate...
+    elif read_root.attrs.get("plate"):
 
-# Needs zarr_format=2 or we get ValueError("store mode does not support writing")
-read_root = zarr.open_group(store=STORES[0], zarr_format=2)
-
-if ns.output_write_details:
-    write_root = None
-else:
-    write_store = STORES[1]
-    write_root = zarr.Group.create(write_store)
-
-# image...
-if read_root.attrs.get("multiscales"):
-    convert_image(read_root, ns.input_path, write_root, ns.output_path, ns.output_read_details, ns.output_write_details)
-
-# plate...
-elif read_root.attrs.get("plate"):
-
-    ome_attrs = {"version": NGFF_VERSION}
-    for key, value in read_root.attrs.items():
-        # ...replaces all other versions - remove
-        if "version" in value:
-            del (value["version"])
-        ome_attrs[key] = value
-    # dev2: everything is under 'ome' key
-    write_root.attrs["ome"] = ome_attrs
-
-    plate_attrs = read_root.attrs.get("plate")
-    wells = plate_attrs.get("wells")
-    for well in tqdm.tqdm(wells, position=0, desc="i", leave=False, colour='green', ncols=80):
-        well_path = well["path"]
-        well_v2 = zarr.open_group(store=STORES[0], path=well_path, zarr_format=2)
-        well_group = write_root.create_group(well_path)
-        # well_attrs = { k:v for (k,v) in well_v2.attrs.items()}
-        # TODO: do we store 'version' in well?
-        well_attrs = {}
-        for key, value in well_v2.attrs.items():
+        ome_attrs = {"version": NGFF_VERSION}
+        for key, value in read_root.attrs.items():
+            # ...replaces all other versions - remove
             if "version" in value:
                 del (value["version"])
-            well_attrs[key] = value
-            well_attrs["version"] = "0.5"
-        well_group.attrs["ome"] = well_attrs
+            ome_attrs[key] = value
 
-        images = well_attrs["well"]["images"]
-        for img in tqdm.tqdm(images, position=1, desc="j", leave=False, colour='red', ncols=80):
-            img_path = well_path + "/" + img["path"]
-            out_path = os.path.join(ns.output_path, img_path)
-            input_path = os.path.join(ns.input_path, img_path)
-            print("img_path", img_path)
-            img_v2 = zarr.open_group(store=STORES[0], path=img_path, zarr_format=2)
-            image_group = write_root.create_group(img_path)
-            # print('img_v2', { k:v for (k,v) in img_v2.attrs.items()})
-            convert_image(img_v2, input_path, image_group, out_path, ns.output_read_details, ns.output_write_details)
+        if write_root:  # otherwise dry run
+            # dev2: everything is under 'ome' key
+            write_root.attrs["ome"] = ome_attrs
+
+        plate_attrs = read_root.attrs.get("plate")
+        wells = plate_attrs.get("wells")
+        for well in tqdm.tqdm(wells, position=0, desc="i", leave=False, colour='green', ncols=80):
+            well_path = well["path"]
+            well_v2 = zarr.open_group(store=STORES[0], path=well_path, zarr_format=2)
+
+            if write_root:  # otherwise dry-run
+                well_group = write_root.create_group(well_path)
+                # well_attrs = { k:v for (k,v) in well_v2.attrs.items()}
+                # TODO: do we store 'version' in well?
+                well_attrs = {}
+                for key, value in well_v2.attrs.items():
+                    if "version" in value:
+                        del (value["version"])
+                    well_attrs[key] = value
+                    well_attrs["version"] = "0.5"
+                well_group.attrs["ome"] = well_attrs
+
+            images = well_attrs["well"]["images"]
+            for img in tqdm.tqdm(images, position=1, desc="j", leave=False, colour='red', ncols=80):
+                img_path = well_path + "/" + img["path"]
+                out_path = os.path.join(ns.output_path, img_path)
+                input_path = os.path.join(ns.input_path, img_path)
+                img_v2 = zarr.open_group(store=STORES[0], path=img_path, zarr_format=2)
+
+                if write_root:  # otherwise dry-run
+                    image_group = write_root.create_group(img_path)
+                else:
+                    image_group = None
+
+                convert_image(img_v2, input_path, image_group, out_path, ns.output_read_details, ns.output_write_details)
+
+
+if __name__ == "__main__":
+    main()
