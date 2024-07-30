@@ -2,7 +2,6 @@
 import pathlib
 import random
 import shutil
-import numpy as np
 import json
 import tqdm
 import zarr
@@ -295,6 +294,7 @@ def convert_image(
         if output_write_details:
             details.append(
                 {
+                    "shape": ds_shape,
                     "chunks": ds_chunks,
                     "shards": ds_shards,
                 }
