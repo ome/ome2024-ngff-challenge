@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import pathlib
 import random
 import shutil
 import json
@@ -13,6 +12,9 @@ import os
 import tensorstore as ts
 
 import argparse
+
+from zarr.api.synchronous import sync
+from zarr.buffer import Buffer
 
 
 NGFF_VERSION = "0.5"
@@ -33,6 +35,16 @@ def guess_shards(shape: list, chunks: list):
     if math.prod(shape) < 100_000_000:
         return shape
     raise Exception(f"no shard guess: shape={shape}, chunks={chunks}")
+
+
+class TextBuffer(Buffer):
+    """
+    Zarr Buffer implementation that simplify saves text at a given location.
+    """
+
+    def __init__(self, text):
+        self.text = text
+        self._data = list(text)
 
 
 class TSMetrics:
@@ -226,10 +238,13 @@ def convert_image(
     CONFIGS: list,
     read_root,
     input_path: str,
+    write_store,
     write_root,
     output_path: str,
     output_read_details: str,
     output_write_details: bool,
+    output_script: bool,
+    script_prefix: str = None,
 ):
     dimension_names = None
     # top-level version...
@@ -278,17 +293,32 @@ def convert_image(
                 # read row by row and overwrite
                 ds_chunks = details[idx]["chunks"]
                 ds_shards = details[idx]["shards"]
-            convert_array(
-                CONFIGS,
-                os.path.join(input_path, ds_path),
-                os.path.join(output_path, ds_path),
-                dimension_names,
-                ds_chunks,
-                ds_shards,
-            )
+
+            if output_script:
+                chunk_txt = ",".join(map(str, ds_chunks))
+                shard_txt = ",".join(map(str, ds_shards))
+                dimsn_txt = ",".join(map(str, dimension_names))
+                if script_prefix:
+                    # Ugly; needs fixing
+                    filename = os.path.join(script_prefix, ds_path, "convert.sh")
+                else:
+                    filename = os.path.join(output_path, ds_path, "convert.sh")
+                text = TextBuffer(
+                    f"zarrs_reencode --chunk-shape {chunk_txt} --shard-shape {shard_txt} --dimension-names {dimsn_txt} --validate {input_path} {output_path}\n"
+                )
+                sync(write_store.set(filename, text))
+            else:
+                convert_array(
+                    CONFIGS,
+                    os.path.join(input_path, ds_path),
+                    os.path.join(output_path, ds_path),
+                    dimension_names,
+                    ds_chunks,
+                    ds_shards,
+                )
 
 
-def write_rocrate(output_path: str):
+def write_rocrate(write_store):
     from zarr_crate.zarr_extension import ZarrCrate
     from zarr_crate.rembi_extension import Biosample, Specimen, ImageAcquistion
 
@@ -316,10 +346,9 @@ def write_rocrate(output_path: str):
     zarr_root["resultOf"] = image_acquisition
 
     metadata_dict = crate.metadata.generate()
-
-    filename = os.path.join(output_path, "ro-crate-metadata.json")
-    with open(filename, "w") as f:
-        f.write(json.dumps(metadata_dict, indent=2))
+    filename = "ro-crate-metadata.json"
+    text = TextBuffer(json.dumps(metadata_dict, indent=2))
+    sync(write_store.set(filename, text))
 
 
 def main(ns: argparse.Namespace):
@@ -369,7 +398,8 @@ def main(ns: argparse.Namespace):
     else:
         write_store = STORES[1]
         write_root = zarr.Group.create(write_store)
-        write_rocrate(ns.output_path)
+        if ns.output_rocrate:
+            write_rocrate(write_store)
 
     # image...
     if read_root.attrs.get("multiscales"):
@@ -377,10 +407,12 @@ def main(ns: argparse.Namespace):
             CONFIGS,
             read_root,
             ns.input_path,
+            write_store,  # TODO: review
             write_root,
             ns.output_path,
             ns.output_read_details,
             ns.output_write_details,
+            ns.output_script,
         )
 
     # plate...
@@ -398,6 +430,7 @@ def main(ns: argparse.Namespace):
 
         plate_attrs = read_root.attrs.get("plate")
         wells = plate_attrs.get("wells")
+
         for well in tqdm.tqdm(
             wells, position=0, desc="i", leave=False, colour="green", ncols=80
         ):
@@ -432,10 +465,13 @@ def main(ns: argparse.Namespace):
                     CONFIGS,
                     img_v2,
                     input_path,
+                    write_store,  # TODO: review
                     image_group,
                     out_path,
                     ns.output_read_details,
                     ns.output_write_details,
+                    ns.output_script,
+                    img_path,  # TODO: review
                 )
 
 
@@ -450,6 +486,8 @@ if __name__ == "__main__":
     parser.add_argument("--output-anon", action="store_true")
     parser.add_argument("--output-region", default="us-east-1")
     parser.add_argument("--output-overwrite", action="store_true")
+    parser.add_argument("--output-script", action="store_true")
+    parser.add_argument("--output-rocrate", action="store_true")
     group_ex = parser.add_mutually_exclusive_group()
     group_ex.add_argument(
         "--output-write-details",
