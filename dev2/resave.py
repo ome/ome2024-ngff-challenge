@@ -68,6 +68,7 @@ class TSMetrics:
     ]
 
     def __init__(self, read_config, write_config, start=None):
+        self.time = time.time()
         self.read_type = read_config["kvstore"]["driver"]
         self.write_type = write_config["kvstore"]["driver"]
         self.start = start
@@ -98,6 +99,9 @@ class TSMetrics:
 
     def written(self):
         return self.value(self.BYTES_WRITTEN.format(store_type=self.write_type))
+
+    def elapsed(self):
+        return self.start is not None and (self.time - self.start.time) or self.time
 
 
 def create_configs(ns):
@@ -197,23 +201,14 @@ def convert_array(
     write = ts.open(write_config).result()
 
     before = TSMetrics(read_config, write_config)
-    start = time.time()
     future = write.write(read)
     future.result()
-    stop = time.time()
     after = TSMetrics(read_config, write_config, before)
 
-    def get_size(path):
-        path = pathlib.Path(path)
-        return sum(f.stat().st_size for f in path.glob("**/*") if f.is_file())
-
-    input_size = get_size(input_path)
-    output_size = get_size(output_path)
-
     print(f"""Reencode (tensorstore) {input_path} to {output_path}
-        read: {input_size} {after.read()}
-        write: {output_size} {after.written()}
-        time: {stop - start}
+        read: {after.read()}
+        write: {after.written()}
+        time: {after.elapsed()}
     """)
 
     verify = ts.open(verify_config).result()
