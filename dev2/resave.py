@@ -13,6 +13,7 @@ import os
 import tensorstore as ts
 
 import argparse
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--input-bucket")
 parser.add_argument("--input-endpoint")
@@ -24,10 +25,14 @@ parser.add_argument("--output-anon", action="store_true")
 parser.add_argument("--output-region", default="us-east-1")
 parser.add_argument("--output-overwrite", action="store_true")
 group_ex = parser.add_mutually_exclusive_group()
-group_ex.add_argument("--output-write-details", action="store_true",
-                      help="don't convert array, instead write chunk and proposed shard sizes")
-group_ex.add_argument("--output-read-details",
-                      help="read chink and shard sizes from file")
+group_ex.add_argument(
+    "--output-write-details",
+    action="store_true",
+    help="don't convert array, instead write chunk and proposed shard sizes",
+)
+group_ex.add_argument(
+    "--output-read-details", help="read chink and shard sizes from file"
+)
 parser.add_argument("input_path")
 parser.add_argument("output_path")
 ns = parser.parse_args()
@@ -39,6 +44,7 @@ NGFF_VERSION = "0.5"
 # Helpers
 #
 
+
 class TSMetrics:
     """
     Instances of this class capture the current tensorstore metrics.
@@ -47,29 +53,30 @@ class TSMetrics:
     in order to deduct prevoius values from those measured by this instance.
     """
 
-    CHUNK_CACHE_READS = '/tensorstore/cache/chunk_cache/reads'
-    CHUNK_CACHE_WRITES = '/tensorstore/cache/chunk_cache/writes'
+    CHUNK_CACHE_READS = "/tensorstore/cache/chunk_cache/reads"
+    CHUNK_CACHE_WRITES = "/tensorstore/cache/chunk_cache/writes"
 
-    FILES_BATCH_READ = '/tensorstore/kvstore/file/batch_read'
-    FILES_BYTES_READ = '/tensorstore/kvstore/file/bytes_read'
-    FILES_BYTES_WRITTEN = '/tensorstore/kvstore/file/bytes_written'
+    FILES_BATCH_READ = "/tensorstore/kvstore/file/batch_read"
+    FILES_BYTES_READ = "/tensorstore/kvstore/file/bytes_read"
+    FILES_BYTES_WRITTEN = "/tensorstore/kvstore/file/bytes_written"
 
     OTHER = [
-        '/tensorstore/cache/hit_count'
-        '/tensorstore/cache/kvs_cache_read'
-        '/tensorstore/cache/miss_count'
-        '/tensorstore/kvstore/file/delete_range'
-        '/tensorstore/kvstore/file/open_read'
-        '/tensorstore/kvstore/file/read'
-        '/tensorstore/kvstore/file/write'
-        '/tensorstore/thread_pool/active'
-        '/tensorstore/thread_pool/max_delay_ns'
-        '/tensorstore/thread_pool/started'
-        '/tensorstore/thread_pool/steal_count'
-        '/tensorstore/thread_pool/task_providers'
-        '/tensorstore/thread_pool/total_queue_time_ns'
-        '/tensorstore/thread_pool/work_time_ns'
+        "/tensorstore/cache/hit_count"
+        "/tensorstore/cache/kvs_cache_read"
+        "/tensorstore/cache/miss_count"
+        "/tensorstore/kvstore/file/delete_range"
+        "/tensorstore/kvstore/file/open_read"
+        "/tensorstore/kvstore/file/read"
+        "/tensorstore/kvstore/file/write"
+        "/tensorstore/thread_pool/active"
+        "/tensorstore/thread_pool/max_delay_ns"
+        "/tensorstore/thread_pool/started"
+        "/tensorstore/thread_pool/steal_count"
+        "/tensorstore/thread_pool/task_providers"
+        "/tensorstore/thread_pool/total_queue_time_ns"
+        "/tensorstore/thread_pool/work_time_ns"
     ]
+
     def __init__(self, start=None):
         self.start = start
         self.data = ts.experimental_collect_matching_metrics()
@@ -92,7 +99,7 @@ class TSMetrics:
         else:
             orig = 0
 
-        return (rv - orig)
+        return rv - orig
 
     def read(self):
         return self.value(self.FILES_BYTES_READ)
@@ -111,58 +118,74 @@ def create_configs(ns):
 
         if bucket:
             store = {
-                'driver': 's3',
-                'bucket': bucket,
-                'aws_region': region,
+                "driver": "s3",
+                "bucket": bucket,
+                "aws_region": region,
             }
             if anon:
-                store['aws_credentials'] = { 'anonymous': anon }
+                store["aws_credentials"] = {"anonymous": anon}
             if endpoint:
                 store["endpoint"] = endpoint
         else:
             store = {
-                'driver': 'file',
+                "driver": "file",
             }
         configs.append(store)
     return configs
 
+
 CONFIGS = create_configs(ns)
 
-def convert_array(input_path: str, output_path: str, dimension_names:list, chunks:list, shards:list):
 
+def convert_array(
+    input_path: str, output_path: str, dimension_names: list, chunks: list, shards: list
+):
     CONFIGS[0]["path"] = input_path
     CONFIGS[1]["path"] = output_path
 
-    read = ts.open({
-        'driver': 'zarr',
-        'kvstore': CONFIGS[0],
-    }).result()
+    read = ts.open(
+        {
+            "driver": "zarr",
+            "kvstore": CONFIGS[0],
+        }
+    ).result()
 
     shape = read.shape
     if chunks:
         chunks = [int(x) for x in ns.chunks.split(",")]
     else:
         chunks = read.schema.chunk_layout.read_chunk.shape
-        print(f"Using chunks {chunks} ({[float(shape[x])/chunks[x] for x in range(len(shape))]})")
+        print(
+            f"Using chunks {chunks} ({[float(shape[x])/chunks[x] for x in range(len(shape))]})"
+        )
 
     if ns.shards:
         if ns.shards == "full":
             shards = shape
         else:
-            shards = [int(x) for x in ns.shards.split(",")] # TODO: needs to be per resolution level
+            shards = [
+                int(x) for x in ns.shards.split(",")
+            ]  # TODO: needs to be per resolution level
 
-        chunk_grid = {"name": "regular", "configuration": {"chunk_shape": shards}}  # write size
+        chunk_grid = {
+            "name": "regular",
+            "configuration": {"chunk_shape": shards},
+        }  # write size
 
         sharding_codec = {
             "name": "sharding_indexed",
             "configuration": {
-                "chunk_shape": chunks, # read size
-                "codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
-                           {"name": "blosc", "configuration": {"cname": "zstd", "clevel": 5}}],
-                "index_codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
-                                 {"name": "crc32c"}],
-                "index_location": "end"
-            }
+                "chunk_shape": chunks,  # read size
+                "codecs": [
+                    {"name": "bytes", "configuration": {"endian": "little"}},
+                    {"name": "blosc", "configuration": {"cname": "zstd", "clevel": 5}},
+                ],
+                "index_codecs": [
+                    {"name": "bytes", "configuration": {"endian": "little"}},
+                    {"name": "crc32c"},
+                ],
+                "index_location": "end",
+            },
         }
         codecs = [sharding_codec]
     else:
@@ -170,7 +193,7 @@ def convert_array(input_path: str, output_path: str, dimension_names:list, chunk
         chunk_grid = {"name": "regular", "configuration": {"chunk_shape": chunks}}
         codecs = [
             {"name": "bytes", "configuration": {"endian": "little"}},
-            {"name": "blosc", "configuration": { "cname": "zstd", "clevel": 5}},
+            {"name": "blosc", "configuration": {"cname": "zstd", "clevel": 5}},
         ]
 
     base_config = {
@@ -179,11 +202,13 @@ def convert_array(input_path: str, output_path: str, dimension_names:list, chunk
         "metadata": {
             "shape": shape,
             "chunk_grid": chunk_grid,
-            "chunk_key_encoding": {"name": "default"}, # "configuration": {"separator": "/"}},
+            "chunk_key_encoding": {
+                "name": "default"
+            },  # "configuration": {"separator": "/"}},
             "codecs": codecs,
             "data_type": read.dtype,
             "dimension_names": dimension_names,
-        }
+        },
     }
 
     write_config = base_config.copy()
@@ -194,7 +219,6 @@ def convert_array(input_path: str, output_path: str, dimension_names:list, chunk
 
     write = ts.open(write_config).result()
 
-
     before = TSMetrics()
     start = time.time()
     future = write.write(read)
@@ -204,7 +228,7 @@ def convert_array(input_path: str, output_path: str, dimension_names:list, chunk
 
     def get_size(path):
         path = pathlib.Path(path)
-        return sum(f.stat().st_size for f in path.glob('**/*') if f.is_file())
+        return sum(f.stat().st_size for f in path.glob("**/*") if f.is_file())
 
     input_size = get_size(input_path)
     output_size = get_size(output_path)
@@ -218,7 +242,7 @@ def convert_array(input_path: str, output_path: str, dimension_names:list, chunk
     verify = ts.open(verify_config).result()
     print(f"Verifying <{output_path}>\t{read.shape}\t", end="")
     for x in range(10):
-        r = tuple([random.randint(0, y-1) for y in read.shape])
+        r = tuple([random.randint(0, y - 1) for y in read.shape])
         before = read[r].read().result()
         after = verify[r].read().result()
         assert before == after
@@ -226,21 +250,25 @@ def convert_array(input_path: str, output_path: str, dimension_names:list, chunk
     print("ok")
 
 
-def convert_image(read_root, input_path, write_root, output_path,
-                  output_read_details: str,
-                  output_write_details: bool,
-    ):
+def convert_image(
+    read_root,
+    input_path,
+    write_root,
+    output_path,
+    output_read_details: str,
+    output_write_details: bool,
+):
     dimension_names = None
     # top-level version...
     ome_attrs = {"version": NGFF_VERSION}
     for key, value in read_root.attrs.items():
         # ...replaces all other versions - remove
         if "version" in value:
-            del (value["version"])
+            del value["version"]
         if key == "multiscales":
             dimension_names = [axis["name"] for axis in value[0]["axes"]]
             if "version" in value[0]:
-                del (value[0]["version"])
+                del value[0]["version"]
         ome_attrs[key] = value
 
     if write_root:  # otherwise dry-run
@@ -265,10 +293,12 @@ def convert_image(read_root, input_path, write_root, output_path,
         ds_shards = "TODO"
 
         if output_write_details:
-            details.append({
-                "chunks": ds_chunks,
-                "shards": ds_shards,
-            })
+            details.append(
+                {
+                    "chunks": ds_chunks,
+                    "shards": ds_shards,
+                }
+            )
             with open(output_path, "w") as o:
                 json.dump(details, o)
         else:
@@ -286,12 +316,11 @@ def convert_image(read_root, input_path, write_root, output_path,
 
 
 def main():
-
     STORES = []
     for config, path, mode in (
-            (CONFIGS[0], ns.input_path, "r"),
-            (CONFIGS[1], ns.output_path, "w")
-        ):
+        (CONFIGS[0], ns.input_path, "r"),
+        (CONFIGS[1], ns.output_path, "w"),
+    ):
         if "bucket" in config:
             store_class = zarr.store.RemoteStore
             anon = config.get("aws_credentials", {}).get("anonymous", False)
@@ -334,16 +363,22 @@ def main():
 
     # image...
     if read_root.attrs.get("multiscales"):
-        convert_image(read_root, ns.input_path, write_root, ns.output_path, ns.output_read_details, ns.output_write_details)
+        convert_image(
+            read_root,
+            ns.input_path,
+            write_root,
+            ns.output_path,
+            ns.output_read_details,
+            ns.output_write_details,
+        )
 
     # plate...
     elif read_root.attrs.get("plate"):
-
         ome_attrs = {"version": NGFF_VERSION}
         for key, value in read_root.attrs.items():
             # ...replaces all other versions - remove
             if "version" in value:
-                del (value["version"])
+                del value["version"]
             ome_attrs[key] = value
 
         if write_root:  # otherwise dry run
@@ -352,7 +387,9 @@ def main():
 
         plate_attrs = read_root.attrs.get("plate")
         wells = plate_attrs.get("wells")
-        for well in tqdm.tqdm(wells, position=0, desc="i", leave=False, colour='green', ncols=80):
+        for well in tqdm.tqdm(
+            wells, position=0, desc="i", leave=False, colour="green", ncols=80
+        ):
             well_path = well["path"]
             well_v2 = zarr.open_group(store=STORES[0], path=well_path, zarr_format=2)
 
@@ -363,13 +400,15 @@ def main():
                 well_attrs = {}
                 for key, value in well_v2.attrs.items():
                     if "version" in value:
-                        del (value["version"])
+                        del value["version"]
                     well_attrs[key] = value
                     well_attrs["version"] = "0.5"
                 well_group.attrs["ome"] = well_attrs
 
             images = well_attrs["well"]["images"]
-            for img in tqdm.tqdm(images, position=1, desc="j", leave=False, colour='red', ncols=80):
+            for img in tqdm.tqdm(
+                images, position=1, desc="j", leave=False, colour="red", ncols=80
+            ):
                 img_path = well_path + "/" + img["path"]
                 out_path = os.path.join(ns.output_path, img_path)
                 input_path = os.path.join(ns.input_path, img_path)
@@ -380,7 +419,14 @@ def main():
                 else:
                     image_group = None
 
-                convert_image(img_v2, input_path, image_group, out_path, ns.output_read_details, ns.output_write_details)
+                convert_image(
+                    img_v2,
+                    input_path,
+                    image_group,
+                    out_path,
+                    ns.output_read_details,
+                    ns.output_write_details,
+                )
 
 
 if __name__ == "__main__":
