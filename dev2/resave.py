@@ -3,6 +3,7 @@ import pathlib
 import random
 import shutil
 import json
+import math
 import tqdm
 import zarr
 import time
@@ -13,35 +14,25 @@ import tensorstore as ts
 
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--input-bucket")
-parser.add_argument("--input-endpoint")
-parser.add_argument("--input-anon", action="store_true")
-parser.add_argument("--input-region", default="us-east-1")
-parser.add_argument("--output-bucket")
-parser.add_argument("--output-endpoint")
-parser.add_argument("--output-anon", action="store_true")
-parser.add_argument("--output-region", default="us-east-1")
-parser.add_argument("--output-overwrite", action="store_true")
-group_ex = parser.add_mutually_exclusive_group()
-group_ex.add_argument(
-    "--output-write-details",
-    action="store_true",
-    help="don't convert array, instead write chunk and proposed shard sizes",
-)
-group_ex.add_argument(
-    "--output-read-details", help="read chink and shard sizes from file"
-)
-parser.add_argument("input_path")
-parser.add_argument("output_path")
-ns = parser.parse_args()
-
 
 NGFF_VERSION = "0.5"
 
 #
 # Helpers
 #
+
+
+def guess_shards(shape: list, chunks: list):
+    """
+    Method to calculate best shard sizes. These values can be written to
+    a file for the current dataset by using:
+
+    ./resave.py input.zarr output.json --output-write-details
+    """
+    # TODO: hard-coded to return the full size unless too large
+    if math.prod(shape) < 100_000_000:
+        return shape
+    raise Exception(f"no shard guess: shape={shape}, chunks={chunks}")
 
 
 class TSMetrics:
@@ -133,11 +124,13 @@ def create_configs(ns):
     return configs
 
 
-CONFIGS = create_configs(ns)
-
-
 def convert_array(
-    input_path: str, output_path: str, dimension_names: list, chunks: list, shards: list
+    CONFIGS: list,
+    input_path: str,
+    output_path: str,
+    dimension_names: list,
+    chunks: list,
+    shards: list,
 ):
     CONFIGS[0]["path"] = input_path
     CONFIGS[1]["path"] = output_path
@@ -234,10 +227,11 @@ def convert_array(
 
 
 def convert_image(
+    CONFIGS: list,
     read_root,
-    input_path,
+    input_path: str,
     write_root,
-    output_path,
+    output_path: str,
     output_read_details: str,
     output_write_details: bool,
 ):
@@ -271,9 +265,7 @@ def convert_image(
         ds_array = read_root[ds_path]
         ds_shape = ds_array.shape
         ds_chunks = ds_array.chunks
-
-        # TODO: calculate shards here
-        ds_shards = "TODO"
+        ds_shards = guess_shards(ds_shape, ds_chunks)
 
         if output_write_details:
             details.append(
@@ -291,6 +283,7 @@ def convert_image(
                 ds_chunks = details[idx]["chunks"]
                 ds_shards = details[idx]["shards"]
             convert_array(
+                CONFIGS,
                 os.path.join(input_path, ds_path),
                 os.path.join(output_path, ds_path),
                 dimension_names,
@@ -299,7 +292,9 @@ def convert_image(
             )
 
 
-def main():
+def main(ns: argparse.Namespace):
+    CONFIGS = create_configs(ns)
+
     STORES = []
     for config, path, mode in (
         (CONFIGS[0], ns.input_path, "r"),
@@ -348,6 +343,7 @@ def main():
     # image...
     if read_root.attrs.get("multiscales"):
         convert_image(
+            CONFIGS,
             read_root,
             ns.input_path,
             write_root,
@@ -402,6 +398,7 @@ def main():
                     image_group = None
 
                 convert_image(
+                    CONFIGS,
                     img_v2,
                     input_path,
                     image_group,
@@ -412,4 +409,27 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input-bucket")
+    parser.add_argument("--input-endpoint")
+    parser.add_argument("--input-anon", action="store_true")
+    parser.add_argument("--input-region", default="us-east-1")
+    parser.add_argument("--output-bucket")
+    parser.add_argument("--output-endpoint")
+    parser.add_argument("--output-anon", action="store_true")
+    parser.add_argument("--output-region", default="us-east-1")
+    parser.add_argument("--output-overwrite", action="store_true")
+    group_ex = parser.add_mutually_exclusive_group()
+    group_ex.add_argument(
+        "--output-write-details",
+        action="store_true",
+        help="don't convert array, instead write chunk and proposed shard sizes",
+    )
+    group_ex.add_argument(
+        "--output-read-details", help="read chink and shard sizes from file"
+    )
+    parser.add_argument("input_path")
+    parser.add_argument("output_path")
+    ns = parser.parse_args()
+
+    main(ns)
