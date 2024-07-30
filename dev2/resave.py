@@ -293,6 +293,40 @@ def convert_image(
             )
 
 
+def write_rocrate(output_path: str):
+    from zarr_crate.zarr_extension import ZarrCrate
+    from zarr_crate.rembi_extension import Biosample, Specimen, ImageAcquistion
+
+    crate = ZarrCrate()
+
+    zarr_root = crate.add_dataset(
+        "./",
+        properties={
+            "name": "Light microscopy photo of a fly",
+            "description": "Light microscopy photo of a fruit fly.",
+            "licence": "https://creativecommons.org/licenses/by/4.0/",
+        },
+    )
+    biosample = crate.add(
+        Biosample(
+            crate, properties={"organism_classification": {"@id": "NCBI:txid7227"}}
+        )
+    )
+    specimen = crate.add(Specimen(crate, biosample))
+    image_acquisition = crate.add(
+        ImageAcquistion(
+            crate, specimen, properties={"fbbi_id": {"@id": "obo:FBbi_00000243"}}
+        )
+    )
+    zarr_root["resultOf"] = image_acquisition
+
+    metadata_dict = crate.metadata.generate()
+
+    filename = os.path.join(output_path, "ro-crate-metadata.json")
+    with open(filename, "w") as f:
+        f.write(json.dumps(metadata_dict, indent=2))
+
+
 def main(ns: argparse.Namespace):
     CONFIGS = create_configs(ns)
 
@@ -340,6 +374,7 @@ def main(ns: argparse.Namespace):
     else:
         write_store = STORES[1]
         write_root = zarr.Group.create(write_store)
+        write_rocrate(ns.output_path)
 
     # image...
     if read_root.attrs.get("multiscales"):
