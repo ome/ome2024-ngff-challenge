@@ -6,6 +6,7 @@ dependencies:
   - 'numpy<2'
   - tensorstore # loads dependencies
   - zarr  # loads dependencies
+  - tqdm
   - pip
   - pip:
       - "--editable=git+https://github.com/will-moore/ome-zarr-py.git@zarr_v3_support#egg=ome-zarr"

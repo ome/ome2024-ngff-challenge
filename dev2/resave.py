@@ -2,6 +2,7 @@
 import pathlib
 import random
 import numpy as np
+import json
 import tqdm
 import zarr
 import time
@@ -21,8 +22,11 @@ parser.add_argument("--output-endpoint")
 parser.add_argument("--output-anon", action="store_true")
 parser.add_argument("--output-region", default="us-east-1")
 parser.add_argument("--output-overwrite", action="store_true")
-parser.add_argument("--chunks")
-parser.add_argument("--shards")
+group_ex = parser.add_mutually_exclusive_group()
+group_ex.add_argument("--output-write-details", action="store_true",
+                      help="don't convert array, instead write chunk and proposed shard sizes")
+group_ex.add_argument("--output-read-details",
+                      help="read chink and shard sizes from file")
 parser.add_argument("input_path")
 parser.add_argument("output_path")
 ns = parser.parse_args()
@@ -220,7 +224,10 @@ def convert_array(input_path: str, output_path: str, dimension_names:list, chunk
     print("ok")
 
 
-def convert_image(read_root, input_path, write_root, output_path, chunks, shards):
+def convert_image(read_root, input_path, write_root, output_path,
+                  output_read_details: str,
+                  output_write_details: bool,
+    ):
     dimension_names = None
     # top-level version...
     ome_attrs = {"version": NGFF_VERSION}
@@ -233,20 +240,47 @@ def convert_image(read_root, input_path, write_root, output_path, chunks, shards
             if "version" in value[0]:
                 del (value[0]["version"])
         ome_attrs[key] = value
-    # dev2: everything is under 'ome' key
-    write_root.attrs["ome"] = ome_attrs
+
+    if write_root:  # otherwise dry-run
+        # dev2: everything is under 'ome' key
+        write_root.attrs["ome"] = ome_attrs
+
+    if output_read_details:
+        with open(output_read_details, "r") as o:
+            details = json.load(o)
+    else:
+        details = []  # No resolutions yet
 
     # convert arrays
     multiscales = read_root.attrs.get("multiscales")
-    for ds in multiscales[0]["datasets"]:
+    for idx, ds in enumerate(multiscales[0]["datasets"]):
         ds_path = ds["path"]
-        convert_array(
-            os.path.join(input_path, ds_path),
-            os.path.join(output_path, ds_path),
-            dimension_names,
-            chunks,
-            shards,
-        )
+        ds_array = read_root[ds_path]
+        ds_shape = ds_array.shape
+        ds_chunks = ds_array.chunks
+
+        # TODO: calculate shards here
+        ds_shards = "TODO"
+
+        if output_write_details:
+            details.append({
+                "chunks": ds_chunks,
+                "shards": ds_shards,
+            })
+            with open(output_path, "w") as o:
+                json.dump(details, o)
+        else:
+            if output_read_details:
+                # read row by row and overwrite
+                ds_chunks = details[idx]["chunks"]
+                ds_shards = details[idx]["shards"]
+            convert_array(
+                os.path.join(input_path, ds_path),
+                os.path.join(output_path, ds_path),
+                dimension_names,
+                ds_chunks,
+                ds_shards,
+            )
 
 
 
@@ -287,12 +321,15 @@ for config, path, mode in (
 # Needs zarr_format=2 or we get ValueError("store mode does not support writing")
 read_root = zarr.open_group(store=STORES[0], zarr_format=2)
 
-write_store = STORES[1]
-write_root = zarr.Group.create(write_store)
+if ns.output_write_details:
+    write_root = None
+else:
+    write_store = STORES[1]
+    write_root = zarr.Group.create(write_store)
 
 # image...
 if read_root.attrs.get("multiscales"):
-    convert_image(read_root, ns.input_path, write_root, ns.output_path, ns.chunks, ns.shards)
+    convert_image(read_root, ns.input_path, write_root, ns.output_path, ns.output_read_details, ns.output_write_details)
 
 # plate...
 elif read_root.attrs.get("plate"):
@@ -331,4 +368,4 @@ elif read_root.attrs.get("plate"):
             img_v2 = zarr.open_group(store=STORES[0], path=img_path, zarr_format=2)
             image_group = write_root.create_group(img_path)
             # print('img_v2', { k:v for (k,v) in img_v2.attrs.items()})
-            convert_image(img_v2, input_path, image_group, out_path)
+            convert_image(img_v2, input_path, image_group, out_path, ns.output_read_details, ns.output_write_details)
