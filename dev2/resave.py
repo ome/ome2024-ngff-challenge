@@ -46,18 +46,18 @@ class TSMetrics:
     CHUNK_CACHE_READS = "/tensorstore/cache/chunk_cache/reads"
     CHUNK_CACHE_WRITES = "/tensorstore/cache/chunk_cache/writes"
 
-    FILES_BATCH_READ = "/tensorstore/kvstore/file/batch_read"
-    FILES_BYTES_READ = "/tensorstore/kvstore/file/bytes_read"
-    FILES_BYTES_WRITTEN = "/tensorstore/kvstore/file/bytes_written"
+    BATCH_READ = "/tensorstore/kvstore/{store_type}/batch_read"
+    BYTES_READ = "/tensorstore/kvstore/{store_type}/bytes_read"
+    BYTES_WRITTEN = "/tensorstore/kvstore/{store_type}/bytes_written"
 
     OTHER = [
         "/tensorstore/cache/hit_count"
         "/tensorstore/cache/kvs_cache_read"
         "/tensorstore/cache/miss_count"
-        "/tensorstore/kvstore/file/delete_range"
-        "/tensorstore/kvstore/file/open_read"
-        "/tensorstore/kvstore/file/read"
-        "/tensorstore/kvstore/file/write"
+        "/tensorstore/kvstore/{store_type}/delete_range"
+        "/tensorstore/kvstore/{store_type}/open_read"
+        "/tensorstore/kvstore/{store_type}/read"
+        "/tensorstore/kvstore/{store_type}/write"
         "/tensorstore/thread_pool/active"
         "/tensorstore/thread_pool/max_delay_ns"
         "/tensorstore/thread_pool/started"
@@ -67,7 +67,9 @@ class TSMetrics:
         "/tensorstore/thread_pool/work_time_ns"
     ]
 
-    def __init__(self, start=None):
+    def __init__(self, read_config, write_config, start=None):
+        self.read_type = read_config["kvstore"]["driver"]
+        self.write_type = write_config["kvstore"]["driver"]
         self.start = start
         self.data = ts.experimental_collect_matching_metrics()
 
@@ -92,10 +94,10 @@ class TSMetrics:
         return rv - orig
 
     def read(self):
-        return self.value(self.FILES_BYTES_READ)
+        return self.value(self.BYTES_READ.format(store_type=self.read_type))
 
     def written(self):
-        return self.value(self.FILES_BYTES_WRITTEN)
+        return self.value(self.BYTES_WRITTEN.format(store_type=self.write_type))
 
 
 def create_configs(ns):
@@ -135,12 +137,11 @@ def convert_array(
     CONFIGS[0]["path"] = input_path
     CONFIGS[1]["path"] = output_path
 
-    read = ts.open(
-        {
-            "driver": "zarr",
-            "kvstore": CONFIGS[0],
-        }
-    ).result()
+    read_config = {
+        "driver": "zarr",
+        "kvstore": CONFIGS[0],
+    }
+    read = ts.open(read_config).result()
 
     if ns.shards:
         chunk_grid = {
@@ -195,12 +196,12 @@ def convert_array(
 
     write = ts.open(write_config).result()
 
-    before = TSMetrics()
+    before = TSMetrics(read_config, write_config)
     start = time.time()
     future = write.write(read)
     future.result()
     stop = time.time()
-    after = TSMetrics(before)
+    after = TSMetrics(read_config, write_config, before)
 
     def get_size(path):
         path = pathlib.Path(path)
