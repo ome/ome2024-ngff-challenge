@@ -1,7 +1,10 @@
 #!/usr/bin/env python
+import pathlib
 import random
 import numpy as np
+import tqdm
 import zarr
+import time
 import sys
 import os
 
@@ -18,7 +21,8 @@ parser.add_argument("--output-endpoint")
 parser.add_argument("--output-anon", action="store_true")
 parser.add_argument("--output-region", default="us-east-1")
 parser.add_argument("--output-overwrite", action="store_true")
-parser.add_argument("--sharding", action="store_true")
+parser.add_argument("--chunks")
+parser.add_argument("--shards")
 parser.add_argument("input_path")
 parser.add_argument("output_path")
 ns = parser.parse_args()
@@ -54,7 +58,7 @@ def create_configs(ns):
 
 CONFIGS = create_configs(ns)
 
-def convert_array(input_path: str, output_path: str, dimension_names):
+def convert_array(input_path: str, output_path: str, dimension_names:list, chunks:list, shards:list):
 
     CONFIGS[0]["path"] = input_path
     CONFIGS[1]["path"] = output_path
@@ -65,43 +69,47 @@ def convert_array(input_path: str, output_path: str, dimension_names):
     }).result()
 
     shape = read.shape
-    chunks = read.schema.chunk_layout.read_chunk.shape
+    if chunks:
+        chunks = [int(x) for x in ns.chunks.split(",")]
+    else:
+        chunks = read.schema.chunk_layout.read_chunk.shape
+        print(f"Using chunks {chunks} ({[float(shape[x])/chunks[x] for x in range(len(shape))]})")
 
-    if ns.sharding:
-        # bigger_chunk includes 2 of the regular chunks
-        bigger_chunk = list(chunks[:])
-        bigger_chunk[0] = bigger_chunk[0] * 2
+    if ns.shards:
+        if ns.shards == "full":
+            shards = shape
+        else:
+            shards = [int(x) for x in ns.shards.split(",")] # TODO: needs to be per resolution level
 
-        # sharding breaks bigger_chunk down into regular chunks
-        # https://google.github.io/tensorstore/driver/zarr3/index.html#json-driver/zarr3/Codec/sharding_indexed
+        chunk_grid = {"name": "regular", "configuration": {"chunk_shape": shards}}  # write size
+
         sharding_codec = {
             "name": "sharding_indexed",
             "configuration": {
-                "chunk_shape": chunks,
+                "chunk_shape": chunks, # read size
                 "codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
-                           {"name": "gzip", "configuration": {"level": 5}}],
+                           {"name": "blosc", "configuration": {"cname": "zstd", "clevel": 5}}],
                 "index_codecs": [{"name": "bytes", "configuration": {"endian": "little"}},
                                  {"name": "crc32c"}],
                 "index_location": "end"
             }
         }
-
         codecs = [sharding_codec]
-        chunks = bigger_chunk
-
     else:
         # Alternative without sharding...
-        blosc_codec = {"name": "blosc", "configuration": {
-          "cname": "lz4", "clevel": 5}}
-        codecs = [blosc_codec]
+        chunk_grid = {"name": "regular", "configuration": {"chunk_shape": chunks}}
+        codecs = [
+            {"name": "bytes", "configuration": {"endian": "little"}},
+            {"name": "blosc", "configuration": { "cname": "zstd", "clevel": 5}},
+        ]
 
     base_config = {
         "driver": "zarr3",
         "kvstore": CONFIGS[1],
         "metadata": {
             "shape": shape,
-            "chunk_grid": {"name": "regular", "configuration": {"chunk_shape": chunks}},
-            "chunk_key_encoding": {"name": "default"},
+            "chunk_grid": chunk_grid,
+            "chunk_key_encoding": {"name": "default"}, # "configuration": {"separator": "/"}},
             "codecs": codecs,
             "data_type": read.dtype,
             "dimension_names": dimension_names,
@@ -116,8 +124,90 @@ def convert_array(input_path: str, output_path: str, dimension_names):
 
     write = ts.open(write_config).result()
 
+    """
+  41   │ cat<<EOF
+  42   │ Reencode 4496763-v2.zarr/0 to 4496763-v3-reencode
+  43   │     read:  ~152.78ms @ 3.60GB/s
+  44   │     write: ~648.93ms @ 0.77GB/s
+  45   │     total: 801.71ms
+  46   │     size:  550.78MB to 502.71MB (838.86MB uncompressed)
+  47   │ EOF
+    """
+
+    class TSMetrics:
+
+        CHUNK_CACHE_READS = '/tensorstore/cache/chunk_cache/reads'
+        CHUNK_CACHE_WRITES = '/tensorstore/cache/chunk_cache/writes'
+
+        FILES_BATCH_READ = '/tensorstore/kvstore/file/batch_read'
+        FILES_BYTES_READ = '/tensorstore/kvstore/file/bytes_read'
+        FILES_BYTES_WRITTEN = '/tensorstore/kvstore/file/bytes_written'
+
+        OTHER = [
+            '/tensorstore/cache/hit_count'
+            '/tensorstore/cache/kvs_cache_read'
+            '/tensorstore/cache/miss_count'
+            '/tensorstore/kvstore/file/delete_range'
+            '/tensorstore/kvstore/file/open_read'
+            '/tensorstore/kvstore/file/read'
+            '/tensorstore/kvstore/file/write'
+            '/tensorstore/thread_pool/active'
+            '/tensorstore/thread_pool/max_delay_ns'
+            '/tensorstore/thread_pool/started'
+            '/tensorstore/thread_pool/steal_count'
+            '/tensorstore/thread_pool/task_providers'
+            '/tensorstore/thread_pool/total_queue_time_ns'
+            '/tensorstore/thread_pool/work_time_ns'
+        ]
+        def __init__(self, start=None):
+            self.start = start
+            self.data = ts.experimental_collect_matching_metrics()
+
+        def value(self, key):
+            rv = None
+            for item in self.data:
+                k = item["name"]
+                v = item["values"]
+                if k == key:
+                    if len(v) > 1:
+                        raise Exception(f"Multiple values for {key}: {v}")
+                    rv = v[0]["value"]
+                    break
+            if rv is None:
+                raise Exception(f"unknown key: {key} from {self.data}")
+
+            if self.start is not None:
+                orig = self.start.value(key)
+            else:
+                orig = 0
+
+            return (rv - orig)
+
+        def read(self):
+            return self.value(self.FILES_BYTES_READ)
+
+        def written(self):
+            return self.value(self.FILES_BYTES_WRITTEN)
+
+    before = TSMetrics()
+    start = time.time()
     future = write.write(read)
     future.result()
+    stop = time.time()
+    after = TSMetrics(before)
+
+    def get_size(path):
+        path = pathlib.Path(path)
+        return sum(f.stat().st_size for f in path.glob('**/*') if f.is_file())
+
+    input_size = get_size(input_path)
+    output_size = get_size(output_path)
+
+    print(f"""Reencode (tensorstore) {input_path} to {output_path}
+        read: {input_size} {after.read()}
+        write: {output_size} {after.written()}
+        time: {stop - start}
+    """)
 
     verify = ts.open(verify_config).result()
     print(f"Verifying <{output_path}>\t{read.shape}\t", end="")
@@ -130,7 +220,7 @@ def convert_array(input_path: str, output_path: str, dimension_names):
     print("ok")
 
 
-def convert_image(read_root, input_path, write_root, output_path):
+def convert_image(read_root, input_path, write_root, output_path, chunks, shards):
     dimension_names = None
     # top-level version...
     ome_attrs = {"version": NGFF_VERSION}
@@ -154,6 +244,8 @@ def convert_image(read_root, input_path, write_root, output_path):
             os.path.join(input_path, ds_path),
             os.path.join(output_path, ds_path),
             dimension_names,
+            chunks,
+            shards,
         )
 
 
@@ -200,7 +292,7 @@ write_root = zarr.Group.create(write_store)
 
 # image...
 if read_root.attrs.get("multiscales"):
-    convert_image(read_root, ns.input_path, write_root, ns.output_path)
+    convert_image(read_root, ns.input_path, write_root, ns.output_path, ns.chunks, ns.shards)
 
 # plate...
 elif read_root.attrs.get("plate"):
@@ -215,7 +307,8 @@ elif read_root.attrs.get("plate"):
     write_root.attrs["ome"] = ome_attrs
 
     plate_attrs = read_root.attrs.get("plate")
-    for well in plate_attrs.get("wells"):
+    wells = plate_attrs.get("wells")
+    for well in tqdm.tqdm(wells, position=0, desc="i", leave=False, colour='green', ncols=80):
         well_path = well["path"]
         well_v2 = zarr.open_group(store=STORES[0], path=well_path, zarr_format=2)
         well_group = write_root.create_group(well_path)
@@ -229,7 +322,8 @@ elif read_root.attrs.get("plate"):
             well_attrs["version"] = "0.5"
         well_group.attrs["ome"] = well_attrs
 
-        for img in well_attrs["well"]["images"]:
+        images = well_attrs["well"]["images"]
+        for img in tqdm.tqdm(images, position=1, desc="j", leave=False, colour='red', ncols=80):
             img_path = well_path + "/" + img["path"]
             out_path = os.path.join(ns.output_path, img_path)
             input_path = os.path.join(ns.input_path, img_path)
