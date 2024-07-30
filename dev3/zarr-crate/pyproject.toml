@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "zarr-crate"
+version = "0.1.0"
+description = "RO-Crate OMEZARR metadata helper"
+authors = ["Francois Sherwood <fsherwood@ebi.ac.uk>"]
+readme = "README.md"
+packages = [{include = "zarr_crate"}]
+
+
+[tool.poetry.dependencies]
+python = "^3.10"
+rocrate = "^0.10"
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.22.2"
+pytest = "^7.4.3"
+pytest-mock = "^3.14.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
