@@ -1,0 +1,75 @@
+{
+  "multiscales" : [ {
+    "metadata" : {
+      "method" : "loci.common.image.SimpleImageScaler",
+      "version" : "Bio-Formats 6.10.1"
+    },
+    "axes" : [ {
+      "name" : "t",
+      "type" : "time"
+    }, {
+      "name" : "c",
+      "type" : "channel"
+    }, {
+      "name" : "z",
+      "type" : "space"
+    }, {
+      "unit" : "micrometer",
+      "name" : "y",
+      "type" : "space"
+    }, {
+      "unit" : "micrometer",
+      "name" : "x",
+      "type" : "space"
+    } ],
+    "name" : "",
+    "datasets" : [ {
+      "path" : "0",
+      "coordinateTransformations" : [ {
+        "scale" : [ 1.0, 1.0, 1.0, 0.22007964065255714, 0.22007964065255714 ],
+        "type" : "scale"
+      } ]
+    }, {
+      "path" : "1",
+      "coordinateTransformations" : [ {
+        "scale" : [ 1.0, 1.0, 1.0, 0.4401592813051143, 0.4401592813051143 ],
+        "type" : "scale"
+      } ]
+    } ],
+    "version" : "0.4"
+  } ],
+  "omero" : {
+    "channels" : [ {
+      "color" : "FF6600",
+      "coefficient" : 1,
+      "active" : true,
+      "label" : "AF555-T1",
+      "window" : {
+        "min" : 0.0,
+        "max" : 255.0,
+        "start" : 0.0,
+        "end" : 255.0
+      },
+      "family" : "linear",
+      "inverted" : false
+    }, {
+      "color" : "00FF00",
+      "coefficient" : 1,
+      "active" : true,
+      "label" : "AF488-T2",
+      "window" : {
+        "min" : 0.0,
+        "max" : 255.0,
+        "start" : 0.0,
+        "end" : 255.0
+      },
+      "family" : "linear",
+      "inverted" : false
+    } ],
+    "rdefs" : {
+      "defaultT" : 0,
+      "model" : "color",
+      "defaultZ" : 0
+    }
+  }
+}
