@@ -143,7 +143,7 @@ def convert_array(
     }
     read = ts.open(read_config).result()
 
-    if ns.shards:
+    if shards:
         chunk_grid = {
             "name": "regular",
             "configuration": {"chunk_shape": shards},
@@ -249,7 +249,7 @@ def convert_image(
                 del value[0]["version"]
         ome_attrs[key] = value
 
-    if write_root:  # otherwise dry-run
+    if write_root is not None:  # otherwise dry-run
         # dev2: everything is under 'ome' key
         write_root.attrs["ome"] = ome_attrs
 
@@ -362,7 +362,7 @@ def main(ns: argparse.Namespace):
                 del value["version"]
             ome_attrs[key] = value
 
-        if write_root:  # otherwise dry run
+        if write_root is not None:  # otherwise dry run
             # dev2: everything is under 'ome' key
             write_root.attrs["ome"] = ome_attrs
 
@@ -374,7 +374,7 @@ def main(ns: argparse.Namespace):
             well_path = well["path"]
             well_v2 = zarr.open_group(store=STORES[0], path=well_path, zarr_format=2)
 
-            if write_root:  # otherwise dry-run
+            if write_root is not None:  # otherwise dry-run
                 well_group = write_root.create_group(well_path)
                 well_attrs = {}
                 for key, value in well_v2.attrs.items():
@@ -393,7 +393,7 @@ def main(ns: argparse.Namespace):
                 input_path = os.path.join(ns.input_path, img_path)
                 img_v2 = zarr.open_group(store=STORES[0], path=img_path, zarr_format=2)
 
-                if write_root:  # otherwise dry-run
+                if write_root is not None:  # otherwise dry-run
                     image_group = write_root.create_group(img_path)
                 else:
                     image_group = None
