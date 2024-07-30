@@ -149,23 +149,7 @@ def convert_array(
         }
     ).result()
 
-    shape = read.shape
-    if chunks:
-        chunks = [int(x) for x in ns.chunks.split(",")]
-    else:
-        chunks = read.schema.chunk_layout.read_chunk.shape
-        print(
-            f"Using chunks {chunks} ({[float(shape[x])/chunks[x] for x in range(len(shape))]})"
-        )
-
     if ns.shards:
-        if ns.shards == "full":
-            shards = shape
-        else:
-            shards = [
-                int(x) for x in ns.shards.split(",")
-            ]  # TODO: needs to be per resolution level
-
         chunk_grid = {
             "name": "regular",
             "configuration": {"chunk_shape": shards},
@@ -199,7 +183,7 @@ def convert_array(
         "driver": "zarr3",
         "kvstore": CONFIGS[1],
         "metadata": {
-            "shape": shape,
+            "shape": read.shape,
             "chunk_grid": chunk_grid,
             "chunk_key_encoding": {
                 "name": "default"
@@ -395,8 +379,6 @@ def main():
 
             if write_root:  # otherwise dry-run
                 well_group = write_root.create_group(well_path)
-                # well_attrs = { k:v for (k,v) in well_v2.attrs.items()}
-                # TODO: do we store 'version' in well?
                 well_attrs = {}
                 for key, value in well_v2.attrs.items():
                     if "version" in value:
