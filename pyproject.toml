@@ -2,12 +2,15 @@
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
 build-backend = "poetry_dynamic_versioning.backend"
 
-
 [tool.poetry]
 name = "ome2024-ngff-challenge"
 version = "0.0.0"
 authors = [
   "Josh Moore <josh@openmicroscopy.org>",
+  "Francois Sherwood <fsherwood@ebi.ac.uk>",
+  "Will Moore <w.moore@dundee.ac.uk>",
+  "Joost de Folter <folterj@gmail.com>",
+  "Tom Boissonnet <tom.boissonnet@hhu.de>",
 ]
 homepage = "https://github.com/ome/ome2024-ngff-challenge"
 repository = "https://github.com/ome/ome2024-ngff-challenge"
@@ -25,7 +28,8 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = "^3.10"
+rocrate = "^0.10"
 
 furo = { version = ">=2023.08.17", optional = true }
 myst_parser = { version = ">=0.13", optional = true }
@@ -36,8 +40,10 @@ sphinx_copybutton = { version = ">=0.3.0", optional = true }
 sphinx-autodoc-typehints = { version = "*", optional = true }
 
 [tool.poetry.dev-dependencies]
-pytest = ">= 6"
-pytest-cov = ">= 3"
+ipython = "^8.22.2"
+pytest = "^7.4.3"
+pytest-mock = "^3.14.0"
+
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov"]
@@ -81,7 +87,7 @@ report.exclude_also = [
 
 [tool.mypy]
 files = ["src", "tests"]
-python_version = "3.8"
+python_version = "3.10"
 warn_unused_configs = true
 strict = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
@@ -138,7 +144,7 @@ isort.required-imports = ["from __future__ import annotations"]
 
 
 [tool.pylint]
-py-version = "3.8"
+py-version = "3.10"
 ignore-paths = [".*/_version.py"]
 reports.output-format = "colorized"
 similarities.ignore-imports = "yes"
