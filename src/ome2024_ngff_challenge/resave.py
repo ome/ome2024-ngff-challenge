@@ -478,7 +478,7 @@ def main(ns: argparse.Namespace):
                 )
 
 
-if __name__ == "__main__":
+def cli():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-bucket")
     parser.add_argument("--input-endpoint")
@@ -506,3 +506,7 @@ if __name__ == "__main__":
 
     logging.basicConfig()
     main(ns)
+
+
+if __name__ == "__main__":
+    cli()
