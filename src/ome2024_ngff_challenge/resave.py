@@ -144,6 +144,7 @@ def convert_array(
     CONFIGS: list,
     input_path: str,
     output_path: str,
+    output_overwrite: bool,
     dimension_names: list,
     chunks: list,
     shards: list,
@@ -204,7 +205,7 @@ def convert_array(
 
     write_config = base_config.copy()
     write_config["create"] = True
-    write_config["delete_existing"] = ns.output_overwrite
+    write_config["delete_existing"] = output_overwrite
 
     verify_config = base_config.copy()
 
@@ -239,6 +240,7 @@ def convert_image(
     write_store,
     write_root,
     output_path: str,
+    output_overwrite: bool,
     output_read_details: str,
     output_write_details: bool,
     output_script: bool,
@@ -311,6 +313,7 @@ def convert_image(
                     CONFIGS,
                     input_path / ds_path,
                     output_path / ds_path,
+                    output_overwrite,
                     dimension_names,
                     ds_chunks,
                     ds_shards,
@@ -408,6 +411,7 @@ def main(ns: argparse.Namespace):
             write_store,  # TODO: review
             write_root,
             ns.output_path,
+            ns.output_overwrite,
             ns.output_read_details,
             ns.output_write_details,
             ns.output_script,
@@ -466,6 +470,7 @@ def main(ns: argparse.Namespace):
                     write_store,  # TODO: review
                     image_group,
                     out_path,
+                    ns.output_overwrite,
                     ns.output_read_details,
                     ns.output_write_details,
                     ns.output_script,
