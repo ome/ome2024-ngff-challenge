@@ -6,6 +6,7 @@
 [![PyPI version][pypi-version]][pypi-link]
 [![Conda-Forge][conda-badge]][conda-link]
 [![PyPI platforms][pypi-platforms]][pypi-link]
+[![Image.SC Zulip][zulip-badge]][zulip-link]
 
 [![GitHub Discussion][github-discussions-badge]][github-discussions-link]
 
@@ -23,6 +24,8 @@
 [pypi-version]:             https://img.shields.io/pypi/v/ome2024-ngff-challenge
 [rtd-badge]:                https://readthedocs.org/projects/ome2024-ngff-challenge/badge/?version=latest
 [rtd-link]:                 https://ome2024-ngff-challenge.readthedocs.io/en/latest/?badge=latest
+[zulip-badge]:              https://img.shields.io/badge/zulip-join_chat-brightgreen.svg
+[zulip-link]:               https://imagesc.zulipchat.com/#narrow/stream/328251-NGFF
 
 <!-- prettier-ignore-end -->
 
