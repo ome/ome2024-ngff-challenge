@@ -64,15 +64,6 @@ additionally set `--output-overwrite` to ignore a previous conversion:
 ome2024-ngff-challenge input.zarr output.zarr --output-overwrite
 ```
 
-### Writing metadata
-
-The RO-Crate metadata writing code is not currently enabled by default. To
-generate the metadata, use:
-
-```
-PYTHONPATH=dev3/zarr-crate ome2024-ngff-challenge input.zarr output.zarr --output-rocrate
-```
-
 ### Reading/writing remotely
 
 If you would like to avoid downloading and/or upload the Zarr datasets, you can
@@ -136,8 +127,16 @@ export PATH=$PATH:$HOME/.cargo/bin
 ### Optimizing chunks and shards
 
 Finally, there is not yet a single heuristic for determining the chunk and shard
-sizes that will work for all data. Instead, you can use a JSON file to review
-and manually optimize the chunking and sharding parameters:
+sizes that will work for all data. Pass the `--output-chunks` and
+`--output-shards` flags in order to set the size of chunks and shards for all
+resolutions:
+
+```
+ome2024-ngff-challenge input.zarr output.zarr --output-chunks=1,1,1,256,256 --output-shards=1,1,1,2048,2048
+```
+
+Alternatively, you can use a JSON file to review and manually optimize the
+chunking and sharding parameters on a per-resolution basis:
 
 ```
 ome2024-ngff-challenge input.zarr parameters.json --output-write-details
@@ -149,7 +148,9 @@ This will write a JSON file of the form:
 [{"shape": [...], "chunks": [...], "shards": [...]}, ...
 ```
 
-Edits to this file can be read back in using the `output-read-details` flag:
+where the order of the dictionaries matches the order of the "datasets" field in
+the "multiscales". Edits to this file can be read back in using the
+`output-read-details` flag:
 
 ```
 ome2024-ngff-challenge input.zarr output.zarr --output-read-details=parameters.json
