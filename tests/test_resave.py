@@ -4,6 +4,10 @@ import pytest
 
 from ome2024_ngff_challenge import resave
 
+#
+# Argument handling tests
+#
+
 
 def test_bad_chunks(tmp_path):
     with pytest.raises(SystemExit):
@@ -14,3 +18,51 @@ def test_bad_chunks(tmp_path):
                 "--output-chunks=xxx",
             ]
         )
+
+
+def test_conflicting_args(tmp_path):
+    with pytest.raises(SystemExit):
+        resave.cli(
+            [
+                str(tmp_path / "in.zarr"),
+                str(tmp_path / "out.zarr"),
+                "--output-chunks=xxx",
+                "--output-read-details=xxx",
+            ]
+        )
+
+
+#
+# Remote testing
+#
+
+IDR_BUCKET = (
+    "--input-bucket=idr",
+    "--input-endpoint=https://uk1s3.embassy.ebi.ac.uk",
+    "--input-anon",
+)
+
+IDR_PLATE = "zarr/v0.4/idr0001A/2551.zarr"
+
+IDR_3D = "zarr/v0.4/idr0062A/6001240.zarr"
+
+
+def test_remote_hcs_with_scripts(tmp_path):
+    resave.cli(
+        [
+            *IDR_BUCKET,
+            IDR_PLATE,
+            str(tmp_path / "out.zarr"),
+            "--output-script",
+        ]
+    )
+
+
+def test_remote_simple_with_download(tmp_path):
+    resave.cli(
+        [
+            *IDR_BUCKET,
+            IDR_3D,
+            str(tmp_path / "out.zarr"),
+        ]
+    )

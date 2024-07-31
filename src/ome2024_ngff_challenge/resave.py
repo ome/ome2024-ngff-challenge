@@ -161,15 +161,15 @@ def create_configs(ns):
 
 def convert_array(
     CONFIGS: list,
-    input_path: str,
-    output_path: str,
+    input_path: Path,
+    output_path: Path,
     output_overwrite: bool,
     dimension_names: list,
     chunks: list,
     shards: list,
 ):
-    CONFIGS[0]["path"] = input_path
-    CONFIGS[1]["path"] = output_path
+    CONFIGS[0]["path"] = str(input_path)
+    CONFIGS[1]["path"] = str(output_path)
 
     read_config = {
         "driver": "zarr",
@@ -478,10 +478,12 @@ def main(ns: argparse.Namespace):
                 img_path = Path(well_path) / img["path"]
                 out_path = ns.output_path / img_path
                 input_path = ns.input_path / img_path
-                img_v2 = zarr.open_group(store=STORES[0], path=img_path, zarr_format=2)
+                img_v2 = zarr.open_group(
+                    store=STORES[0], path=str(img_path), zarr_format=2
+                )
 
                 if write_root is not None:  # otherwise dry-run
-                    image_group = write_root.create_group(img_path)
+                    image_group = write_root.create_group(str(img_path))
                 else:
                     image_group = None
 
