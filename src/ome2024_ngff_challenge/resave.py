@@ -71,7 +71,6 @@ class TextBuffer(Buffer):
     """
 
     def __init__(self, text):
-        super().__init__(self)
         self.text = text
         self._data = list(text)
 
