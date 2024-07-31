@@ -1,23 +1,24 @@
 #!/usr/bin/env python
-import random
-import shutil
-import json
-import math
-import tqdm
-import zarr
-import time
-import sys
-import os
-
-import tensorstore as ts
+from __future__ import annotations
 
 import argparse
+import json
+import logging
+import math
+import random
+import shutil
+import sys
+import time
+from pathlib import Path
 
+import tensorstore as ts
+import tqdm
+import zarr
 from zarr.api.synchronous import sync
 from zarr.buffer import Buffer
 
-
 NGFF_VERSION = "0.5"
+LOGGER = logging.getLogger("resave")
 
 #
 # Helpers
@@ -52,7 +53,7 @@ class TSMetrics:
     Instances of this class capture the current tensorstore metrics.
 
     If an existing instance is passed in on creation, it will be stored
-    in order to deduct prevoius values from those measured by this instance.
+    in order to deduct previous values from those measured by this instance.
     """
 
     CHUNK_CACHE_READS = "/tensorstore/cache/chunk_cache/reads"
@@ -62,7 +63,7 @@ class TSMetrics:
     BYTES_READ = "/tensorstore/kvstore/{store_type}/bytes_read"
     BYTES_WRITTEN = "/tensorstore/kvstore/{store_type}/bytes_written"
 
-    OTHER = [
+    OTHER = (
         "/tensorstore/cache/hit_count"
         "/tensorstore/cache/kvs_cache_read"
         "/tensorstore/cache/miss_count"
@@ -77,7 +78,7 @@ class TSMetrics:
         "/tensorstore/thread_pool/task_providers"
         "/tensorstore/thread_pool/total_queue_time_ns"
         "/tensorstore/thread_pool/work_time_ns"
-    ]
+    )
 
     def __init__(self, read_config, write_config, start=None):
         self.time = time.time()
@@ -99,10 +100,7 @@ class TSMetrics:
         if rv is None:
             raise Exception(f"unknown key: {key} from {self.data}")
 
-        if self.start is not None:
-            orig = self.start.value(key)
-        else:
-            orig = 0
+        orig = self.start.value(key) if self.start is not None else 0
 
         return rv - orig
 
@@ -217,21 +215,21 @@ def convert_array(
     future.result()
     after = TSMetrics(read_config, write_config, before)
 
-    print(f"""Reencode (tensorstore) {input_path} to {output_path}
+    LOGGER.info(f"""Re-encode (tensorstore) {input_path} to {output_path}
         read: {after.read()}
         write: {after.written()}
         time: {after.elapsed()}
     """)
 
     verify = ts.open(verify_config).result()
-    print(f"Verifying <{output_path}>\t{read.shape}\t", end="")
+    LOGGER.info(f"Verifying <{output_path}>\t{read.shape}\t")
     for x in range(10):
         r = tuple([random.randint(0, y - 1) for y in read.shape])
         before = read[r].read().result()
         after = verify[r].read().result()
         assert before == after
-        print(".", end="")
-    print("ok")
+        LOGGER.debug(f"{x}")
+    LOGGER.info("ok")
 
 
 def convert_image(
@@ -244,7 +242,7 @@ def convert_image(
     output_read_details: str,
     output_write_details: bool,
     output_script: bool,
-    script_prefix: str = None,
+    script_prefix: Path | None = None,
 ):
     dimension_names = None
     # top-level version...
@@ -264,7 +262,7 @@ def convert_image(
         write_root.attrs["ome"] = ome_attrs
 
     if output_read_details:
-        with open(output_read_details, "r") as o:
+        with output_read_details.open() as o:
             details = json.load(o)
     else:
         details = []  # No resolutions yet
@@ -286,7 +284,8 @@ def convert_image(
                     "shards": ds_shards,
                 }
             )
-            with open(output_path, "w") as o:
+            # Note: not S3 compatible!
+            with output_path.open(mode="w") as o:
                 json.dump(details, o)
         else:
             if output_read_details:
@@ -300,9 +299,9 @@ def convert_image(
                 dimsn_txt = ",".join(map(str, dimension_names))
                 if script_prefix:
                     # Ugly; needs fixing
-                    filename = os.path.join(script_prefix, ds_path, "convert.sh")
+                    filename = script_prefix / ds_path / "convert.sh"
                 else:
-                    filename = os.path.join(output_path, ds_path, "convert.sh")
+                    filename = output_path / ds_path / "convert.sh"
                 text = TextBuffer(
                     f"zarrs_reencode --chunk-shape {chunk_txt} --shard-shape {shard_txt} --dimension-names {dimsn_txt} --validate {input_path} {output_path}\n"
                 )
@@ -310,8 +309,8 @@ def convert_image(
             else:
                 convert_array(
                     CONFIGS,
-                    os.path.join(input_path, ds_path),
-                    os.path.join(output_path, ds_path),
+                    input_path / ds_path,
+                    output_path / ds_path,
                     dimension_names,
                     ds_chunks,
                     ds_shards,
@@ -319,8 +318,8 @@ def convert_image(
 
 
 def write_rocrate(write_store):
+    from zarr_crate.rembi_extension import Biosample, ImageAcquistion, Specimen
     from zarr_crate.zarr_extension import ZarrCrate
-    from zarr_crate.rembi_extension import Biosample, Specimen, ImageAcquistion
 
     crate = ZarrCrate()
 
@@ -372,21 +371,19 @@ def main(ns: argparse.Namespace):
             store_class = zarr.store.LocalStore
             store = store_class(path, mode=mode)
 
-            if STORES:
-                # If more than one element, then we are configuring
-                # the output path. If this is local, then delete.
-                #
+            # If more than one element, then we are configuring
+            # the output path. If this is local, then delete.
+            if STORES and ns.output_path.exists():
                 # TODO: This should really be an option on zarr-python
                 # as with tensorstore.
-                if os.path.exists(ns.output_path):
-                    if ns.output_overwrite:
-                        if os.path.isfile(ns.output_path):
-                            os.remove(ns.output_path)
-                        else:
-                            shutil.rmtree(ns.output_path)
+                if ns.output_overwrite:
+                    if ns.output_path.is_file():
+                        ns.output_path.unlink()
                     else:
-                        print(f"{ns.output_path} exists. Exiting")
-                        sys.exit(1)
+                        shutil.rmtree(ns.output_path)
+                else:
+                    LOGGER.error(f"{ns.output_path} exists. Exiting")
+                    sys.exit(1)
 
         STORES.append(store)
 
@@ -452,9 +449,9 @@ def main(ns: argparse.Namespace):
             for img in tqdm.tqdm(
                 images, position=1, desc="j", leave=False, colour="red", ncols=80
             ):
-                img_path = well_path + "/" + img["path"]
-                out_path = os.path.join(ns.output_path, img_path)
-                input_path = os.path.join(ns.input_path, img_path)
+                img_path = Path(well_path) / img["path"]
+                out_path = ns.output_path / img_path
+                input_path = ns.input_path / img_path
                 img_v2 = zarr.open_group(store=STORES[0], path=img_path, zarr_format=2)
 
                 if write_root is not None:  # otherwise dry-run
@@ -496,10 +493,11 @@ if __name__ == "__main__":
         help="don't convert array, instead write chunk and proposed shard sizes",
     )
     group_ex.add_argument(
-        "--output-read-details", help="read chink and shard sizes from file"
+        "--output-read-details", type=Path, help="read chink and shard sizes from file"
     )
-    parser.add_argument("input_path")
-    parser.add_argument("output_path")
+    parser.add_argument("input_path", type=Path)
+    parser.add_argument("output_path", type=Path)
     ns = parser.parse_args()
 
+    logging.basicConfig()
     main(ns)

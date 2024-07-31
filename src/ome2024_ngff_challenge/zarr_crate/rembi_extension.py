@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from rocrate.model.contextentity import ContextEntity
 
 
@@ -7,12 +9,12 @@ class Biosample(ContextEntity):
         if properties:
             biosample_properties = {}
             biosample_properties.update(properties)
-            if "@type" in properties.keys():
+            if "@type" in properties:
                 biosample_types = biosample_properties["@type"]
                 if biosample_type_path not in biosample_types:
                     try:
                         biosample_types.append(biosample_type_path)
-                    except:
+                    except Exception:
                         biosample_types = [biosample_types]
                         biosample_types.append(biosample_type_path)
                     biosample_properties["@type"] = biosample_types
@@ -30,12 +32,12 @@ class Specimen(ContextEntity):
         if properties:
             specimen_properties = {}
             specimen_properties.update(properties)
-            if "@type" in properties.keys():
+            if "@type" in properties:
                 specimen_type = specimen_properties["@type"]
                 if specimen_type_path not in specimen_type:
                     try:
                         specimen_type.append(specimen_type_path)
-                    except:
+                    except Exception:
                         specimen_type = [specimen_type]
                         specimen_type.append(specimen_type_path)
                     specimen_properties["@type"] = specimen_type
@@ -55,12 +57,12 @@ class ImageAcquistion(ContextEntity):
         if properties:
             image_acquisition_properties = {}
             image_acquisition_properties.update(properties)
-            if "@type" in properties.keys():
+            if "@type" in properties:
                 image_acquisition_type = image_acquisition_properties["@type"]
                 if image_acquisition_type_path not in image_acquisition_type:
                     try:
                         image_acquisition_type.append(image_acquisition_type_path)
-                    except:
+                    except Exception:
                         image_acquisition_type = [image_acquisition_type]
                         image_acquisition_type.append(image_acquisition_type_path)
                     image_acquisition_properties["@type"] = image_acquisition_type

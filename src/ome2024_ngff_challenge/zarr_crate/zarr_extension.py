@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 from rocrate.rocrate import ROCrate
 
 
 class ZarrCrate(ROCrate):
-
-    def __init__(self, source=None, gen_preview=False, init=False, exclude=None):
+    def __init__(
+        self, source=None, gen_preview=False, init=False, exclude=None
+    ) -> None:
         super().__init__(source, gen_preview, init, exclude)
         self.metadata.extra_terms = {
             "organism_classification": "https://schema.org/taxonomicRange",
