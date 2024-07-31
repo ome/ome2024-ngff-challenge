@@ -2,7 +2,6 @@ from rocrate.rocrate import ROCrate
 
 
 class ZarrCrate(ROCrate):
-
     def __init__(self, source=None, gen_preview=False, init=False, exclude=None):
         super().__init__(source, gen_preview, init, exclude)
         self.metadata.extra_terms = {

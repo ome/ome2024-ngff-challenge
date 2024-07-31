@@ -52,7 +52,7 @@ class TSMetrics:
     Instances of this class capture the current tensorstore metrics.
 
     If an existing instance is passed in on creation, it will be stored
-    in order to deduct prevoius values from those measured by this instance.
+    in order to deduct previous values from those measured by this instance.
     """
 
     CHUNK_CACHE_READS = "/tensorstore/cache/chunk_cache/reads"
@@ -217,7 +217,7 @@ def convert_array(
     future.result()
     after = TSMetrics(read_config, write_config, before)
 
-    print(f"""Reencode (tensorstore) {input_path} to {output_path}
+    print(f"""Re-encode (tensorstore) {input_path} to {output_path}
         read: {after.read()}
         write: {after.written()}
         time: {after.elapsed()}

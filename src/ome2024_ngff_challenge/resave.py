@@ -38,7 +38,7 @@ def guess_shards(shape: list, chunks: list):
     # TODO: hard-coded to return the full size unless too large
     if math.prod(shape) < 100_000_000:
         return shape
-    raise Exception(f"no shard guess: shape={shape}, chunks={chunks}")
+    raise ValueError(f"no shard guess: shape={shape}, chunks={chunks}")
 
 
 def csv_int(vstr, sep=",") -> list:
@@ -52,7 +52,7 @@ def csv_int(vstr, sep=",") -> list:
             values.append(v)
         except ValueError as ve:
             raise argparse.ArgumentError(
-                "Invalid value %s, values must be a number" % v0
+                message="Invalid value %s, values must be a number" % v0
             ) from ve
     return values
 
@@ -168,7 +168,7 @@ def create_configs(ns):
 
 
 def convert_array(
-    CONFIGS: list,
+    configs: list,
     input_path: Path,
     output_path: Path,
     output_overwrite: bool,
@@ -176,12 +176,12 @@ def convert_array(
     chunks: list,
     shards: list,
 ):
-    CONFIGS[0]["path"] = str(input_path)
-    CONFIGS[1]["path"] = str(output_path)
+    configs[0]["path"] = str(input_path)
+    configs[1]["path"] = str(output_path)
 
     read_config = {
         "driver": "zarr",
-        "kvstore": CONFIGS[0],
+        "kvstore": configs[0],
     }
     read = ts.open(read_config).result()
 
@@ -217,7 +217,7 @@ def convert_array(
 
     base_config = {
         "driver": "zarr3",
-        "kvstore": CONFIGS[1],
+        "kvstore": configs[1],
         "metadata": {
             "shape": read.shape,
             "chunk_grid": chunk_grid,
@@ -261,7 +261,7 @@ def convert_array(
 
 
 def convert_image(
-    CONFIGS: list,
+    configs: list,
     read_root,
     input_path: str,
     write_store,
@@ -340,7 +340,7 @@ def convert_image(
                 sync(write_store.set(str(filename), text))
             else:
                 convert_array(
-                    CONFIGS,
+                    configs,
                     input_path / ds_path,
                     output_path / ds_path,
                     output_overwrite,
@@ -381,12 +381,12 @@ def write_rocrate(write_store):
 
 
 def main(ns: argparse.Namespace):
-    CONFIGS = create_configs(ns)
+    configs = create_configs(ns)
 
-    STORES = []
+    stores = []
     for config, path, mode in (
-        (CONFIGS[0], ns.input_path, "r"),
-        (CONFIGS[1], ns.output_path, "w"),
+        (configs[0], ns.input_path, "r"),
+        (configs[1], ns.output_path, "w"),
     ):
         if "bucket" in config:
             store_class = zarr.store.RemoteStore
@@ -403,7 +403,7 @@ def main(ns: argparse.Namespace):
 
             # If more than one element, then we are configuring
             # the output path. If this is local, then delete.
-            if STORES and ns.output_path.exists():
+            if stores and ns.output_path.exists():
                 # TODO: This should really be an option on zarr-python
                 # as with tensorstore.
                 if ns.output_overwrite:
@@ -415,23 +415,23 @@ def main(ns: argparse.Namespace):
                     LOGGER.error(f"{ns.output_path} exists. Exiting")
                     sys.exit(1)
 
-        STORES.append(store)
+        stores.append(store)
 
     # Needs zarr_format=2 or we get ValueError("store mode does not support writing")
-    read_root = zarr.open_group(store=STORES[0], zarr_format=2)
+    read_root = zarr.open_group(store=stores[0], zarr_format=2)
 
     if ns.output_write_details:
         write_root = None
         write_store = None
     else:
-        write_store = STORES[1]
+        write_store = stores[1]
         write_root = zarr.Group.create(write_store)
         write_rocrate(write_store)
 
     # image...
     if read_root.attrs.get("multiscales"):
         convert_image(
-            CONFIGS,
+            configs,
             read_root,
             ns.input_path,
             write_store,  # TODO: review
@@ -464,7 +464,7 @@ def main(ns: argparse.Namespace):
             wells, position=0, desc="i", leave=False, colour="green", ncols=80
         ):
             well_path = well["path"]
-            well_v2 = zarr.open_group(store=STORES[0], path=well_path, zarr_format=2)
+            well_v2 = zarr.open_group(store=stores[0], path=well_path, zarr_format=2)
 
             if write_root is not None:  # otherwise dry-run
                 well_group = write_root.create_group(well_path)
@@ -483,7 +483,7 @@ def main(ns: argparse.Namespace):
                 out_path = ns.output_path / img_path
                 input_path = ns.input_path / img_path
                 img_v2 = zarr.open_group(
-                    store=STORES[0], path=str(img_path), zarr_format=2
+                    store=stores[0], path=str(img_path), zarr_format=2
                 )
 
                 if write_root is not None:  # otherwise dry-run
@@ -492,7 +492,7 @@ def main(ns: argparse.Namespace):
                     image_group = None
 
                 convert_image(
-                    CONFIGS,
+                    configs,
                     img_v2,
                     input_path,
                     write_store,  # TODO: review

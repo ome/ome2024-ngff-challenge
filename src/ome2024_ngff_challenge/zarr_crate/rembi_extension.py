@@ -25,6 +25,15 @@ class Biosample(ContextEntity):
 
         super().__init__(crate, identifier, biosample_properties)
 
+    def popitem(self):
+        raise NotImplementedError
+
+    def clear(self):
+        raise NotImplementedError
+
+    def update(self):
+        raise NotImplementedError
+
 
 class Specimen(ContextEntity):
     def __init__(self, crate, biosample, identifier=None, properties=None):
@@ -49,6 +58,15 @@ class Specimen(ContextEntity):
         super().__init__(crate, identifier, specimen_properties)
 
         self["specimen"] = biosample
+
+    def popitem(self):
+        raise NotImplementedError
+
+    def clear(self):
+        raise NotImplementedError
+
+    def update(self):
+        raise NotImplementedError
 
 
 class ImageAcquistion(ContextEntity):
@@ -76,3 +94,12 @@ class ImageAcquistion(ContextEntity):
         super().__init__(crate, identifier, image_acquisition_properties)
 
         self["specimen"] = specimen
+
+    def popitem(self):
+        raise NotImplementedError
+
+    def clear(self):
+        raise NotImplementedError
+
+    def update(self):
+        raise NotImplementedError
