@@ -1,0 +1,152 @@
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+
+[tool.poetry]
+name = "ome2024-ngff-challenge"
+version = "0.0.0"
+authors = [
+  "Josh Moore <josh@openmicroscopy.org>",
+]
+homepage = "https://github.com/ome/ome2024-ngff-challenge"
+repository = "https://github.com/ome/ome2024-ngff-challenge"
+license = "BSD-3-Clause"
+description = "Tools for converting OME-Zarr data within the ome2024-ngff-challenge (see https://forum.image.sc/t/ome2024-ngff-challenge/97363)"
+readme = "README.md"
+
+classifiers = [
+  "Development Status :: 1 - Planning",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering",
+  "Typing :: Typed",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+
+furo = { version = ">=2023.08.17", optional = true }
+myst_parser = { version = ">=0.13", optional = true }
+pytest = { version = ">=6", optional = true }
+pytest-cov = { version = ">=3", optional = true }
+sphinx = { version = ">=7.0", optional = true }
+sphinx_copybutton = { version = ">=0.3.0", optional = true }
+sphinx-autodoc-typehints = { version = "*", optional = true }
+
+[tool.poetry.dev-dependencies]
+pytest = ">= 6"
+pytest-cov = ">= 3"
+
+[tool.poetry.extras]
+test = ["pytest", "pytest-cov"]
+dev = ["pytest", "pytest-cov"]
+docs = [
+  "furo",
+  "myst_parser",
+  "sphinx",
+  "sphinx_autodoc_typehints",
+  "sphinx_copybutton",
+]
+
+[tool.poetry-dynamic-versioning]
+enable = true
+substitution.files = ["src/ome2024_ngff_challenge/__init__.py"]
+
+
+[tool.setuptools_scm]
+write_to = "src/ome2024_ngff_challenge/_version.py"
+
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
+xfail_strict = true
+filterwarnings = [
+  "error",
+]
+log_cli_level = "INFO"
+testpaths = [
+  "tests",
+]
+
+
+[tool.coverage]
+run.source = ["ome2024_ngff_challenge"]
+report.exclude_also = [
+  '\.\.\.',
+  'if typing.TYPE_CHECKING:',
+]
+
+[tool.mypy]
+files = ["src", "tests"]
+python_version = "3.8"
+warn_unused_configs = true
+strict = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+warn_unreachable = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[[tool.mypy.overrides]]
+module = "ome2024_ngff_challenge.*"
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+
+[tool.ruff]
+src = ["src"]
+target-version = "py38"
+
+[tool.ruff.lint]
+extend-select = [
+  "B",        # flake8-bugbear
+  "I",        # isort
+  "ARG",      # flake8-unused-arguments
+  "C4",       # flake8-comprehensions
+  "EM",       # flake8-errmsg
+  "ICN",      # flake8-import-conventions
+  "G",        # flake8-logging-format
+  "PGH",      # pygrep-hooks
+  "PIE",      # flake8-pie
+  "PL",       # pylint
+  "PT",       # flake8-pytest-style
+  "PTH",      # flake8-use-pathlib
+  "RET",      # flake8-return
+  "RUF",      # Ruff-specific
+  "SIM",      # flake8-simplify
+  "T20",      # flake8-print
+  "UP",       # pyupgrade
+  "YTT",      # flake8-2020
+  "EXE",      # flake8-executable
+  "NPY",      # NumPy specific rules
+  "PD",       # pandas-vet
+]
+ignore = [
+  "PLR09",    # Too many <...>
+  "PLR2004",  # Magic value used in comparison
+  "ISC001",   # Conflicts with formatter
+]
+isort.required-imports = ["from __future__ import annotations"]
+# Uncomment if using a _compat.typing backport
+# typing-modules = ["ome2024_ngff_challenge._compat.typing"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["T20"]
+"noxfile.py" = ["T20"]
+
+
+[tool.pylint]
+py-version = "3.8"
+ignore-paths = [".*/_version.py"]
+reports.output-format = "colorized"
+similarities.ignore-imports = "yes"
+messages_control.disable = [
+  "design",
+  "fixme",
+  "line-too-long",
+  "missing-module-docstring",
+  "missing-function-docstring",
+  "wrong-import-position",
+]

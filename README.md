@@ -1,5 +1,31 @@
 # ome2024-ngff-challenge
 
+[![Actions Status][actions-badge]][actions-link]
+[![Documentation Status][rtd-badge]][rtd-link]
+
+[![PyPI version][pypi-version]][pypi-link]
+[![Conda-Forge][conda-badge]][conda-link]
+[![PyPI platforms][pypi-platforms]][pypi-link]
+
+[![GitHub Discussion][github-discussions-badge]][github-discussions-link]
+
+<!-- SPHINX-START -->
+
+<!-- prettier-ignore-start -->
+[actions-badge]:            https://github.com/ome/ome2024-ngff-challenge/workflows/CI/badge.svg
+[actions-link]:             https://github.com/ome/ome2024-ngff-challenge/actions
+[conda-badge]:              https://img.shields.io/conda/vn/conda-forge/ome2024-ngff-challenge
+[conda-link]:               https://github.com/conda-forge/ome2024-ngff-challenge-feedstock
+[github-discussions-badge]: https://img.shields.io/static/v1?label=Discussions&message=Ask&color=blue&logo=github
+[github-discussions-link]:  https://github.com/ome/ome2024-ngff-challenge/discussions
+[pypi-link]:                https://pypi.org/project/ome2024-ngff-challenge/
+[pypi-platforms]:           https://img.shields.io/pypi/pyversions/ome2024-ngff-challenge
+[pypi-version]:             https://img.shields.io/pypi/v/ome2024-ngff-challenge
+[rtd-badge]:                https://readthedocs.org/projects/ome2024-ngff-challenge/badge/?version=latest
+[rtd-link]:                 https://ome2024-ngff-challenge.readthedocs.io/en/latest/?badge=latest
+
+<!-- prettier-ignore-end -->
+
 Project planning and material repository for the 2024 challenge to generate 1 PB of OME-Zarr data
 
 ## Challenge overview
