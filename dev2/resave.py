@@ -395,6 +395,7 @@ def main(ns: argparse.Namespace):
 
     if ns.output_write_details:
         write_root = None
+        write_store = None
     else:
         write_store = STORES[1]
         write_root = zarr.Group.create(write_store)
