@@ -41,6 +41,22 @@ def guess_shards(shape: list, chunks: list):
     raise Exception(f"no shard guess: shape={shape}, chunks={chunks}")
 
 
+def csv_int(vstr, sep=",") -> list:
+    """Convert a string of comma separated values to integers
+    @returns iterable of floats
+    """
+    values = []
+    for v0 in vstr.split(sep):
+        try:
+            v = int(v0)
+            values.append(v)
+        except ValueError as ve:
+            raise argparse.ArgumentError(
+                "Invalid value %s, values must be a number" % v0
+            ) from ve
+    return values
+
+
 class TextBuffer(Buffer):
     """
     Zarr Buffer implementation that simplify saves text at a given location.
@@ -244,7 +260,9 @@ def convert_image(
     write_root,
     output_path: str,
     output_overwrite: bool,
-    output_read_details: str,
+    output_chunks: list[int] | None,
+    output_shards: list[int] | None,
+    output_read_details: str | None,
     output_write_details: bool,
     output_script: bool,
     script_prefix: Path | None = None,
@@ -293,7 +311,10 @@ def convert_image(
             with output_path.open(mode="w") as o:
                 json.dump(details, o)
         else:
-            if output_read_details:
+            if output_chunks:
+                ds_chunks = output_chunks
+                ds_shards = output_shards
+            elif output_read_details:
                 # read row by row and overwrite
                 ds_chunks = details[idx]["chunks"]
                 ds_shards = details[idx]["shards"]
@@ -411,6 +432,8 @@ def main(ns: argparse.Namespace):
             write_root,
             ns.output_path,
             ns.output_overwrite,
+            ns.output_chunks,
+            ns.output_shards,
             ns.output_read_details,
             ns.output_write_details,
             ns.output_script,
@@ -477,7 +500,7 @@ def main(ns: argparse.Namespace):
                 )
 
 
-def cli():
+def cli(args=sys.argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-bucket")
     parser.add_argument("--input-endpoint")
@@ -498,13 +521,23 @@ def cli():
     group_ex.add_argument(
         "--output-read-details", type=Path, help="read chink and shard sizes from file"
     )
+    group_ex.add_argument(
+        "--output-chunks",
+        help="comma separated list of chunk sizes for all subresolutions",
+        type=csv_int,
+    )
+    parser.add_argument(
+        "--output-shards",
+        help="comma separated list of shards sizes for all subresolutions",
+        type=csv_int,
+    )
     parser.add_argument("input_path", type=Path)
     parser.add_argument("output_path", type=Path)
-    ns = parser.parse_args()
+    ns = parser.parse_args(args)
 
     logging.basicConfig()
     main(ns)
 
 
 if __name__ == "__main__":
-    cli()
+    cli(sys.argv)
