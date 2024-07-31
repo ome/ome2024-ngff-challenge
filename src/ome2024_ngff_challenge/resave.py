@@ -17,6 +17,9 @@ import zarr
 from zarr.api.synchronous import sync
 from zarr.buffer import Buffer
 
+from .zarr_crate.rembi_extension import Biosample, ImageAcquistion, Specimen
+from .zarr_crate.zarr_extension import ZarrCrate
+
 NGFF_VERSION = "0.5"
 LOGGER = logging.getLogger("resave")
 
@@ -321,9 +324,6 @@ def convert_image(
 
 
 def write_rocrate(write_store):
-    from zarr_crate.rembi_extension import Biosample, ImageAcquistion, Specimen
-    from zarr_crate.zarr_extension import ZarrCrate
-
     crate = ZarrCrate()
 
     zarr_root = crate.add_dataset(
@@ -399,8 +399,7 @@ def main(ns: argparse.Namespace):
     else:
         write_store = STORES[1]
         write_root = zarr.Group.create(write_store)
-        if ns.output_rocrate:
-            write_rocrate(write_store)
+        write_rocrate(write_store)
 
     # image...
     if read_root.attrs.get("multiscales"):
@@ -490,7 +489,6 @@ def cli():
     parser.add_argument("--output-region", default="us-east-1")
     parser.add_argument("--output-overwrite", action="store_true")
     parser.add_argument("--output-script", action="store_true")
-    parser.add_argument("--output-rocrate", action="store_true")
     group_ex = parser.add_mutually_exclusive_group()
     group_ex.add_argument(
         "--output-write-details",
