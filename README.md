@@ -67,6 +67,39 @@ dev2/resave.py \
         /tmp/6001240.zarr
 ```
 
+### Reading/writing via a script
+
+Another R/W option is to have `resave.py` generate a script which you can execute later.
+If you pass `--output-script`, then rather than generate the arrays immediately, a file
+named `convert.sh` will be created which can be executed later.
+
+For example, running:
+
+```
+dev2/resave.py dev2/input.zarr /tmp/scripts.zarr --output-script
+```
+
+produces a dataset with one `zarr.json` file and 3 `convert.sh` scripts:
+
+```
+/tmp/scripts.zarr/0/convert.sh
+/tmp/scripts.zarr/1/convert.sh
+/tmp/scripts.zarr/2/convert.sh
+```
+
+Each of the scripts contains a statement of the form:
+
+```
+zarrs_reencode --chunk-shape 1,1,275,271 --shard-shape 2,236,275,271 --dimension-names c,z,y,x --validate dev2/input.zarr /tmp/scripts.zarr
+```
+
+Running this script will require having installed `zarrs_tools` with:
+
+```
+cargo install zarrs_tools
+export PATH=$PATH:$HOME/.cargo/bin
+```
+
 ### Optimizing chunks and shards
 
 Finally, there is not yet a single heuristic for determining the chunk and shard sizes
