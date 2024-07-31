@@ -7,7 +7,8 @@ full_name: Josh Moore
 license: BSD
 org: ome
 project_name: ome2024-ngff-challenge
-project_short_description: Tools for converting OME-Zarr data within the ome2024-ngff-challenge
-    (see https://forum.image.sc/t/ome2024-ngff-challenge/97363)
+project_short_description:
+  Tools for converting OME-Zarr data within the ome2024-ngff-challenge (see
+  https://forum.image.sc/t/ome2024-ngff-challenge/97363)
 url: https://github.com/ome/ome2024-ngff-challenge
 vcs: true

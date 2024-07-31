@@ -3,13 +3,13 @@ channels:
 dependencies:
   - napari
   - pyqt
-  - 'numpy<2'
+  - "numpy<2"
   - tensorstore # loads dependencies
-  - zarr  # loads dependencies
+  - zarr # loads dependencies
   - tqdm
   - pip
   - pip:
       - "--editable=git+https://github.com/will-moore/ome-zarr-py.git@zarr_v3_support#egg=ome-zarr"
       - "--editable=git+https://github.com/zarr-developers/zarr-python.git@v3#egg=zarr"
       - "--editable=git+https://github.com/ome/napari-ome-zarr.git@v3#egg=napari-ome-zarr"
-      - 'tensorstore>=0.1.63'
+      - "tensorstore>=0.1.63"

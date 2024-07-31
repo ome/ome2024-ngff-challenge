@@ -7,6 +7,7 @@ import os
 import tensorstore as ts
 
 import argparse
+
 parser = argparse.ArgumentParser()
 parser.add_argument("input_path")
 parser.add_argument("output_path")
@@ -22,32 +23,38 @@ if os.path.exists(ns.output_path):
 
 
 def convert_array(input_path, output_path):
-    read = ts.open({
-        'driver': 'zarr',
-        'kvstore': {
-            'driver': 'file',
-            'path': input_path,
-        },
-    }).result()
+    read = ts.open(
+        {
+            "driver": "zarr",
+            "kvstore": {
+                "driver": "file",
+                "path": input_path,
+            },
+        }
+    ).result()
 
     shape = read.shape
-    chunks= read.schema.chunk_layout.read_chunk.shape
+    chunks = read.schema.chunk_layout.read_chunk.shape
 
-    write = ts.open({
-        "driver": "zarr3",
-        "kvstore": {
-            "driver": "file",
-            "path": output_path
-        },
-        "metadata": {
-            "shape": shape,
-            "chunk_grid": {"name": "regular", "configuration": {"chunk_shape": chunks}},
-            "chunk_key_encoding": {"name": "default"},
-            "codecs": [{"name": "blosc", "configuration": {"cname": "lz4", "clevel": 5}}],
-            "data_type": read.dtype,
-        },
-        "create": True,
-    }).result()
+    write = ts.open(
+        {
+            "driver": "zarr3",
+            "kvstore": {"driver": "file", "path": output_path},
+            "metadata": {
+                "shape": shape,
+                "chunk_grid": {
+                    "name": "regular",
+                    "configuration": {"chunk_shape": chunks},
+                },
+                "chunk_key_encoding": {"name": "default"},
+                "codecs": [
+                    {"name": "blosc", "configuration": {"cname": "lz4", "clevel": 5}}
+                ],
+                "data_type": read.dtype,
+            },
+            "create": True,
+        }
+    ).result()
 
     future = write.write(read)
     future.result()
@@ -76,6 +83,5 @@ multiscales = read_root.attrs.get("multiscales")
 for ds in multiscales[0]["datasets"]:
     ds_path = ds["path"]
     convert_array(
-        os.path.join(ns.input_path, ds_path),
-        os.path.join(ns.output_path, ds_path)
+        os.path.join(ns.input_path, ds_path), os.path.join(ns.output_path, ds_path)
     )

@@ -15,11 +15,15 @@ if __name__ == "__main__":
         },
     )
     biosample = crate.add(
-        Biosample(crate, properties={"organism_classification": {"@id": "NCBI:txid7227" }})
+        Biosample(
+            crate, properties={"organism_classification": {"@id": "NCBI:txid7227"}}
+        )
     )
     specimen = crate.add(Specimen(crate, biosample))
     image_acquisition = crate.add(
-        ImageAcquistion(crate, specimen, properties={"fbbi_id": {"@id": "obo:FBbi_00000243"}})
+        ImageAcquistion(
+            crate, specimen, properties={"fbbi_id": {"@id": "obo:FBbi_00000243"}}
+        )
     )
     zarr_root["resultOf"] = image_acquisition
 

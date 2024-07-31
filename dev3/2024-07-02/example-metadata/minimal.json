@@ -1,62 +1,54 @@
 {
-    "@context": [
-        "https://w3id.org/ro/crate/1.1/context",
-        {
-            "organism_classification": "https://schema.org/taxonomicRange",
-            "BioChemEntity": "https://schema.org/BioChemEntity",
-            "obo": "http://purl.obolibrary.org/obo/",
-            "acquisiton_method": {
-                "@reverse": "https://schema.org/result",
-                "@type": "@id"
-            },
-            "biological_entity": "https://schema.org/about"
-        }
-    ],
-    "@graph": [
-        {
-            "@type": "CreativeWork",
-            "@id": "ro-crate-metadata.json",
-            "conformsTo": {
-                "@id": "https://w3id.org/ro/crate/1.1"
-            },
-            "about": {
-                "@id": "./"
-            }
-        },
-        {
-            "@id": "./",
-            "@type": "Dataset",
-            "name": "Light microscopy photo of a fly",
-            "description": "Light microscopy photo of a fruit fly.",
-            "licence": "https://creativecommons.org/licenses/by/4.0/",
-            "hasPart": {
-                "@id": "./dros-mel-image.zarr/"
-            }
-        },
-        {
-            "@id": "./dros-mel-image.zarr/",
-            "@type": "Dataset",
-            "name": "OME-ZARR files",
-            "description": "the ome zarr files of the fly.",
-            "acquisiton_method": [
-                "_:b0"
-            ],
-            "preparation_method": [
-                "_:b1"
-            ]
-        },
-        {
-            "@id": "_:b0",
-            "@type": [
-                "http://purl.obolibrary.org/obo/FBbi_00000243"
-            ]
-        },
-        {
-            "@id": "_:b21",
-            "@type": [
-                "BioChemEntity"
-            ],
-            "organism_classification": "NCBI:txid7227"
-        }
-    ]
- }
+  "@context": [
+    "https://w3id.org/ro/crate/1.1/context",
+    {
+      "organism_classification": "https://schema.org/taxonomicRange",
+      "BioChemEntity": "https://schema.org/BioChemEntity",
+      "obo": "http://purl.obolibrary.org/obo/",
+      "acquisiton_method": {
+        "@reverse": "https://schema.org/result",
+        "@type": "@id"
+      },
+      "biological_entity": "https://schema.org/about"
+    }
+  ],
+  "@graph": [
+    {
+      "@type": "CreativeWork",
+      "@id": "ro-crate-metadata.json",
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.1"
+      },
+      "about": {
+        "@id": "./"
+      }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "name": "Light microscopy photo of a fly",
+      "description": "Light microscopy photo of a fruit fly.",
+      "licence": "https://creativecommons.org/licenses/by/4.0/",
+      "hasPart": {
+        "@id": "./dros-mel-image.zarr/"
+      }
+    },
+    {
+      "@id": "./dros-mel-image.zarr/",
+      "@type": "Dataset",
+      "name": "OME-ZARR files",
+      "description": "the ome zarr files of the fly.",
+      "acquisiton_method": ["_:b0"],
+      "preparation_method": ["_:b1"]
+    },
+    {
+      "@id": "_:b0",
+      "@type": ["http://purl.obolibrary.org/obo/FBbi_00000243"]
+    },
+    {
+      "@id": "_:b21",
+      "@type": ["BioChemEntity"],
+      "organism_classification": "NCBI:txid7227"
+    }
+  ]
+}

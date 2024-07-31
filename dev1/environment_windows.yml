@@ -4,7 +4,7 @@ channels:
 dependencies:
   - python=3.10
   - numpy<2
-  - zarr  # loads dependencies
+  - zarr # loads dependencies
   - pip
   - pip:
       - tensorstore
