@@ -57,6 +57,14 @@ def csv_int(vstr, sep=",") -> list:
     return values
 
 
+def strip_version(possible_dict) -> None:
+    """
+    If argument is a dict with the key "version", remove it
+    """
+    if isinstance(possible_dict, dict) and "version" in possible_dict:
+        del possible_dict["version"]
+
+
 class TextBuffer(Buffer):
     """
     Zarr Buffer implementation that simplify saves text at a given location.
@@ -272,12 +280,10 @@ def convert_image(
     ome_attrs = {"version": NGFF_VERSION}
     for key, value in read_root.attrs.items():
         # ...replaces all other versions - remove
-        if "version" in value:
-            del value["version"]
+        strip_version(value)
         if key == "multiscales":
             dimension_names = [axis["name"] for axis in value[0]["axes"]]
-            if "version" in value[0]:
-                del value[0]["version"]
+            strip_version(value[0])
         ome_attrs[key] = value
 
     if write_root is not None:  # otherwise dry-run
@@ -331,7 +337,7 @@ def convert_image(
                 text = TextBuffer(
                     f"zarrs_reencode --chunk-shape {chunk_txt} --shard-shape {shard_txt} --dimension-names {dimsn_txt} --validate {input_path} {output_path}\n"
                 )
-                sync(write_store.set(filename, text))
+                sync(write_store.set(str(filename), text))
             else:
                 convert_array(
                     CONFIGS,
@@ -444,8 +450,7 @@ def main(ns: argparse.Namespace):
         ome_attrs = {"version": NGFF_VERSION}
         for key, value in read_root.attrs.items():
             # ...replaces all other versions - remove
-            if "version" in value:
-                del value["version"]
+            strip_version(value)
             ome_attrs[key] = value
 
         if write_root is not None:  # otherwise dry run
@@ -465,8 +470,7 @@ def main(ns: argparse.Namespace):
                 well_group = write_root.create_group(well_path)
                 well_attrs = {}
                 for key, value in well_v2.attrs.items():
-                    if "version" in value:
-                        del value["version"]
+                    strip_version(value)
                     well_attrs[key] = value
                     well_attrs["version"] = "0.5"
                 well_group.attrs["ome"] = well_attrs
@@ -495,6 +499,8 @@ def main(ns: argparse.Namespace):
                     image_group,
                     out_path,
                     ns.output_overwrite,
+                    ns.output_chunks,
+                    ns.output_shards,
                     ns.output_read_details,
                     ns.output_write_details,
                     ns.output_script,

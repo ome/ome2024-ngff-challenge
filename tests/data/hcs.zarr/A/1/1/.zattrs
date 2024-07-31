@@ -1,0 +1,83 @@
+{
+  "multiscales" : [ {
+    "metadata" : {
+      "method" : "loci.common.image.SimpleImageScaler",
+      "version" : "Bio-Formats 7.1.0"
+    },
+    "axes" : [ {
+      "name" : "t",
+      "type" : "time"
+    }, {
+      "name" : "c",
+      "type" : "channel"
+    }, {
+      "unit" : "micrometer",
+      "name" : "z",
+      "type" : "space"
+    }, {
+      "unit" : "micrometer",
+      "name" : "y",
+      "type" : "space"
+    }, {
+      "unit" : "micrometer",
+      "name" : "x",
+      "type" : "space"
+    } ],
+    "name" : "hcs 2",
+    "datasets" : [ {
+      "path" : "0",
+      "coordinateTransformations" : [ {
+        "scale" : [ 1.0, 1.0, 1.0, 1.0, 1.0 ],
+        "type" : "scale"
+      } ]
+    } ],
+    "version" : "0.4"
+  } ],
+  "omero" : {
+    "channels" : [ {
+      "color" : "6496C8",
+      "coefficient" : 1,
+      "active" : true,
+      "label" : "Name",
+      "window" : {
+        "min" : 0.0,
+        "max" : 63.0,
+        "start" : 0.0,
+        "end" : 63.0
+      },
+      "family" : "linear",
+      "inverted" : false
+    }, {
+      "color" : "00FF00",
+      "coefficient" : 1,
+      "active" : true,
+      "label" : "Channel 1",
+      "window" : {
+        "min" : 0.0,
+        "max" : 63.0,
+        "start" : 0.0,
+        "end" : 63.0
+      },
+      "family" : "linear",
+      "inverted" : false
+    }, {
+      "color" : "0000FF",
+      "coefficient" : 1,
+      "active" : true,
+      "label" : "Channel 2",
+      "window" : {
+        "min" : 0.0,
+        "max" : 63.0,
+        "start" : 0.0,
+        "end" : 63.0
+      },
+      "family" : "linear",
+      "inverted" : false
+    } ],
+    "rdefs" : {
+      "defaultT" : 0,
+      "model" : "color",
+      "defaultZ" : 0
+    }
+  }
+}
