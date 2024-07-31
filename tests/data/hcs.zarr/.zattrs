@@ -1,0 +1,38 @@
+{
+  "bioformats2raw.layout" : 3,
+  "plate" : {
+    "columns" : [ {
+      "name" : "1"
+    }, {
+      "name" : "2"
+    } ],
+    "name" : "Plate Name 0",
+    "wells" : [ {
+      "path" : "A/1",
+      "rowIndex" : 0,
+      "columnIndex" : 0
+    }, {
+      "path" : "A/2",
+      "rowIndex" : 0,
+      "columnIndex" : 1
+    }, {
+      "path" : "B/1",
+      "rowIndex" : 1,
+      "columnIndex" : 0
+    }, {
+      "path" : "B/2",
+      "rowIndex" : 1,
+      "columnIndex" : 1
+    } ],
+    "field_count" : 2,
+    "rows" : [ {
+      "name" : "A"
+    }, {
+      "name" : "B"
+    } ],
+    "acquisitions" : [ {
+      "id" : 0
+    } ],
+    "version" : "0.4"
+  }
+}
