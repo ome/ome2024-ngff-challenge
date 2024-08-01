@@ -11,6 +11,7 @@ import sys
 import time
 from pathlib import Path
 
+import numpy as np
 import tensorstore as ts
 import tqdm
 import zarr
@@ -72,7 +73,9 @@ class TextBuffer(Buffer):
 
     def __init__(self, text):
         self.text = text
-        self._data = list(text)
+        if isinstance(text, str):
+            text = np.array(text.encode())
+        self._data = text
 
 
 class TSMetrics:
