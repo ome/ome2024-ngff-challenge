@@ -111,6 +111,8 @@ def test_local_bf2raw(tmp_path):
         )
         == 2
     )
+    xml = tmp_path / "out.zarr" / "OME" / "METADATA.ome.xml"
+    assert xml.is_file(), str("\n".join([str(x) for x in tmp_path.rglob("*")]))
 
 
 def test_local_hcs(tmp_path):

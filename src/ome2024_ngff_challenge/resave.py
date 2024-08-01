@@ -16,7 +16,7 @@ import tensorstore as ts
 import tqdm
 import zarr
 from zarr.api.synchronous import sync
-from zarr.buffer import Buffer
+from zarr.buffer import Buffer, BufferPrototype
 
 from .zarr_crate.rembi_extension import Biosample, ImageAcquistion, Specimen
 from .zarr_crate.zarr_extension import ZarrCrate
@@ -144,49 +144,154 @@ class TSMetrics:
         return self.start is not None and (self.time - self.start.time) or self.time
 
 
-def create_configs(ns):
-    configs = []
-    for selection in ("input", "output"):
-        anon = getattr(ns, f"{selection}_anon")
-        bucket = getattr(ns, f"{selection}_bucket")
-        endpoint = getattr(ns, f"{selection}_endpoint")
-        region = getattr(ns, f"{selection}_region")
+class Config:
+    """
+    Filesystem and S3 configuration information for both tensorstore and zarr-python
+    """
 
-        if bucket:
-            store = {
+    def __init__(
+        self,
+        ns: argparse.Namespace,
+        selection: str,
+        mode: str,
+        overwrite: bool = False,
+        subpath: Path | str | None = None,
+    ):
+        self.ns = ns
+        self.selection = selection
+        self.mode = mode
+        self.overwrite = overwrite
+        self.subpath = None if not subpath else Path(subpath)
+
+        self.path = getattr(ns, f"{selection}_path")
+        self.anon = getattr(ns, f"{selection}_anon")
+        self.bucket = getattr(ns, f"{selection}_bucket")
+        self.endpoint = getattr(ns, f"{selection}_endpoint")
+        self.region = getattr(ns, f"{selection}_region")
+
+        if self.bucket:
+            self.ts_store = {
                 "driver": "s3",
-                "bucket": bucket,
-                "aws_region": region,
+                "bucket": self.bucket,
+                "aws_region": self.region,
             }
-            if anon:
-                store["aws_credentials"] = {"anonymous": anon}
-            if endpoint:
-                store["endpoint"] = endpoint
+            if self.anon:
+                self.ts_store["aws_credentials"] = {"anonymous": self.anon}
+            if self.endpoint:
+                self.ts_store["endpoint"] = self.endpoint
+
+            store_class = zarr.store.RemoteStore
+            self.zr_store = store_class(
+                url=self.s3_string(),
+                anon=self.anon,
+                endpoint_url=self.endpoint,
+                mode=mode,
+            )
+
         else:
-            store = {
+            self.ts_store = {
                 "driver": "file",
             }
-        configs.append(store)
-    return configs
+
+            store_class = zarr.store.LocalStore
+            self.zr_store = store_class(self.fs_string(), mode=mode)
+
+        self.ts_store["path"] = self.fs_string()
+        self.ts_config = {
+            "driver": "zarr" if selection == "input" else "zarr3",
+            "kvstore": self.ts_store,
+        }
+
+        self.zr_group = None
+        self.zr_attrs = None
+
+    def s3_string(self):
+        return f"s3://{self.bucket}/{self.fs_string()}"
+
+    def fs_string(self):
+        return str(self.path / self.subpath) if self.subpath else str(self.path)
+
+    def __str__(self):
+        if self.bucket:
+            return self.s3_string()
+        return self.fs_string()
+
+    def __repr__(self):
+        return (
+            f"Config<{self.__str__()}, {self.selection}, {self.mode}, {self.overwrite}>"
+        )
+
+    def check_or_delete_path(self):
+        # If this is local, then delete.
+        if self.bucket:
+            raise Exception(f"bucket set ({self.bucket}). Refusing to delete.")
+
+        if self.path.exists():
+            # TODO: This should really be an option on zarr-python
+            # as with tensorstore.
+            if self.overwrite:
+                if self.path.is_file():
+                    self.path.unlink()
+                else:
+                    shutil.rmtree(self.path)
+            else:
+                raise Exception(f"{self.path} exists. Exiting")
+
+    def open_group(self):
+        # Needs zarr_format=2 or we get ValueError("store mode does not support writing")
+        self.zr_group = zarr.open_group(store=self.zr_store, zarr_format=2)
+        self.zr_attrs = self.zr_group.attrs
+
+    def create_group(self):
+        self.zr_group = zarr.Group.create(self.zr_store)
+        self.zr_attrs = self.zr_group.attrs
+
+    def sub_config(self, subpath: str, create_or_open_group: bool = True):
+        sub = Config(
+            self.ns,
+            self.selection,
+            self.mode,
+            self.overwrite,
+            subpath if not self.subpath else self.subpath / subpath,
+        )
+        if create_or_open_group:
+            if sub.selection == "input":
+                sub.open_group()
+            elif sub.selection == "output":
+                sub.create_group()
+            else:
+                raise Exception(f"unknown selection: {self.selection}")
+        return sub
+
+    def ts_read(self):
+        return ts.open(self.ts_config).result()
+
+    def zr_write_text(self, path: Path, text: str):
+        text = TextBuffer(text)
+        filename = self.path / self.subpath / path if self.subpath else self.path / path
+        sync(self.zr_store.set(str(filename), text))
+
+    def zr_read_text(self, path: str | Path):
+        return sync(
+            self.zr_store.get(str(path), prototype=BufferPrototype(TextBuffer, None))
+        )
+
+
+class Location:
+    """
+    High-level collection of objects and configuration
+    options related to a source or target location for conversion.
+    """
 
 
 def convert_array(
-    configs: list,
-    input_path: Path,
-    output_path: Path,
-    output_overwrite: bool,
+    input_config: Config,
+    output_config: Config,
     dimension_names: list,
     chunks: list,
     shards: list,
 ):
-    configs[0]["path"] = str(input_path)
-    configs[1]["path"] = str(output_path)
-
-    read_config = {
-        "driver": "zarr",
-        "kvstore": configs[0],
-    }
-    read = ts.open(read_config).result()
+    read = input_config.ts_read()
 
     if shards:
         chunk_grid = {
@@ -218,42 +323,39 @@ def convert_array(
             {"name": "blosc", "configuration": {"cname": "zstd", "clevel": 5}},
         ]
 
-    base_config = {
-        "driver": "zarr3",
-        "kvstore": configs[1],
-        "metadata": {
-            "shape": read.shape,
-            "chunk_grid": chunk_grid,
-            "chunk_key_encoding": {
-                "name": "default"
-            },  # "configuration": {"separator": "/"}},
-            "codecs": codecs,
-            "data_type": read.dtype,
-            "dimension_names": dimension_names,
-        },
+    base_config = output_config.ts_config.copy()
+    base_config["metadata"] = {
+        "shape": read.shape,
+        "chunk_grid": chunk_grid,
+        "chunk_key_encoding": {
+            "name": "default"
+        },  # "configuration": {"separator": "/"}},
+        "codecs": codecs,
+        "data_type": read.dtype,
+        "dimension_names": dimension_names,
     }
 
     write_config = base_config.copy()
     write_config["create"] = True
-    write_config["delete_existing"] = output_overwrite
+    write_config["delete_existing"] = output_config.overwrite
 
     verify_config = base_config.copy()
 
     write = ts.open(write_config).result()
 
-    before = TSMetrics(read_config, write_config)
+    before = TSMetrics(input_config.ts_config, write_config)
     future = write.write(read)
     future.result()
-    after = TSMetrics(read_config, write_config, before)
+    after = TSMetrics(input_config.ts_config, write_config, before)
 
-    LOGGER.info(f"""Re-encode (tensorstore) {input_path} to {output_path}
+    LOGGER.info(f"""Re-encode (tensorstore) {input_config} to {output_config}
         read: {after.read()}
         write: {after.written()}
         time: {after.elapsed()}
     """)
 
     verify = ts.open(verify_config).result()
-    LOGGER.info(f"Verifying <{output_path}>\t{read.shape}\t")
+    LOGGER.info(f"Verifying <{output_config}>\t{read.shape}\t")
     for x in range(10):
         r = tuple([random.randint(0, y - 1) for y in read.shape])
         before = read[r].read().result()
@@ -264,24 +366,18 @@ def convert_array(
 
 
 def convert_image(
-    configs: list,
-    read_root,
-    input_path: str,
-    write_store,
-    write_root,
-    output_path: str,
-    output_overwrite: bool,
+    input_config: Config,
+    output_config: Config,
     output_chunks: list[int] | None,
     output_shards: list[int] | None,
     output_read_details: str | None,
     output_write_details: bool,
     output_script: bool,
-    script_prefix: Path | None = None,
 ):
     dimension_names = None
     # top-level version...
     ome_attrs = {"version": NGFF_VERSION}
-    for key, value in read_root.attrs.items():
+    for key, value in input_config.zr_attrs.items():
         # ...replaces all other versions - remove
         strip_version(value)
         if key == "multiscales":
@@ -289,9 +385,9 @@ def convert_image(
             strip_version(value[0])
         ome_attrs[key] = value
 
-    if write_root is not None:  # otherwise dry-run
+    if output_config.zr_group is not None:  # otherwise dry-run
         # dev2: everything is under 'ome' key
-        write_root.attrs["ome"] = ome_attrs
+        output_config.zr_attrs["ome"] = ome_attrs
 
     if output_read_details:
         with output_read_details.open() as o:
@@ -300,10 +396,10 @@ def convert_image(
         details = []  # No resolutions yet
 
     # convert arrays
-    multiscales = read_root.attrs.get("multiscales")
+    multiscales = input_config.zr_attrs.get("multiscales")
     for idx, ds in enumerate(multiscales[0]["datasets"]):
         ds_path = ds["path"]
-        ds_array = read_root[ds_path]
+        ds_array = input_config.zr_group[ds_path]
         ds_shape = ds_array.shape
         ds_chunks = ds_array.chunks
         ds_shards = guess_shards(ds_shape, ds_chunks)
@@ -316,8 +412,8 @@ def convert_image(
                     "shards": ds_shards,
                 }
             )
-            # Note: not S3 compatible!
-            with output_path.open(mode="w") as o:
+            # Note: not S3 compatible and doesn't use subpath!
+            with output_config.path.open(mode="w") as o:
                 json.dump(details, o)
         else:
             if output_chunks:
@@ -332,28 +428,21 @@ def convert_image(
                 chunk_txt = ",".join(map(str, ds_chunks))
                 shard_txt = ",".join(map(str, ds_shards))
                 dimsn_txt = ",".join(map(str, dimension_names))
-                if script_prefix:
-                    # Ugly; needs fixing
-                    filename = script_prefix / ds_path / "convert.sh"
-                else:
-                    filename = output_path / ds_path / "convert.sh"
-                text = TextBuffer(
-                    f"zarrs_reencode --chunk-shape {chunk_txt} --shard-shape {shard_txt} --dimension-names {dimsn_txt} --validate {input_path} {output_path}\n"
+                output_config.zr_write_text(
+                    ds_path / "convert.sh",
+                    f"zarrs_reencode --chunk-shape {chunk_txt} --shard-shape {shard_txt} --dimension-names {dimsn_txt} --validate {input_config} {output_config}\n",
                 )
-                sync(write_store.set(str(filename), text))
             else:
                 convert_array(
-                    configs,
-                    input_path / ds_path,
-                    output_path / ds_path,
-                    output_overwrite,
+                    input_config.sub_config(ds_path, False),
+                    output_config.sub_config(ds_path, False),
                     dimension_names,
                     ds_chunks,
                     ds_shards,
                 )
 
 
-def write_rocrate(write_store):
+def write_rocrate(output_config: Config):
     crate = ZarrCrate()
 
     zarr_root = crate.add_dataset(
@@ -379,8 +468,7 @@ def write_rocrate(write_store):
 
     metadata_dict = crate.metadata.generate()
     filename = "ro-crate-metadata.json"
-    text = TextBuffer(json.dumps(metadata_dict, indent=2))
-    sync(write_store.set(filename, text))
+    output_config.zr_write_text(filename, json.dumps(metadata_dict, indent=2))
 
 
 def main(ns: argparse.Namespace) -> int:
@@ -388,63 +476,22 @@ def main(ns: argparse.Namespace) -> int:
     Returns the number of images converted
     """
     converted = 0
-    configs = create_configs(ns)
 
-    stores = []
-    for config, path, mode in (
-        (configs[0], ns.input_path, "r"),
-        (configs[1], ns.output_path, "w"),
-    ):
-        if "bucket" in config:
-            store_class = zarr.store.RemoteStore
-            anon = config.get("aws_credentials", {}).get("anonymous", False)
-            store = store_class(
-                url=f's3://{config["bucket"]}/{path}',
-                anon=anon,
-                endpoint_url=config.get("endpoint", None),
-                mode=mode,
-            )
-        else:
-            store_class = zarr.store.LocalStore
-            store = store_class(path, mode=mode)
+    input_config = Config(ns, "input", "r")
+    output_config = Config(ns, "output", "w")
+    output_config.check_or_delete_path()
 
-            # If more than one element, then we are configuring
-            # the output path. If this is local, then delete.
-            if stores and ns.output_path.exists():
-                # TODO: This should really be an option on zarr-python
-                # as with tensorstore.
-                if ns.output_overwrite:
-                    if ns.output_path.is_file():
-                        ns.output_path.unlink()
-                    else:
-                        shutil.rmtree(ns.output_path)
-                else:
-                    LOGGER.error(f"{ns.output_path} exists. Exiting")
-                    sys.exit(1)
+    input_config.open_group()
 
-        stores.append(store)
-
-    # Needs zarr_format=2 or we get ValueError("store mode does not support writing")
-    read_root = zarr.open_group(store=stores[0], zarr_format=2)
-
-    if ns.output_write_details:
-        write_root = None
-        write_store = None
-    else:
-        write_store = stores[1]
-        write_root = zarr.Group.create(write_store)
-        write_rocrate(write_store)
+    if not ns.output_write_details:
+        output_config.create_group()
+        write_rocrate(output_config)
 
     # image...
-    if read_root.attrs.get("multiscales"):
+    if input_config.zr_attrs.get("multiscales"):
         convert_image(
-            configs,
-            read_root,
-            ns.input_path,
-            write_store,  # TODO: review
-            write_root,
-            ns.output_path,
-            ns.output_overwrite,
+            input_config,
+            output_config,
             ns.output_chunks,
             ns.output_shards,
             ns.output_read_details,
@@ -454,16 +501,16 @@ def main(ns: argparse.Namespace) -> int:
         converted += 1
 
     # plate...
-    elif plate_attrs := read_root.attrs.get("plate"):
+    elif plate_attrs := input_config.zr_attrs.get("plate"):
         ome_attrs = {"version": NGFF_VERSION}
-        for key, value in read_root.attrs.items():
+        for key, value in input_config.zr_attrs.items():
             # ...replaces all other versions - remove
             strip_version(value)
             ome_attrs[key] = value
 
-        if write_root is not None:  # otherwise dry run
+        if output_config.zr_group is not None:  # otherwise dry run
             # dev2: everything is under 'ome' key
-            write_root.attrs["ome"] = ome_attrs
+            output_config.zr_attrs["ome"] = ome_attrs
 
         wells = plate_attrs.get("wells")
 
@@ -471,97 +518,84 @@ def main(ns: argparse.Namespace) -> int:
             wells, position=0, desc="i", leave=False, colour="green", ncols=80
         ):
             well_path = well["path"]
-            well_v2 = zarr.open_group(store=stores[0], path=well_path, zarr_format=2)
 
-            if write_root is not None:  # otherwise dry-run
-                well_group = write_root.create_group(well_path)
+            well_input_config = input_config.sub_config(well_path)
+
+            if output_config.zr_group is not None:  # otherwise dry-run
+                well_output_config = output_config.sub_config(well_path)
                 well_attrs = {}
-                for key, value in well_v2.attrs.items():
+                for key, value in well_input_config.zr_attrs.items():
                     strip_version(value)
                     well_attrs[key] = value
                     well_attrs["version"] = "0.5"
-                well_group.attrs["ome"] = well_attrs
+                well_output_config.zr_attrs["ome"] = well_attrs
 
             images = well_attrs["well"]["images"]
             for img in tqdm.tqdm(
                 images, position=1, desc="j", leave=False, colour="red", ncols=80
             ):
                 img_path = Path(well_path) / img["path"]
-                out_path = ns.output_path / img_path
-                input_path = ns.input_path / img_path
-                img_v2 = zarr.open_group(
-                    store=stores[0], path=str(img_path), zarr_format=2
-                )
+                img_input_config = input_config.sub_config(img_path)
 
-                if write_root is not None:  # otherwise dry-run
-                    image_group = write_root.create_group(str(img_path))
+                if output_config.zr_group is not None:  # otherwise dry-run
+                    img_output_config = output_config.sub_config(str(img_path))
                 else:
-                    image_group = None
+                    img_output_config = None
 
                 convert_image(
-                    configs,
-                    img_v2,
-                    input_path,
-                    write_store,  # TODO: review
-                    image_group,
-                    out_path,
-                    ns.output_overwrite,
+                    img_input_config,
+                    img_output_config,
                     ns.output_chunks,
                     ns.output_shards,
                     ns.output_read_details,
                     ns.output_write_details,
                     ns.output_script,
-                    img_path,  # TODO: review
                 )
                 converted += 1
     # Note: plates can *also* contain this metadata
-    elif layout := read_root.attrs.get("bioformats2raw.layout"):
+    elif layout := input_config.zr_attrs.get("bioformats2raw.layout"):
         assert layout == 3
         ome_attrs = {"version": NGFF_VERSION}
-        for key, value in read_root.attrs.items():
+        for key, value in input_config.zr_attrs.items():
             # ...replaces all other versions - remove
             strip_version(value)
             ome_attrs[key] = value
 
-        if write_root is not None:  # otherwise dry run
+        if output_config.zr_group is not None:  # otherwise dry run
             # dev2: everything is under 'ome' key
-            write_root.attrs["ome"] = ome_attrs
+            output_config.zr_attrs["ome"] = ome_attrs
 
-        ome_group = zarr.open_group(store=stores[0], path="OME", zarr_format=2)
-        series = ome_group.attrs.get("series", [])
+        ome_config = input_config.sub_config("OME")
+        series = ome_config.zr_attrs.get("series", [])
         assert series  # TODO: support implicit case where OME-XML must be read
+
+        filename = "OME/METADATA.ome.xml"
+        ome_xml = input_config.zr_read_text(filename)
+        if ome_xml is not None:
+            output_config.zr_write_text(filename, ome_xml.text)
 
         for img_path in tqdm.tqdm(
             series, position=0, desc="i", leave=False, colour="green", ncols=80
         ):
-            # TODO: duplicated with plate section (move to class)
-            out_path = ns.output_path / img_path
-            input_path = ns.input_path / img_path
-            img_v2 = zarr.open_group(store=stores[0], path=str(img_path), zarr_format=2)
+            img_input_config = input_config.sub_config(str(img_path))
 
-            if write_root is not None:  # otherwise dry-run
-                image_group = write_root.create_group(str(img_path))
+            if output_config.zr_group is not None:  # otherwise dry-run
+                img_output_config = output_config.sub_config(str(img_path))
             else:
-                image_group = None
+                img_output_config = None
 
             convert_image(
-                configs,
-                img_v2,
-                input_path,
-                write_store,  # TODO: review
-                image_group,
-                out_path,
-                ns.output_overwrite,
+                img_input_config,
+                img_output_config,
                 ns.output_chunks,
                 ns.output_shards,
                 ns.output_read_details,
                 ns.output_write_details,
                 ns.output_script,
-                img_path,  # TODO: review
             )
             converted += 1
     else:
-        LOGGER.warning(f"no convertible metadata: {read_root.attrs.keys()}")
+        LOGGER.warning(f"no convertible metadata: {input_config.zr_attrs.keys()}")
 
     return converted
 
