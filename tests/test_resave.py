@@ -91,6 +91,24 @@ def test_rocrate_set_name(tmp_path):
     assert "XXX" in rocrate.read_text()
 
 
+def test_rocrate_full_example(tmp_path):
+    organism = "NCBI:txid7227"
+    modality = "obo:FBbi_00000243"
+    assert (
+        resave.cli(
+            [
+                "--rocrate-name=test name",
+                "--rocrate-description=this should be a full description",
+                f"--rocrate-organism={organism}",
+                f"--rocrate-modality={modality}",
+                "data/2d.zarr",
+                str(tmp_path / "out.zarr"),
+            ]
+        )
+        == 1
+    )
+
+
 #
 # Remote testing
 #
@@ -135,7 +153,7 @@ def test_remote_simple_with_download(tmp_path):
 
 
 def check_bf2raw(tmp_path, input, expected, args):
-    assert {input, expected, args}
+    assert (input, expected, args) >= ("", 0, [])
     xml = tmp_path / "out.zarr" / "OME" / "METADATA.ome.xml"
     assert xml.is_file(), str("\n".join([str(x) for x in tmp_path.rglob("*")]))
 
@@ -162,4 +180,5 @@ def test_local_tests(tmp_path, input, expected, args, func):
         )
         == expected
     )
-    func(tmp_path, input, expected, args)
+    if func:
+        func(tmp_path, input, expected, args)
