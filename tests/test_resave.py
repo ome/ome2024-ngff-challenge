@@ -18,6 +18,15 @@ def _change_test_dir(request, monkeypatch):
     monkeypatch.chdir(request.fspath.dirname)
 
 
+def all_files(path):
+    """
+    Return a string of all the files in a directory. Useful for asserts:
+
+    assert something, all_files(path)
+    """
+    return str("\n".join([str(x) for x in path.rglob("*")]))
+
+
 #
 # Argument handling tests
 #
@@ -85,43 +94,35 @@ def test_remote_simple_with_download(tmp_path):
 
 
 #
-# Local testing
+# Local testing using files under data/
 #
 
 
-def test_local_2d(tmp_path):
+@pytest.mark.parametrize(
+    "input,expected,args,func",
+    [
+        pytest.param("2d", 1, [], None),
+        pytest.param("2d", 1, ["--output-script"], None),
+        pytest.param("bf2raw", 2, [], check_bf2raw),
+        pytest.param("bf2raw", 2, ["--output-script"], check_bf2raw),
+        pytest.param("hcs", 8, [], None),
+        pytest.param("hcs", 8, ["--output-script"], None),
+    ],
+)
+def test_local_tests(tmp_path, input, expected, args, func):
     assert (
         resave.cli(
             [
-                "data/2d.zarr",
+                *args,
+                f"data/{input}.zarr",
                 str(tmp_path / "out.zarr"),
             ]
         )
-        == 1
+        == expected
     )
+    func(tmp_path, input, expected, args)
 
 
-def test_local_bf2raw(tmp_path):
-    assert (
-        resave.cli(
-            [
-                "data/bf2raw.zarr",
-                str(tmp_path / "out.zarr"),
-            ]
-        )
-        == 2
-    )
+def check_bf2raw(tmp_path, input, expected, args):
     xml = tmp_path / "out.zarr" / "OME" / "METADATA.ome.xml"
     assert xml.is_file(), str("\n".join([str(x) for x in tmp_path.rglob("*")]))
-
-
-def test_local_hcs(tmp_path):
-    assert (
-        resave.cli(
-            [
-                "data/hcs.zarr",
-                str(tmp_path / "out.zarr"),
-            ]
-        )
-        == 8
-    )

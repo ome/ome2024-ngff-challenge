@@ -154,14 +154,16 @@ class Config:
         ns: argparse.Namespace,
         selection: str,
         mode: str,
-        overwrite: bool = False,
         subpath: Path | str | None = None,
     ):
         self.ns = ns
         self.selection = selection
         self.mode = mode
-        self.overwrite = overwrite
         self.subpath = None if not subpath else Path(subpath)
+
+        self.overwrite = False
+        if selection == "output":
+            self.overwrite = ns.output_overwrite
 
         self.path = getattr(ns, f"{selection}_path")
         self.anon = getattr(ns, f"{selection}_anon")
@@ -251,7 +253,6 @@ class Config:
             self.ns,
             self.selection,
             self.mode,
-            self.overwrite,
             subpath if not self.subpath else self.subpath / subpath,
         )
         if create_or_open_group:
@@ -429,7 +430,7 @@ def convert_image(
                 shard_txt = ",".join(map(str, ds_shards))
                 dimsn_txt = ",".join(map(str, dimension_names))
                 output_config.zr_write_text(
-                    ds_path / "convert.sh",
+                    Path(ds_path) / "convert.sh",
                     f"zarrs_reencode --chunk-shape {chunk_txt} --shard-shape {shard_txt} --dimension-names {dimsn_txt} --validate {input_config} {output_config}\n",
                 )
             else:
