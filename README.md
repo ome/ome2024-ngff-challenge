@@ -1,8 +1,6 @@
 # ome2024-ngff-challenge
 
 [![Actions Status][actions-badge]][actions-link]
-[![Documentation Status][rtd-badge]][rtd-link]
-
 [![PyPI version][pypi-version]][pypi-link]
 [![PyPI platforms][pypi-platforms]][pypi-link]
 [![Image.SC Zulip][zulip-badge]][zulip-link]
@@ -42,6 +40,27 @@ Data generated within the challenge will have:
 - all .zattrs metadata migrated to `zarr.json["attributes"]["ome"]`
 - a top-level `ro-crate-metadata.json` file with minimal metadata (specimen and
   imaging modality)
+
+You can example the contents of a sample dataset by using
+[the minio client](https://github.com/minio/mc):
+
+```
+$ mc config host add uk1anon https://uk1s3.embassy.ebi.ac.uk "" ""
+Added `uk1anon` successfully.
+$ mc ls -r uk1anon/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr/
+[2024-08-01 14:24:35 CEST]  24MiB STANDARD 0/c/0/0/0/0
+[2024-08-01 14:24:28 CEST]   598B STANDARD 0/zarr.json
+[2024-08-01 14:24:32 CEST] 6.0MiB STANDARD 1/c/0/0/0/0
+[2024-08-01 14:24:28 CEST]   598B STANDARD 1/zarr.json
+[2024-08-01 14:24:29 CEST] 1.6MiB STANDARD 2/c/0/0/0/0
+[2024-08-01 14:24:28 CEST]   592B STANDARD 2/zarr.json
+[2024-08-01 14:24:28 CEST] 1.2KiB STANDARD ro-crate-metadata.json
+[2024-08-01 14:24:28 CEST] 2.7KiB STANDARD zarr.json
+```
+
+The dataset can be inspected using a development version of the OME-NGFF
+Validator available at
+<https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.4/6001240.zarr>
 
 ## Converting your data
 
