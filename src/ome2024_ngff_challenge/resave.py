@@ -443,36 +443,84 @@ def convert_image(
                 )
 
 
-def write_rocrate(output_config: Config):
-    crate = ZarrCrate()
+class ROCrateWriter:
+    def __init__(
+        self,
+        name: str = "dataset name",
+        description: str = "dataset description",
+        license: str = "https://creativecommons.org/licenses/by/4.0/",
+        organism: str | None = None,
+        modality: str | None = None,
+    ):
+        self.name = name
+        self.description = description
+        self.license = license
 
-    zarr_root = crate.add_dataset(
-        "./",
-        properties={
-            "name": "Light microscopy photo of a fly",
-            "description": "Light microscopy photo of a fruit fly.",
-            "licence": "https://creativecommons.org/licenses/by/4.0/",
-        },
-    )
-    biosample = crate.add(
-        Biosample(
-            crate, properties={"organism_classification": {"@id": "NCBI:txid7227"}}
-        )
-    )
-    specimen = crate.add(Specimen(crate, biosample))
-    image_acquisition = crate.add(
-        ImageAcquistion(
-            crate, specimen, properties={"fbbi_id": {"@id": "obo:FBbi_00000243"}}
-        )
-    )
-    zarr_root["resultOf"] = image_acquisition
+        # Optional parameters that can be ignored if `process()` is overwritten.
+        self.organism = organism
+        self.modality = modality
 
-    metadata_dict = crate.metadata.generate()
-    filename = "ro-crate-metadata.json"
-    output_config.zr_write_text(filename, json.dumps(metadata_dict, indent=2))
+        # Created by generate()
+        self.crate = None
+        self.zarr_root = None
+
+    def properties(self) -> dict:
+        """
+        Return a dictionary containing the base properties
+        like name, description, and license
+        """
+        return {
+            "name": self.name,
+            "description": self.description,
+            "licence": self.license,
+        }
+
+    def generate(self, dataset="./") -> None:
+        """
+        Create a ZarrCrate object for the given dataset and
+        add the default properties.
+        """
+        self.crate = ZarrCrate()
+        self.zarr_root = self.crate.add_dataset(dataset, properties=self.properties())
+
+    def process(self) -> None:
+        """
+        Post-process the generated ZarrCrate by adding any appropriate metadata.
+        By default, if organism and modality were set on construction add those.
+        """
+        if self.organism:
+            biosample = self.crate.add(
+                Biosample(
+                    self.crate,
+                    properties={"organism_classification": {"@id": self.organism}},
+                )
+            )
+            specimen = self.crate.add(Specimen(self.crate, biosample))
+        if self.modality:
+            image_acquisition = self.crate.add(
+                ImageAcquistion(
+                    self.crate, specimen, properties={"fbbi_id": {"@id": self.modality}}
+                )
+            )
+            self.zarr_root["resultOf"] = image_acquisition
+
+    def write(
+        self,
+        config: Config,
+        filename: str | Path = "ro-crate-metadata.json",
+        indent: int = 2,
+    ) -> None:
+        """
+        Use the config location to write a string representation of the metadata to a file.
+        """
+        self.generate()
+        self.process()
+        metadata_dict = self.crate.metadata.generate()
+        text = json.dumps(metadata_dict, indent=indent)
+        config.zr_write_text(filename, text)
 
 
-def main(ns: argparse.Namespace) -> int:
+def main(ns: argparse.Namespace, rocrate: ROCrateWriter | None = None) -> int:
     """
     Returns the number of images converted
     """
@@ -486,7 +534,8 @@ def main(ns: argparse.Namespace) -> int:
 
     if not ns.output_write_details:
         output_config.create_group()
-        write_rocrate(output_config)
+        if rocrate:
+            rocrate.write(output_config)
 
     # image...
     if input_config.zr_attrs.get("multiscales"):
@@ -618,6 +667,12 @@ def cli(args=sys.argv[1:]):
     parser.add_argument("--output-region", default="us-east-1")
     parser.add_argument("--output-overwrite", action="store_true")
     parser.add_argument("--output-script", action="store_true")
+    parser.add_argument("--rocrate-name", type=str)
+    parser.add_argument("--rocrate-description", type=str)
+    parser.add_argument("--rocrate-license", type=str)
+    parser.add_argument("--rocrate-organism", type=str)
+    parser.add_argument("--rocrate-modality", type=str)
+    parser.add_argument("--rocrate-skip", action="store_true")
     group_ex = parser.add_mutually_exclusive_group()
     group_ex.add_argument(
         "--output-write-details",
@@ -643,7 +698,16 @@ def cli(args=sys.argv[1:]):
 
     logging.basicConfig()
 
-    converted = main(ns)
+    rocrate = None
+    if not ns.rocrate_skip:
+        setup = {}
+        for key in ("name", "description", "license", "organism", "modality"):
+            value = getattr(ns, f"rocrate_{key}", None)
+            if value:
+                setup[key] = value
+        rocrate = ROCrateWriter(**setup)
+
+    converted = main(ns, rocrate)
     if converted == 0:
         raise SystemExit(1)
     return converted
