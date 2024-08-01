@@ -448,13 +448,13 @@ class ROCrateWriter:
         self,
         name: str = "dataset name",
         description: str = "dataset description",
-        license: str = "https://creativecommons.org/licenses/by/4.0/",
+        data_license: str = "https://creativecommons.org/licenses/by/4.0/",
         organism: str | None = None,
         modality: str | None = None,
     ):
         self.name = name
         self.description = description
-        self.license = license
+        self.data_license = data_license
 
         # Optional parameters that can be ignored if `process()` is overwritten.
         self.organism = organism
@@ -472,7 +472,7 @@ class ROCrateWriter:
         return {
             "name": self.name,
             "description": self.description,
-            "licence": self.license,
+            "licence": self.data_license,
         }
 
     def generate(self, dataset="./") -> None:
@@ -488,6 +488,7 @@ class ROCrateWriter:
         Post-process the generated ZarrCrate by adding any appropriate metadata.
         By default, if organism and modality were set on construction add those.
         """
+        specimen = None
         if self.organism:
             biosample = self.crate.add(
                 Biosample(
@@ -496,7 +497,8 @@ class ROCrateWriter:
                 )
             )
             specimen = self.crate.add(Specimen(self.crate, biosample))
-        if self.modality:
+
+        if specimen and self.modality:
             image_acquisition = self.crate.add(
                 ImageAcquistion(
                     self.crate, specimen, properties={"fbbi_id": {"@id": self.modality}}
