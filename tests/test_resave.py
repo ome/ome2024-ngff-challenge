@@ -90,18 +90,36 @@ def test_remote_simple_with_download(tmp_path):
 
 
 def test_local_2d(tmp_path):
-    resave.cli(
-        [
-            "data/2d.zarr",
-            str(tmp_path / "out.zarr"),
-        ]
+    assert (
+        resave.cli(
+            [
+                "data/2d.zarr",
+                str(tmp_path / "out.zarr"),
+            ]
+        )
+        == 1
+    )
+
+
+def test_local_bf2raw(tmp_path):
+    assert (
+        resave.cli(
+            [
+                "data/bf2raw.zarr",
+                str(tmp_path / "out.zarr"),
+            ]
+        )
+        == 2
     )
 
 
 def test_local_hcs(tmp_path):
-    resave.cli(
-        [
-            "data/hcs.zarr",
-            str(tmp_path / "out.zarr"),
-        ]
+    assert (
+        resave.cli(
+            [
+                "data/hcs.zarr",
+                str(tmp_path / "out.zarr"),
+            ]
+        )
+        == 8
     )

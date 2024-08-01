@@ -380,7 +380,11 @@ def write_rocrate(write_store):
     sync(write_store.set(filename, text))
 
 
-def main(ns: argparse.Namespace):
+def main(ns: argparse.Namespace) -> int:
+    """
+    Returns the number of images converted
+    """
+    converted = 0
     configs = create_configs(ns)
 
     stores = []
@@ -444,9 +448,10 @@ def main(ns: argparse.Namespace):
             ns.output_write_details,
             ns.output_script,
         )
+        converted += 1
 
     # plate...
-    elif read_root.attrs.get("plate"):
+    elif plate_attrs := read_root.attrs.get("plate"):
         ome_attrs = {"version": NGFF_VERSION}
         for key, value in read_root.attrs.items():
             # ...replaces all other versions - remove
@@ -457,7 +462,6 @@ def main(ns: argparse.Namespace):
             # dev2: everything is under 'ome' key
             write_root.attrs["ome"] = ome_attrs
 
-        plate_attrs = read_root.attrs.get("plate")
         wells = plate_attrs.get("wells")
 
         for well in tqdm.tqdm(
@@ -506,9 +510,65 @@ def main(ns: argparse.Namespace):
                     ns.output_script,
                     img_path,  # TODO: review
                 )
+                converted += 1
+    # Note: plates can *also* contain this metadata
+    elif layout := read_root.attrs.get("bioformats2raw.layout"):
+        assert layout == 3
+        ome_attrs = {"version": NGFF_VERSION}
+        for key, value in read_root.attrs.items():
+            # ...replaces all other versions - remove
+            strip_version(value)
+            ome_attrs[key] = value
+
+        if write_root is not None:  # otherwise dry run
+            # dev2: everything is under 'ome' key
+            write_root.attrs["ome"] = ome_attrs
+
+        ome_group = zarr.open_group(store=stores[0], path="OME", zarr_format=2)
+        series = ome_group.attrs.get("series", [])
+        assert series  # TODO: support implicit case where OME-XML must be read
+
+        for img_path in tqdm.tqdm(
+            series, position=0, desc="i", leave=False, colour="green", ncols=80
+        ):
+            # TODO: duplicated with plate section (move to class)
+            out_path = ns.output_path / img_path
+            input_path = ns.input_path / img_path
+            img_v2 = zarr.open_group(store=stores[0], path=str(img_path), zarr_format=2)
+
+            if write_root is not None:  # otherwise dry-run
+                image_group = write_root.create_group(str(img_path))
+            else:
+                image_group = None
+
+            convert_image(
+                configs,
+                img_v2,
+                input_path,
+                write_store,  # TODO: review
+                image_group,
+                out_path,
+                ns.output_overwrite,
+                ns.output_chunks,
+                ns.output_shards,
+                ns.output_read_details,
+                ns.output_write_details,
+                ns.output_script,
+                img_path,  # TODO: review
+            )
+            converted += 1
+    else:
+        LOGGER.warning(f"no convertible metadata: {read_root.attrs.keys()}")
+
+    return converted
 
 
 def cli(args=sys.argv):
+    """
+    Parses the arguments contained in `args` and passes
+    them to `main`. If no images are converted, raises
+    SystemExit. Otherwise, return the number of images.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-bucket")
     parser.add_argument("--input-endpoint")
@@ -544,7 +604,11 @@ def cli(args=sys.argv):
     ns = parser.parse_args(args)
 
     logging.basicConfig()
-    main(ns)
+
+    converted = main(ns)
+    if converted == 0:
+        raise SystemExit(1)
+    return converted
 
 
 if __name__ == "__main__":
