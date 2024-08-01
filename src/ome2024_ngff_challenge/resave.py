@@ -563,7 +563,7 @@ def main(ns: argparse.Namespace) -> int:
     return converted
 
 
-def cli(args=sys.argv):
+def cli(args=sys.argv[1:]):
     """
     Parses the arguments contained in `args` and passes
     them to `main`. If no images are converted, raises
@@ -612,4 +612,4 @@ def cli(args=sys.argv):
 
 
 if __name__ == "__main__":
-    cli(sys.argv)
+    cli(sys.argv[1:])
