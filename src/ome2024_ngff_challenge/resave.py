@@ -9,8 +9,8 @@ import random
 import shutil
 import sys
 import time
-from pathlib import Path
 from importlib.metadata import version as lib_version
+from pathlib import Path
 
 import numpy as np
 import tensorstore as ts
@@ -69,11 +69,8 @@ def strip_version(possible_dict) -> None:
 
 def add_creator(json_dict) -> None:
     # Add _creator - NB: this will overwrite any existing _creator info
-    pkg_version = lib_version('ome2024-ngff-challenge')
-    json_dict["_creator"] = {
-        "name": "ome2024-ngff-challenge",
-        "version": pkg_version
-    }
+    pkg_version = lib_version("ome2024-ngff-challenge")
+    json_dict["_creator"] = {"name": "ome2024-ngff-challenge", "version": pkg_version}
 
 
 class TextBuffer(Buffer):
