@@ -1,0 +1,148 @@
+{
+    "@context": "https://some.sensible.context",
+    "@graph": [
+        {
+            "@type": "CreativeWork",
+            "@id": "ro-crate-metadata.json",
+            "conformsTo": {
+                "@id": "https://w3id.org/ro/crate/1.1"
+            },
+            "about": {
+                "@id": "./"
+            }
+        },
+        {
+            "@id": "./",
+            "@type": "Dataset",
+            "axes": [
+                "_:b0",
+                "_:b1",
+                "_:b2",
+                "_:b3",
+                "_:b4"
+            ],
+            "version": "Bio-Formats 6.10.1",
+            "method": "loci.common.image.SimpleImageScaler",
+            "channels": [
+                "_:b5",
+                "_:b6"
+            ],
+            "render_default": "_:b7",
+            "has_part": [
+                "./0/",
+                "./1/"
+            ]
+        },
+        {
+            "@id": "_:b0",
+            "@type": "axis",
+            "name": "t",
+            "axis_type": "time"
+        },
+        {
+            "@id": "_:b1",
+            "@type": "axis",
+            "name": "c",
+            "axis_type": "channel"
+        },
+        {
+            "@id": "_:b2",
+            "@type": "axis",
+            "name": "z",
+            "axis_type": "space"
+        },
+        {
+            "@id": "_:b3",
+            "@type": "axis",
+            "name": "y",
+            "axis_type": "space",
+            "unit": "micrometer"
+        },
+        {
+            "@id": "_:b4",
+            "@type": "axis",
+            "name": "x",
+            "axis_type": "space",
+            "unit": "micrometer"
+        },
+        {
+            "@id": "_:b5",
+            "@type": "channel",
+            "color": "FF6600",
+            "coefficient": 1,
+            "active": true,
+            "label": "AF555-T1",
+            "window": "_:b8",
+            "family": "linear",
+            "inverted": false
+        },
+        {
+            "@id": "_:b6",
+            "@type": "channel",
+            "color": "00FF00",
+            "coefficient": 1,
+            "active": true,
+            "label": "AF488-T2",
+            "window": "_:b9",
+            "family": "linear",
+            "inverted": false
+        },
+        {
+            "@id": "_:b8",
+            "@type": "RenderedView",
+            "defaultT": 0,
+            "model": "color",
+            "defaultZ": 0
+        },
+        {
+            "@id": "_:b8",
+            "@type": "window",
+            "min": 0.0,
+            "max": 255.0,
+            "start": 0.0,
+            "end": 255.0
+        },
+        {
+            "@id": "_:b9",
+            "@type": "window",
+            "min": 0.0,
+            "max": 255.0,
+            "start": 0.0,
+            "end": 255.0
+        },
+        {
+            "@id": "./0/",
+            "@type": "Dataset",
+            "coordianteTansformations": "_:b10"
+        },
+        {
+            "@id": "./1/",
+            "@type": "Dataset",
+            "coordianteTansformations": "_:b11"
+        },
+        {
+            "@id": "_:b10",
+            "@type": "CoordinateTransformation",
+            "scale": [
+                1.0,
+                1.0,
+                1.0,
+                0.22007964065255714,
+                0.22007964065255714
+            ],
+            "transformation_type": "scale"
+        },
+        {
+            "@id": "_:b11",
+            "@type": "CoordinateTransformation",
+            "scale": [
+                1.0,
+                1.0,
+                1.0,
+                0.4401592813051143,
+                0.4401592813051143
+            ],
+            "transformation_type": "scale"
+        }
+    ]
+}
