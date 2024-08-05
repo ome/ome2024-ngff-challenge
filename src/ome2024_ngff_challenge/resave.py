@@ -10,6 +10,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
+from importlib.metadata import version as lib_version
 
 import numpy as np
 import tensorstore as ts
@@ -385,6 +386,13 @@ def convert_image(
             dimension_names = [axis["name"] for axis in value[0]["axes"]]
             strip_version(value[0])
         ome_attrs[key] = value
+
+    # Add _creator - NB: this will overwrite existing _creator info
+    pkg_version = lib_version('ome2024-ngff-challenge')
+    ome_attrs["_creator"] = {
+        "name": "ome2024-ngff-challenge",
+        "version": pkg_version
+    }
 
     if output_config.zr_group is not None:  # otherwise dry-run
         # dev2: everything is under 'ome' key
