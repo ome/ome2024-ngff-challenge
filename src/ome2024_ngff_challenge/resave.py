@@ -36,10 +36,8 @@ def guess_shards(shape: list, chunks: list):
 
     ./resave.py input.zarr output.json --output-write-details
     """
-    # TODO: hard-coded to return the full size unless too large
-    if math.prod(shape) < 100_000_000:
-        return shape
-    raise ValueError(f"no shard guess: shape={shape}, chunks={chunks}")
+    # TODO: hard-coded to return the full size
+    return shape
 
 
 def csv_int(vstr, sep=",") -> list:
@@ -417,13 +415,17 @@ def convert_image(
             with output_config.path.open(mode="w") as o:
                 json.dump(details, o)
         else:
-            if output_chunks:
+            if output_chunks and output_shards:
                 ds_chunks = output_chunks
                 ds_shards = output_shards
             elif output_read_details:
                 # read row by row and overwrite
                 ds_chunks = details[idx]["chunks"]
                 ds_shards = details[idx]["shards"]
+            else:
+                # if we're going to convert, let's validate the guess...
+                if not output_script and math.prod(ds_shards) > 100_000_000:
+                    raise ValueError(f"no shard guess: shape={ds_shape}, chunks={ds_chunks}")
 
             if output_script:
                 chunk_txt = ",".join(map(str, ds_chunks))
