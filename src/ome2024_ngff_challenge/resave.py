@@ -422,10 +422,11 @@ def convert_image(
                 # read row by row and overwrite
                 ds_chunks = details[idx]["chunks"]
                 ds_shards = details[idx]["shards"]
-            else:
+            elif not output_script and math.prod(ds_shards) > 100_000_000:
                 # if we're going to convert, let's validate the guess...
-                if not output_script and math.prod(ds_shards) > 100_000_000:
-                    raise ValueError(f"no shard guess: shape={ds_shape}, chunks={ds_chunks}")
+                raise ValueError(
+                    f"no shard guess: shape={ds_shape}, chunks={ds_chunks}"
+                )
 
             if output_script:
                 chunk_txt = ",".join(map(str, ds_chunks))
