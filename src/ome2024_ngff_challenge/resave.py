@@ -415,18 +415,21 @@ def convert_image(
             with output_config.path.open(mode="w") as o:
                 json.dump(details, o)
         else:
-            if output_chunks and output_shards:
-                ds_chunks = output_chunks
-                ds_shards = output_shards
-            elif output_read_details:
+            if output_read_details:
                 # read row by row and overwrite
                 ds_chunks = details[idx]["chunks"]
                 ds_shards = details[idx]["shards"]
-            elif not output_script and math.prod(ds_shards) > 100_000_000:
-                # if we're going to convert, let's validate the guess...
-                raise ValueError(
-                    f"no shard guess: shape={ds_shape}, chunks={ds_chunks}"
-                )
+            else:
+                if output_chunks:
+                    ds_chunks = output_chunks
+                if output_shards:
+                    ds_shards = output_shards
+                elif not output_script and math.prod(ds_shards) > 100_000_000:
+                    # if we're going to convert, and we guessed the shards,
+                    # let's validate the guess...
+                    raise ValueError(
+                        f"no shard guess: shape={ds_shape}, chunks={ds_chunks}"
+                    )
 
             if output_script:
                 chunk_txt = ",".join(map(str, ds_chunks))
