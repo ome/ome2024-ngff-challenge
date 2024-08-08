@@ -1,11 +1,8 @@
-import json
-from zarr_crate.zarr_extension import ZarrCrate
-from zarr_crate.rembi_extension import Biosample, Specimen, ImageAcquistion
 from rocrate.rocrate import ROCrate
 from pathlib import Path
 
 if __name__ == "__main__":
-    folder = Path(__file__).parent.joinpath('./possible_ro_crate').absolute()
+    folder = Path(__file__).parent.joinpath("./example_ro_crate").absolute()
     crate = ROCrate(folder)  # or ROCrate('exp_crate.zip')
 
     root = crate.root_dataset
