@@ -14,4 +14,3 @@ if __name__ == "__main__":
 
     print(f"Imaging type: {image_acquisition["fbbi_id"]}")
     print(f"Organism Taxon id: {taxon}")
-    
