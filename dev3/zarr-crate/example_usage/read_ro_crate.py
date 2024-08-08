@@ -6,7 +6,7 @@ if __name__ == "__main__":
     crate = ROCrate(folder)  # or ROCrate('exp_crate.zip')
 
     root = crate.root_dataset
-    
+
     image_acquisition = root["resultOf"]
     specimen = image_acquisition["specimen"]
     biosample = specimen["biosample"]
