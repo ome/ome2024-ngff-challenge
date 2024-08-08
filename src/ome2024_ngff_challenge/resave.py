@@ -37,6 +37,7 @@ def guess_shards(shape: list, chunks: list):
     ./resave.py input.zarr output.json --output-write-details
     """
     # TODO: hard-coded to return the full size
+    assert chunks is not None  # fixes unused parameter
     return shape
 
 
