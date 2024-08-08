@@ -28,6 +28,7 @@ LOGGER = logging.getLogger("resave")
 # Helpers
 #
 
+
 class SafeEncoder(json.JSONEncoder):
     # Handle any TypeErrors so we are safe to use this for logging
     # E.g. dtype obj is not JSON serializable
@@ -36,6 +37,7 @@ class SafeEncoder(json.JSONEncoder):
             return super().default(obj)
         except TypeError:
             return str(obj)
+
 
 def guess_shards(shape: list, chunks: list):
     """
@@ -60,7 +62,7 @@ def csv_int(vstr, sep=",") -> list:
             values.append(v)
         except ValueError as ve:
             raise argparse.ArgumentError(
-                message=f'Invalid value {v0}, values must be a number'
+                message=f"Invalid value {v0}, values must be a number"
             ) from ve
     return values
 
@@ -244,7 +246,9 @@ class Config:
                 else:
                     shutil.rmtree(self.path)
             else:
-                raise Exception(f"{self.path} exists. Use --output-overwrite to overwrite")
+                raise Exception(
+                    f"{self.path} exists. Use --output-overwrite to overwrite"
+                )
 
     def open_group(self):
         # Needs zarr_format=2 or we get ValueError("store mode does not support writing")
@@ -697,8 +701,7 @@ def cli(args=sys.argv[1:]):
     parser.add_argument("--rocrate-organism", type=str)
     parser.add_argument("--rocrate-modality", type=str)
     parser.add_argument("--rocrate-skip", action="store_true")
-    parser.add_argument("--log", default="warn",
-                        help="warn, 'info' or 'debug'")
+    parser.add_argument("--log", default="warn", help="warn, 'info' or 'debug'")
     group_ex = parser.add_mutually_exclusive_group()
     group_ex.add_argument(
         "--output-write-details",
