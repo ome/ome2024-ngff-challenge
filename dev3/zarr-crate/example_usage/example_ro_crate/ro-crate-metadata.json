@@ -25,7 +25,7 @@
       "description": "Light microscopy photo of a fruit fly.",
       "licence": "https://creativecommons.org/licenses/by/4.0/",
       "resultOf": {
-        "@id": "#7954ed7b-f385-4044-b1e1-bfd5c2cd469a"
+        "@id": "#16e30b5b-9995-4ff2-97e6-66a9c025f0d3"
       }
     },
     {
@@ -39,27 +39,27 @@
       }
     },
     {
-      "@id": "#6b8ce0f2-ae6e-4cca-aee8-3251e5fa5bc0",
+      "@id": "#ed830cd5-0196-4f7d-83fa-32386b778707",
       "@type": "biosample",
       "organism_classification": {
         "@id": "NCBI:txid7227"
       }
     },
     {
-      "@id": "#6279dfa3-6ed1-4ce2-8359-07984e3d47fd",
+      "@id": "#1d3f4266-174e-41fe-827f-777ce23e39ca",
       "@type": "specimen",
-      "specimen": {
-        "@id": "#6b8ce0f2-ae6e-4cca-aee8-3251e5fa5bc0"
+      "biosample": {
+        "@id": "#ed830cd5-0196-4f7d-83fa-32386b778707"
       }
     },
     {
-      "@id": "#7954ed7b-f385-4044-b1e1-bfd5c2cd469a",
-      "@type": "specimen",
+      "@id": "#16e30b5b-9995-4ff2-97e6-66a9c025f0d3",
+      "@type": "image_acquisition",
       "fbbi_id": {
         "@id": "obo:FBbi_00000243"
       },
       "specimen": {
-        "@id": "#6279dfa3-6ed1-4ce2-8359-07984e3d47fd"
+        "@id": "#1d3f4266-174e-41fe-827f-777ce23e39ca"
       }
     }
   ]

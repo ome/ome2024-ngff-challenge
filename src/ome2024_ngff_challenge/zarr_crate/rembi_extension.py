@@ -57,7 +57,7 @@ class Specimen(ContextEntity):
 
         super().__init__(crate, identifier, specimen_properties)
 
-        self["specimen"] = biosample
+        self["biosample"] = biosample
 
     def popitem(self):
         raise NotImplementedError
@@ -71,7 +71,7 @@ class Specimen(ContextEntity):
 
 class ImageAcquistion(ContextEntity):
     def __init__(self, crate, specimen, identifier=None, properties=None):
-        image_acquisition_type_path = "specimen"
+        image_acquisition_type_path = "image_acquisition"
         if properties:
             image_acquisition_properties = {}
             image_acquisition_properties.update(properties)
