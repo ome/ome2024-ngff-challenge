@@ -58,15 +58,17 @@ $ mc ls -r uk1anon/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr/
 [2024-08-01 14:24:28 CEST] 2.7KiB STANDARD zarr.json
 ```
 
-The dataset (from idr0062) can be inspected using a development version of the OME-NGFF
-Validator available at
+The dataset (from idr0062) can be inspected using a development version of the
+OME-NGFF Validator available at
 <https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr>
 
 Other samples:
 
- - [4496763.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/4496763.zarr) Shape `4,25,2048,2048`, Size `589.81 MB`, from idr0047.
- - [9822152.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/9822152.zarr) Shape `1,1,1,93184,144384`, Size `21.57 GB`, from idr0083.
- 
+- [4496763.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/4496763.zarr)
+  Shape `4,25,2048,2048`, Size `589.81 MB`, from idr0047.
+- [9822152.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/9822152.zarr)
+  Shape `1,1,1,93184,144384`, Size `21.57 GB`, from idr0083.
+
  <details><summary>Expand for more details on creation of these samples</summary>
 
 <hr>
@@ -79,8 +81,9 @@ First the config details were generated with:
 $ ome2024-ngff-challenge --input-bucket=idr --input-endpoint=https://uk1s3.embassy.ebi.ac.uk --input-anon zarr/v0.4/idr0047A/4496763.zarr params_4496763.json --output-write-details
 ```
 
-The `params_4496763.json` file was edited to set "shards" to: `[4, 1, sizeY, sizeX]` for each pyramid resolution
-to create a single shard for each Z section.
+The `params_4496763.json` file was edited to set "shards" to:
+`[4, 1, sizeY, sizeX]` for each pyramid resolution to create a single shard for
+each Z section.
 
 ```
 # params_4496763.json
@@ -97,19 +100,21 @@ ome2024-ngff-challenge --input-bucket=idr --input-endpoint=https://uk1s3.embassy
 
 `9822152.zarr` was created with ome2024-ngff-challenge commit `f17a6de963`.
 
-The chunks and shard shapes are specified to be the same for all resoultion levels. This is required since the smaller resolution levels of
-the source image at
+The chunks and shard shapes are specified to be the same for all resolution
+levels. This is required since the smaller resolution levels of the source
+image at
 https://ome.github.io/ome-ngff-validator/?source=https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0083A/9822152.zarr
-have chunks that correspond to the resolution shape, e,g, `1,1,1,91,141` and this will fail to convert using
-a shard shape of `1,1,1,4096,4096`.
+have chunks that correspond to the resolution shape, e,g, `1,1,1,91,141` and
+this will fail to convert using a shard shape of `1,1,1,4096,4096`.
 
 Took 34 minutes to run conversion with this command:
+
 ```
 $ ome2024-ngff-challenge --input-bucket=idr --input-endpoint=https://uk1s3.embassy.ebi.ac.uk --input-anon zarr/v0.4/idr0083A/9822152.zarr 9822152.zarr --output-shards=1,1,1,4096,4096 --output-chunks=1,1,1,1024,1024 --log debug
 ```
+
 <hr>
  </details>
-
 
 ## Converting your data
 
