@@ -62,8 +62,19 @@ The dataset (from idr0062) can be inspected using a development version of the O
 Validator available at
 <https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr>
 
-Another example (idr0047) is at
-<https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/4496763.zarr>
+Other samples:
+
+ - [4496763.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/4496763.zarr) Shape `4,25,2048,2048`, from idr0047.
+ - [9822152.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/9822152.zarr) Shape `1,1,1,93184,144384`, from idr0083. <details><summary>details</summary>
+
+Created with ome2024-ngff-challenge commit `f17a6de963`.
+
+Took 34 minutes to create:
+```
+$ ome2024-ngff-challenge --input-bucket=idr --input-endpoint=https://uk1s3.embassy.ebi.ac.uk --input-anon zarr/v0.4/idr0083A/9822152.zarr 9822152.zarr --output-shards=1,1,1,4096,4096 --output-chunks=1,1,1,1024,1024 --log debug
+```
+ </details>
+
 
 ## Converting your data
 
