@@ -97,6 +97,12 @@ ome2024-ngff-challenge --input-bucket=idr --input-endpoint=https://uk1s3.embassy
 
 `9822152.zarr` was created with ome2024-ngff-challenge commit `f17a6de963`.
 
+The chunks and shard shapes are specified to be the same for all resoultion levels. This is required since the smaller resolution levels of
+the source image at
+https://ome.github.io/ome-ngff-validator/?source=https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0083A/9822152.zarr
+have chunks that correspond to the resolution shape, e,g, `1,1,1,91,141` and this will fail to convert using
+a shard shape of `1,1,1,4096,4096`.
+
 Took 34 minutes to run conversion with this command:
 ```
 $ ome2024-ngff-challenge --input-bucket=idr --input-endpoint=https://uk1s3.embassy.ebi.ac.uk --input-anon zarr/v0.4/idr0083A/9822152.zarr 9822152.zarr --output-shards=1,1,1,4096,4096 --output-chunks=1,1,1,1024,1024 --log debug
