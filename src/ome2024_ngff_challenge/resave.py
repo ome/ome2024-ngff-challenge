@@ -32,11 +32,11 @@ LOGGER = logging.getLogger("resave")
 class SafeEncoder(json.JSONEncoder):
     # Handle any TypeErrors so we are safe to use this for logging
     # E.g. dtype obj is not JSON serializable
-    def default(self, obj):
+    def default(self, o):
         try:
-            return super().default(obj)
+            return super().default(o)
         except TypeError:
-            return str(obj)
+            return str(o)
 
 
 def guess_shards(shape: list, chunks: list):
