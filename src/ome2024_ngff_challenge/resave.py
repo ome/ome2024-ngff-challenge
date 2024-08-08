@@ -29,6 +29,16 @@ LOGGER = logging.getLogger("resave")
 #
 
 
+class SafeEncoder(json.JSONEncoder):
+    # Handle any TypeErrors so we are safe to use this for logging
+    # E.g. dtype obj is not JSON serializable
+    def default(self, o):
+        try:
+            return super().default(o)
+        except TypeError:
+            return str(o)
+
+
 def guess_shards(shape: list, chunks: list):
     """
     Method to calculate best shard sizes. These values can be written to
@@ -36,10 +46,9 @@ def guess_shards(shape: list, chunks: list):
 
     ./resave.py input.zarr output.json --output-write-details
     """
-    # TODO: hard-coded to return the full size unless too large
-    if math.prod(shape) < 100_000_000:
-        return shape
-    raise ValueError(f"no shard guess: shape={shape}, chunks={chunks}")
+    # TODO: hard-coded to return the full size
+    assert chunks is not None  # fixes unused parameter
+    return shape
 
 
 def csv_int(vstr, sep=",") -> list:
@@ -53,7 +62,7 @@ def csv_int(vstr, sep=",") -> list:
             values.append(v)
         except ValueError as ve:
             raise argparse.ArgumentError(
-                message="Invalid value %s, values must be a number" % v0
+                message=f"Invalid value {v0}, values must be a number"
             ) from ve
     return values
 
@@ -237,7 +246,9 @@ class Config:
                 else:
                     shutil.rmtree(self.path)
             else:
-                raise Exception(f"{self.path} exists. Exiting")
+                raise Exception(
+                    f"{self.path} exists. Use --output-overwrite to overwrite"
+                )
 
     def open_group(self):
         # Needs zarr_format=2 or we get ValueError("store mode does not support writing")
@@ -340,6 +351,13 @@ def convert_array(
     write_config["create"] = True
     write_config["delete_existing"] = output_config.overwrite
 
+    LOGGER.debug(f"""input_config:
+{json.dumps(input_config.ts_config, indent=4)}
+    """)
+    LOGGER.debug(f"""write_config:
+{json.dumps(write_config, indent=4, cls=SafeEncoder)}
+    """)
+
     verify_config = base_config.copy()
 
     write = ts.open(write_config).result()
@@ -417,13 +435,21 @@ def convert_image(
             with output_config.path.open(mode="w") as o:
                 json.dump(details, o)
         else:
-            if output_chunks:
-                ds_chunks = output_chunks
-                ds_shards = output_shards
-            elif output_read_details:
+            if output_read_details:
                 # read row by row and overwrite
                 ds_chunks = details[idx]["chunks"]
                 ds_shards = details[idx]["shards"]
+            else:
+                if output_chunks:
+                    ds_chunks = output_chunks
+                if output_shards:
+                    ds_shards = output_shards
+                elif not output_script and math.prod(ds_shards) > 100_000_000:
+                    # if we're going to convert, and we guessed the shards,
+                    # let's validate the guess...
+                    raise ValueError(
+                        f"no shard guess: shape={ds_shape}, chunks={ds_chunks}"
+                    )
 
             if output_script:
                 chunk_txt = ",".join(map(str, ds_chunks))
@@ -675,6 +701,7 @@ def cli(args=sys.argv[1:]):
     parser.add_argument("--rocrate-organism", type=str)
     parser.add_argument("--rocrate-modality", type=str)
     parser.add_argument("--rocrate-skip", action="store_true")
+    parser.add_argument("--log", default="warn", help="warn, 'info' or 'debug'")
     group_ex = parser.add_mutually_exclusive_group()
     group_ex.add_argument(
         "--output-write-details",
@@ -698,7 +725,11 @@ def cli(args=sys.argv[1:]):
     parser.add_argument("output_path", type=Path)
     ns = parser.parse_args(args)
 
-    logging.basicConfig()
+    # configure logging
+    numeric_level = getattr(logging, ns.log.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError(f"Invalid log level: {ns.log}. Use 'info' or 'debug'")
+    logging.basicConfig(level=numeric_level)
 
     rocrate = None
     if not ns.rocrate_skip:
