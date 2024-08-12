@@ -11,6 +11,7 @@ import sys
 import time
 from pathlib import Path
 
+import dask.array as da
 import numpy as np
 import tensorstore as ts
 import tqdm
@@ -345,8 +346,27 @@ def convert_array(
     write = ts.open(write_config).result()
 
     before = TSMetrics(input_config.ts_config, write_config)
-    future = write.write(read)
-    future.result()
+
+    # We want to read & write a chunk at a time with TensorStore
+    # but don't have a map_blocks() function for TensorStore?
+    # So we use Dask Array's map_blocks() purely to iterate through chunks,
+    # using the array-location of each chunk to read/write in TensorStore
+    my_zeros = da.zeros(read.shape, chunks=chunks)
+    def domap(data, block_info=None):
+        # handle fake calling of function to establish dtype
+        if block_info is None:
+            return data
+        # array-location e.g. [(1, 2), (512, 1024), (0, 512)]
+        array_location = block_info[0]["array-location"]
+        LOGGER.debug(f"array_location: ${array_location}")
+        slice_tuple = tuple([slice(dim[0], dim[1]) for dim in array_location])
+        future = write[slice_tuple].write(read[slice_tuple])
+        future.result()
+        return data
+
+    # trigger domap on each chunk
+    my_zeros.map_blocks(domap).compute()
+
     after = TSMetrics(input_config.ts_config, write_config, before)
 
     LOGGER.info(f"""Re-encode (tensorstore) {input_config} to {output_config}
