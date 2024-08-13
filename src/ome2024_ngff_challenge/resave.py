@@ -9,9 +9,9 @@ import random
 import shutil
 import sys
 import time
+from itertools import product
 from pathlib import Path
 
-import dask.array as da
 import numpy as np
 import tensorstore as ts
 import tqdm
@@ -50,6 +50,20 @@ def guess_shards(shape: list, chunks: list):
     # TODO: hard-coded to return the full size
     assert chunks is not None  # fixes unused parameter
     return shape
+
+
+def chunk_iter(shape: list, chunks: list):
+    """
+    Returns a series of tuples, each containing chunck slice
+    E.g. for 2D shape/chunks: ((slice(0, 512, 1), slice(0, 512, 1)), (slice(0, 512, 1), slice(512, 1024, 1))...)
+    Thanks to Davis Bennett.
+    """
+    assert(len(shape) == len(chunks))
+    chunk_iters = []
+    for chunk_size, dim_size in zip(chunks, shape):
+        chunk_tuple = tuple(slice(c_index * chunk_size, min(dim_size, c_index * chunk_size + chunk_size), 1) for c_index in range(-(-dim_size // chunk_size)))
+        chunk_iters.append(chunk_tuple)
+    return tuple(product(*chunk_iters))
 
 
 def csv_int(vstr, sep=",") -> list:
@@ -365,25 +379,10 @@ def convert_array(
 
     before = TSMetrics(input_config.ts_config, write_config)
 
-    # We want to read & write a chunk at a time with TensorStore
-    # but don't have a map_blocks() function for TensorStore?
-    # So we use Dask Array's map_blocks() purely to iterate through chunks,
-    # using the array-location of each chunk to read/write in TensorStore
-    my_zeros = da.zeros(read.shape, chunks=chunks)
-    def domap(data, block_info=None):
-        # handle fake calling of function to establish dtype
-        if block_info is None:
-            return data
-        # array-location e.g. [(1, 2), (512, 1024), (0, 512)]
-        array_location = block_info[0]["array-location"]
-        LOGGER.debug(f"array_location: ${array_location}")
-        slice_tuple = tuple([slice(dim[0], dim[1]) for dim in array_location])
+    for slice_tuple in chunk_iter(read.shape, chunks):
+        LOGGER.debug(f"array_location: {slice_tuple}")
         future = write[slice_tuple].write(read[slice_tuple])
         future.result()
-        return data
-
-    # trigger domap on each chunk
-    my_zeros.map_blocks(domap).compute()
 
     after = TSMetrics(input_config.ts_config, write_config, before)
 

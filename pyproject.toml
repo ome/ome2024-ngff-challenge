@@ -28,7 +28,6 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-dask ">=2024.5.2"
 python = "^3.10"
 rocrate = "^0.10"
 s3fs = ">=2024.6.1"
