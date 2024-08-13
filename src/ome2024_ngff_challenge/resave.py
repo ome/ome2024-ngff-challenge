@@ -379,7 +379,9 @@ def convert_array(
 
     before = TSMetrics(input_config.ts_config, write_config)
 
-    for slice_tuple in chunk_iter(read.shape, chunks):
+    # read & write a chunk (or shard) at a time:
+    blocks = shards if shards is not None else chunks
+    for slice_tuple in chunk_iter(read.shape, blocks):
         LOGGER.debug(f"array_location: {slice_tuple}")
         future = write[slice_tuple].write(read[slice_tuple])
         future.result()
