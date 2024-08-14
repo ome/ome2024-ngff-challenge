@@ -68,6 +68,7 @@ Other samples:
   Shape `4,25,2048,2048`, Size `589.81 MB`, from idr0047.
 - [9822152.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/9822152.zarr)
   Shape `1,1,1,93184,144384`, Size `21.57 GB`, from idr0083.
+- [9846151.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/9846151.zarr) Shape `1,3,1402,5192,2947`, Size `66.04 GB`, from idr0048.
 
  <details><summary>Expand for more details on creation of these samples</summary>
 
@@ -111,6 +112,13 @@ Took 34 minutes to run conversion with this command:
 
 ```
 $ ome2024-ngff-challenge --input-bucket=idr --input-endpoint=https://uk1s3.embassy.ebi.ac.uk --input-anon zarr/v0.4/idr0083A/9822152.zarr 9822152.zarr --output-shards=1,1,1,4096,4096 --output-chunks=1,1,1,1024,1024 --log debug
+```
+
+<hr>
+
+Took 9 hours to run this conversion:
+```
+$ ome2024-ngff-challenge 9846151.zarr/0 will/9846151_2D_chunks_3.zarr --output-shards=1,1,1,4096,4096 --output-chunks=1,1,1,1024,1024 --log debug
 ```
 
 <hr>
