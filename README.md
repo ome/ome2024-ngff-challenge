@@ -69,6 +69,7 @@ Other samples:
 - [9822152.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/9822152.zarr)
   Shape `1,1,1,93184,144384`, Size `21.57 GB`, from idr0083.
 - [9846151.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/9846151.zarr) Shape `1,3,1402,5192,2947`, Size `66.04 GB`, from idr0048.
+- [Week9_090907.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/idr0035/Week9_090907.zarr) plate from idr0035.
 
  <details><summary>Expand for more details on creation of these samples</summary>
 
@@ -120,8 +121,13 @@ Took 9 hours to run this conversion:
 ```
 $ ome2024-ngff-challenge 9846151.zarr/0 will/9846151_2D_chunks_3.zarr --output-shards=1,1,1,4096,4096 --output-chunks=1,1,1,1024,1024 --log debug
 ```
-
 <hr>
+
+Plate conversion, took 19 minutes, choosing a shard size that contained a whole image. Image shape is `1,3,1,1024,1280`.
+```
+$ ome2024-ngff-challenge --input-bucket=bia-integrator-data --input-endpoint=https://uk1s3.embassy.ebi.ac.uk --input-anon S-BIAD847/0762bf96-4f01-454d-9b13-5c8438ea384f/0762bf96-4f01-454d-9b13-5c8438ea384f.zarr /data/will/idr0035/Week9_090907.zarr --output-shards=1,3,1,1024,2048 --output-chunks=1,1,1,1024,1024 --log debug
+```
+
  </details>
 
 ## Converting your data
