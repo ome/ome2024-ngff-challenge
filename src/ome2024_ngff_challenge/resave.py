@@ -442,6 +442,37 @@ def convert_image(
                     ds_shards,
                 )
 
+    if not output_write_details:
+        # check for labels...
+        try:
+            labels_config = input_config.sub_config("labels")
+        except ValueError:
+            # File "../site-packages/zarr/abc/store.py", line 29, in _check_writable
+            # raise ValueError("store mode does not support writing")
+            LOGGER.debug("No labels group found")
+        else:
+            labels_attrs = labels_config.zr_attrs.get("labels", [])
+            LOGGER.debug("labels_attrs: %s" % labels_attrs)
+            labels_output_config = output_config.sub_config("labels")
+            labels_output_config.zr_attrs["ome"] = dict(labels_config.zr_attrs)
+
+            for label_path in labels_attrs:
+                label_config = labels_config.sub_config(label_path)
+                label_path = Path("labels") / label_path
+
+                label_output_config = None
+                if output_config.zr_group is not None:  # otherwise dry-run
+                    label_output_config = output_config.sub_config(label_path)
+
+                convert_image(
+                    label_config,
+                    label_output_config,
+                    output_chunks,
+                    output_shards,
+                    output_read_details,
+                    output_write_details,
+                    output_script,
+                )
 
 class ROCrateWriter:
     def __init__(
