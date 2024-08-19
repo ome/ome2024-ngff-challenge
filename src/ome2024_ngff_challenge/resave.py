@@ -54,14 +54,21 @@ def guess_shards(shape: list, chunks: list):
 
 def chunk_iter(shape: list, chunks: list):
     """
-    Returns a series of tuples, each containing chunck slice
+    Returns a series of tuples, each containing chunk slice
     E.g. for 2D shape/chunks: ((slice(0, 512, 1), slice(0, 512, 1)), (slice(0, 512, 1), slice(512, 1024, 1))...)
     Thanks to Davis Bennett.
     """
-    assert(len(shape) == len(chunks))
+    assert len(shape) == len(chunks)
     chunk_iters = []
     for chunk_size, dim_size in zip(chunks, shape):
-        chunk_tuple = tuple(slice(c_index * chunk_size, min(dim_size, c_index * chunk_size + chunk_size), 1) for c_index in range(-(-dim_size // chunk_size)))
+        chunk_tuple = tuple(
+            slice(
+                c_index * chunk_size,
+                min(dim_size, c_index * chunk_size + chunk_size),
+                1,
+            )
+            for c_index in range(-(-dim_size // chunk_size))
+        )
         chunk_iters.append(chunk_tuple)
     return tuple(product(*chunk_iters))
 
