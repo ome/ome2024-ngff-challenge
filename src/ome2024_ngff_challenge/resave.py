@@ -9,7 +9,7 @@ import random
 import shutil
 import sys
 import time
-from itertools import product
+from itertools import batched, product
 from pathlib import Path
 
 import numpy as np
@@ -324,6 +324,7 @@ def convert_array(
     dimension_names: list,
     chunks: list,
     shards: list,
+    threads: int,
 ):
     read = input_config.ts_read()
 
@@ -388,10 +389,15 @@ def convert_array(
 
     # read & write a chunk (or shard) at a time:
     blocks = shards if shards is not None else chunks
-    for slice_tuple in chunk_iter(read.shape, blocks):
-        LOGGER.debug(f"array_location: {slice_tuple}")
-        future = write[slice_tuple].write(read[slice_tuple])
-        future.result()
+    for idx, batch in enumerate(batched(chunk_iter(read.shape, blocks), threads)):
+        futures = []
+        for slice_tuple in batch:
+            future = write[slice_tuple].write(read[slice_tuple])
+            LOGGER.info(f"batch {idx}: {slice_tuple} scheduled -- {future}")
+            futures.append((slice_tuple, future))
+        for slice_tuple, future in futures:
+            future.result()
+            LOGGER.info(f"batch {idx}: {slice_tuple} completed -- {future}")
 
     after = TSMetrics(input_config.ts_config, write_config, before)
 
@@ -420,6 +426,7 @@ def convert_image(
     output_read_details: str | None,
     output_write_details: bool,
     output_script: bool,
+    threads: int,
 ):
     dimension_names = None
     # top-level version...
@@ -494,6 +501,7 @@ def convert_image(
                     dimension_names,
                     ds_chunks,
                     ds_shards,
+                    threads,
                 )
 
 
@@ -603,6 +611,7 @@ def main(ns: argparse.Namespace, rocrate: ROCrateWriter | None = None) -> int:
             ns.output_read_details,
             ns.output_write_details,
             ns.output_script,
+            ns.output_threads,
         )
         converted += 1
 
@@ -656,6 +665,7 @@ def main(ns: argparse.Namespace, rocrate: ROCrateWriter | None = None) -> int:
                     ns.output_read_details,
                     ns.output_write_details,
                     ns.output_script,
+                    ns.output_threads,
                 )
                 converted += 1
     # Note: plates can *also* contain this metadata
@@ -698,6 +708,7 @@ def main(ns: argparse.Namespace, rocrate: ROCrateWriter | None = None) -> int:
                 ns.output_read_details,
                 ns.output_write_details,
                 ns.output_script,
+                ns.output_threads,
             )
             converted += 1
     else:
@@ -723,6 +734,12 @@ def cli(args=sys.argv[1:]):
     parser.add_argument("--output-region", default="us-east-1")
     parser.add_argument("--output-overwrite", action="store_true")
     parser.add_argument("--output-script", action="store_true")
+    parser.add_argument(
+        "--output-threads",
+        type=int,
+        default=16,
+        help="number of simultaneous write threads",
+    )
     parser.add_argument("--rocrate-name", type=str)
     parser.add_argument("--rocrate-description", type=str)
     parser.add_argument("--rocrate-license", type=str)
