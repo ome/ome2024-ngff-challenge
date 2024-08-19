@@ -413,14 +413,10 @@ def convert_array(
     # read & write a chunk (or shard) at a time:
     blocks = shards if shards is not None else chunks
     for idx, batch in enumerate(Batched(chunk_iter(read.shape, blocks), threads)):
-        futures = []
-        for slice_tuple in batch:
-            future = write[slice_tuple].write(read[slice_tuple])
-            LOGGER.info(f"batch {idx}: {slice_tuple} scheduled -- {future}")
-            futures.append((slice_tuple, future))
-        for slice_tuple, future in futures:
-            future.result()
-            LOGGER.info(f"batch {idx}: {slice_tuple} completed -- {future}")
+        with ts.Transaction() as txn:
+            for slice_tuple in batch:
+                write.with_transaction(txn)[slice_tuple] = read[slice_tuple]
+                LOGGER.info(f"batch {idx}: {slice_tuple} scheduled in transaction")
 
     after = TSMetrics(input_config.ts_config, write_config, before)
 
