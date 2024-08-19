@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import logging
 import math
@@ -9,7 +10,6 @@ import random
 import shutil
 import sys
 import time
-from itertools import batched, product
 from pathlib import Path
 
 import numpy as np
@@ -28,6 +28,29 @@ LOGGER = logging.getLogger("resave")
 #
 # Helpers
 #
+
+
+class Batched:
+    """
+    implementation of itertools.batched for pre-3.12 Python versions
+    from https://mathspp.com/blog/itertools-batched
+    """
+
+    def __init__(self, iterable, n: int):
+        if n < 1:
+            msg = f"n must be at least one ({n})"
+            raise ValueError(msg)
+        self.iter = iter(iterable)
+        self.n = n
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        batch = tuple(itertools.islice(self.iter, self.n))
+        if not batch:
+            raise StopIteration()
+        return batch
 
 
 class SafeEncoder(json.JSONEncoder):
@@ -70,7 +93,7 @@ def chunk_iter(shape: list, chunks: list):
             for c_index in range(-(-dim_size // chunk_size))
         )
         chunk_iters.append(chunk_tuple)
-    return tuple(product(*chunk_iters))
+    return tuple(itertools.product(*chunk_iters))
 
 
 def csv_int(vstr, sep=",") -> list:
@@ -389,7 +412,7 @@ def convert_array(
 
     # read & write a chunk (or shard) at a time:
     blocks = shards if shards is not None else chunks
-    for idx, batch in enumerate(batched(chunk_iter(read.shape, blocks), threads)):
+    for idx, batch in enumerate(Batched(chunk_iter(read.shape, blocks), threads)):
         futures = []
         for slice_tuple in batch:
             future = write[slice_tuple].write(read[slice_tuple])
