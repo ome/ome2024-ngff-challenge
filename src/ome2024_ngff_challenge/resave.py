@@ -483,7 +483,11 @@ def convert_image(
         with output_read_details.open() as o:
             details = json.load(o)
     else:
-        details = []  # No resolutions yet
+        details = []
+        if output_config.path.exists() and output_config.path.is_file():
+            # Someone has already written details. Reload them
+            with output_config.path.open() as o:
+                details = json.load(o)
 
     # convert arrays
     multiscales = input_config.zr_attrs.get("multiscales")
@@ -497,9 +501,11 @@ def convert_image(
         if output_write_details:
             details.append(
                 {
-                    "shape": ds_shape,
-                    "chunks": ds_chunks,
-                    "shards": ds_shards,
+                    str(input_config.path / ds_path): {
+                        "shape": ds_shape,
+                        "chunks": ds_chunks,
+                        "shards": ds_shards,
+                    }
                 }
             )
             # Note: not S3 compatible and doesn't use subpath!
