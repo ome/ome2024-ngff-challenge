@@ -23,7 +23,7 @@ from .zarr_crate.rembi_extension import Biosample, ImageAcquistion, Specimen
 from .zarr_crate.zarr_extension import ZarrCrate
 
 NGFF_VERSION = "0.5"
-LOGGER = logging.getLogger("resave")
+LOGGER = logging.getLogger(__file__)
 
 #
 # Helpers
@@ -855,10 +855,11 @@ def cli(args=sys.argv[1:]):
     if not isinstance(numeric_level, int):
         raise ValueError(f"Invalid log level: {ns.log}. Use 'info' or 'debug'")
     logging.basicConfig(
-        level=numeric_level,
+        level=logging.INFO,
         format="%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+    LOGGER.setLevel(numeric_level)
 
     rocrate = None
     if not ns.rocrate_skip:
