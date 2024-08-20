@@ -419,10 +419,21 @@ def convert_array(
     # read & write a chunk (or shard) at a time:
     blocks = shards if shards is not None else chunks
     for idx, batch in enumerate(Batched(chunk_iter(read.shape, blocks), threads)):
+        start = time.time()
         with ts.Transaction() as txn:
+            LOGGER.log(5, f"batch {idx:03d}: scheduling transaction size={len(batch)}")
             for slice_tuple in batch:
                 write.with_transaction(txn)[slice_tuple] = read[slice_tuple]
-                LOGGER.info(f"batch {idx}: {slice_tuple} scheduled in transaction")
+                LOGGER.log(
+                    5, f"batch {idx:03d}: {slice_tuple} scheduled in transaction"
+                )
+            LOGGER.log(5, f"batch {idx:03d}: waiting on transaction size={len(batch)}")
+        stop = time.time()
+        elapsed = stop - start
+        avg = float(elapsed) / len(batch)
+        LOGGER.debug(
+            f"batch {idx:03d}: completed transaction size={len(batch)} in {stop-start:0.2f}s (avg={avg:0.2f})"
+        )
 
     after = TSMetrics(input_config.ts_config, write_config, before)
 
