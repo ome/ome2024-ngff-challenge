@@ -138,20 +138,31 @@ $ ome2024-ngff-challenge --input-bucket=bia-integrator-data --input-endpoint=htt
 
 ## Converting your data
 
-### Getting started
+The `ome2024-ngff-challenge` tool can be used to convert an OME-Zarr 0.4 dataset
+that is based on Zarr v2. The input data will **not be modified** in any way and
+a full copy of the data will be created at the chosen location.
 
-The `ome2024-ngff-challenge` script can be used to convert an OME-Zarr 0.4
-dataset that is based on Zarr v2:
+### Getting started
 
 ```
 ome2024-ngff-challenge input.zarr output.zarr
 ```
 
-If you would like to re-run the script with different parameters, you can
-additionally set `--output-overwrite` to ignore a previous conversion:
+is the most basic invocation of the tool. If you would like to re-run the script
+with different parameters, you can additionally set `--output-overwrite` to
+ignore a previous conversion:
 
 ```
 ome2024-ngff-challenge input.zarr output.zarr --output-overwrite
+```
+
+### Writing in parallel
+
+By default, 16 chunks of data will be processed simultaneously in order to bound
+memory usage. You can increase this number based on your local resources:
+
+```
+ome2024-ngff-challenge input.zarr output.zarr --output-threads=128
 ```
 
 ### Reading/writing remotely
