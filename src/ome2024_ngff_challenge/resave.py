@@ -24,7 +24,7 @@ from .zarr_crate.rembi_extension import Biosample, ImageAcquistion, Specimen
 from .zarr_crate.zarr_extension import ZarrCrate
 
 NGFF_VERSION = "0.5"
-LOGGER = logging.getLogger("resave")
+LOGGER = logging.getLogger(__file__)
 
 #
 # Helpers
@@ -493,23 +493,31 @@ def convert_image(
         with output_read_details.open() as o:
             details = json.load(o)
     else:
-        details = []  # No resolutions yet
+        details = {}
+        if output_config.path.exists() and output_config.path.is_file():
+            # Someone has already written details. Reload them
+            with output_config.path.open() as o:
+                details = json.load(o)
 
     # convert arrays
     multiscales = input_config.zr_attrs.get("multiscales")
-    for idx, ds in enumerate(multiscales[0]["datasets"]):
+    for ds in multiscales[0]["datasets"]:
         ds_path = ds["path"]
         ds_array = input_config.zr_group[ds_path]
         ds_shape = ds_array.shape
         ds_chunks = ds_array.chunks
         ds_shards = guess_shards(ds_shape, ds_chunks)
+        ds_input_config = input_config.sub_config(ds_path, False)
+        ds_output_config = output_config.sub_config(ds_path, False)
 
         if output_write_details:
-            details.append(
+            details.update(
                 {
-                    "shape": ds_shape,
-                    "chunks": ds_chunks,
-                    "shards": ds_shards,
+                    ds_input_config.fs_string(): {
+                        "shape": ds_shape,
+                        "chunks": ds_chunks,
+                        "shards": ds_shards,
+                    }
                 }
             )
             # Note: not S3 compatible and doesn't use subpath!
@@ -518,8 +526,9 @@ def convert_image(
         else:
             if output_read_details:
                 # read row by row and overwrite
-                ds_chunks = details[idx]["chunks"]
-                ds_shards = details[idx]["shards"]
+                key = ds_input_config.fs_string()
+                ds_chunks = details[key]["chunks"]
+                ds_shards = details[key]["shards"]
             else:
                 if output_chunks:
                     ds_chunks = output_chunks
@@ -542,13 +551,52 @@ def convert_image(
                 )
             else:
                 convert_array(
-                    input_config.sub_config(ds_path, False),
-                    output_config.sub_config(ds_path, False),
+                    ds_input_config,
+                    ds_output_config,
                     dimension_names,
                     ds_chunks,
                     ds_shards,
                     threads,
                 )
+
+    # check for labels...
+    try:
+        labels_config = input_config.sub_config("labels")
+    except ValueError:
+        # File "../site-packages/zarr/abc/store.py", line 29, in _check_writable
+        # raise ValueError("store mode does not support writing")
+        LOGGER.debug("No labels group found")
+    else:
+        labels_attrs = labels_config.zr_attrs.get("labels", [])
+        LOGGER.debug("labels_attrs: %s", labels_attrs)
+
+        dry_run = output_config.zr_group is None
+
+        labels_output_config = output_config.sub_config(
+            "labels", create_or_open_group=(not dry_run)
+        )
+        if not dry_run:
+            labels_output_config.zr_attrs["ome"] = dict(labels_config.zr_attrs)
+
+        for label_path in labels_attrs:
+            label_config = labels_config.sub_config(label_path)
+            label_path_obj = Path("labels") / label_path
+
+            label_output_config = output_config.sub_config(
+                label_path_obj,
+                create_or_open_group=(not dry_run),
+            )
+
+            convert_image(
+                label_config,
+                label_output_config,
+                output_chunks,
+                output_shards,
+                output_read_details,
+                output_write_details,
+                output_script,
+                threads,
+            )
 
 
 class ROCrateWriter:
@@ -828,10 +876,11 @@ def cli(args=sys.argv[1:]):
     if not isinstance(numeric_level, int):
         raise ValueError(f"Invalid log level: {ns.log}. Use 'info' or 'debug'")
     logging.basicConfig(
-        level=numeric_level,
+        level=logging.INFO,
         format="%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+    LOGGER.setLevel(numeric_level)
 
     rocrate = None
     if not ns.rocrate_skip:

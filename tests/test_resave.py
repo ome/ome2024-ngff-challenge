@@ -138,11 +138,16 @@ def test_remote_hcs_with_scripts(tmp_path):
 
 
 def test_remote_simple_with_download(tmp_path):
+    # The labels for `6001240.zarr` have chunks like [1,59,69,136] which is
+    # not compatible with default shard (whole image, [1,236,275,271]),
+    # so we need to specify both:
     resave.cli(
         [
             *IDR_BUCKET,
             IDR_3D,
             str(tmp_path / "out.zarr"),
+            "--output-shards=1,10,512,512",
+            "--output-chunks=1,1,256,256",
         ]
     )
 
