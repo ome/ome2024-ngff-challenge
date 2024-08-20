@@ -570,6 +570,7 @@ def convert_image(
                     output_read_details,
                     output_write_details,
                     output_script,
+                    threads,
                 )
 
 
