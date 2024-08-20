@@ -397,12 +397,18 @@ def convert_array(
     write_config["create"] = True
     write_config["delete_existing"] = output_config.overwrite
 
-    LOGGER.debug(f"""input_config:
+    LOGGER.log(
+        5,
+        f"""input_config:
 {json.dumps(input_config.ts_config, indent=4)}
-    """)
-    LOGGER.debug(f"""write_config:
+    """,
+    )
+    LOGGER.log(
+        5,
+        f"""write_config:
 {json.dumps(write_config, indent=4, cls=SafeEncoder)}
-    """)
+    """,
+    )
 
     verify_config = base_config.copy()
 
@@ -765,7 +771,9 @@ def cli(args=sys.argv[1:]):
     parser.add_argument("--rocrate-organism", type=str)
     parser.add_argument("--rocrate-modality", type=str)
     parser.add_argument("--rocrate-skip", action="store_true")
-    parser.add_argument("--log", default="warn", help="warn, 'info' or 'debug'")
+    parser.add_argument(
+        "--log", default="warn", help="'error', 'warn', 'info', 'debug' or 'trace'"
+    )
     group_ex = parser.add_mutually_exclusive_group()
     group_ex.add_argument(
         "--output-write-details",
@@ -790,10 +798,17 @@ def cli(args=sys.argv[1:]):
     ns = parser.parse_args(args)
 
     # configure logging
-    numeric_level = getattr(logging, ns.log.upper(), None)
+    if ns.log.upper() == "TRACE":
+        numeric_level = 5
+    else:
+        numeric_level = getattr(logging, ns.log.upper(), None)
     if not isinstance(numeric_level, int):
         raise ValueError(f"Invalid log level: {ns.log}. Use 'info' or 'debug'")
-    logging.basicConfig(level=numeric_level)
+    logging.basicConfig(
+        level=numeric_level,
+        format="%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
     rocrate = None
     if not ns.rocrate_skip:
