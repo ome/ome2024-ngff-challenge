@@ -10,6 +10,7 @@ import random
 import shutil
 import sys
 import time
+from importlib.metadata import version as lib_version
 from pathlib import Path
 
 import numpy as np
@@ -118,6 +119,12 @@ def strip_version(possible_dict) -> None:
     """
     if isinstance(possible_dict, dict) and "version" in possible_dict:
         del possible_dict["version"]
+
+
+def add_creator(json_dict) -> None:
+    # Add _creator - NB: this will overwrite any existing _creator info
+    pkg_version = lib_version("ome2024-ngff-challenge")
+    json_dict["_creator"] = {"name": "ome2024-ngff-challenge", "version": pkg_version}
 
 
 class TextBuffer(Buffer):
@@ -475,6 +482,9 @@ def convert_image(
             strip_version(value[0])
         ome_attrs[key] = value
 
+    # Add _creator - NB: this will overwrite existing _creator info
+    add_creator(ome_attrs)
+
     if output_config.zr_group is not None:  # otherwise dry-run
         # dev2: everything is under 'ome' key
         output_config.zr_attrs["ome"] = ome_attrs
@@ -658,6 +668,8 @@ def main(ns: argparse.Namespace, rocrate: ROCrateWriter | None = None) -> int:
             # ...replaces all other versions - remove
             strip_version(value)
             ome_attrs[key] = value
+
+        add_creator(ome_attrs)
 
         if output_config.zr_group is not None:  # otherwise dry run
             # dev2: everything is under 'ome' key
