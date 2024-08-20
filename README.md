@@ -58,9 +58,83 @@ $ mc ls -r uk1anon/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr/
 [2024-08-01 14:24:28 CEST] 2.7KiB STANDARD zarr.json
 ```
 
-The dataset can be inspected using a development version of the OME-NGFF
-Validator available at
+The dataset (from idr0062) can be inspected using a development version of the
+OME-NGFF Validator available at
 <https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr>
+
+Other samples:
+
+- [4496763.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/4496763.zarr)
+  Shape `4,25,2048,2048`, Size `589.81 MB`, from idr0047.
+- [9822152.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/9822152.zarr)
+  Shape `1,1,1,93184,144384`, Size `21.57 GB`, from idr0083.
+- [9846151.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/9846151.zarr)
+  Shape `1,3,1402,5192,2947`, Size `66.04 GB`, from idr0048.
+- [Week9_090907.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/idr0035/Week9_090907.zarr)
+  plate from idr0035.
+
+ <details><summary>Expand for more details on creation of these samples</summary>
+
+<hr>
+
+`4496763.json` was created with ome2024-ngff-challenge commit `0e1809bf3b`.
+
+First the config details were generated with:
+
+```
+$ ome2024-ngff-challenge --input-bucket=idr --input-endpoint=https://uk1s3.embassy.ebi.ac.uk --input-anon zarr/v0.4/idr0047A/4496763.zarr params_4496763.json --output-write-details
+```
+
+The `params_4496763.json` file was edited to set "shards" to:
+`[4, 1, sizeY, sizeX]` for each pyramid resolution to create a single shard for
+each Z section.
+
+```
+# params_4496763.json
+[{"shape": [4, 25, 2048, 2048], "chunks": [1, 1, 2048, 2048], "shards": [4, 1, 2048, 2048]}, {"shape": [4, 25, 1024, 1024], "chunks": [1, 1, 1024, 1024], "shards": [4, 1, 1024, 1024]}, {"shape": [4, 25, 512, 512], "chunks": [1, 1, 512, 512], "shards": [4, 1, 512, 512]}, {"shape": [4, 25, 256, 256], "chunks": [1, 1, 256, 256], "shards": [4, 1, 256, 256]}, {"shape": [4, 25, 128, 128], "chunks": [1, 1, 128, 128], "shards": [4, 1, 128, 128]}, {"shape": [4, 25, 64, 64], "chunks": [1, 1, 64, 64], "shards": [4, 1, 64, 64]}]
+```
+
+This was then used to run the conversion:
+
+```
+ome2024-ngff-challenge --input-bucket=idr --input-endpoint=https://uk1s3.embassy.ebi.ac.uk --input-anon zarr/v0.4/idr0047A/4496763.zarr 4496763.zarr --output-read-details params_4496763.json
+```
+
+<hr>
+
+`9822152.zarr` was created with ome2024-ngff-challenge commit `f17a6de963`.
+
+The chunks and shard shapes are specified to be the same for all resolution
+levels. This is required since the smaller resolution levels of the source image
+at
+https://ome.github.io/ome-ngff-validator/?source=https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0083A/9822152.zarr
+have chunks that correspond to the resolution shape, e,g, `1,1,1,91,141` and
+this will fail to convert using a shard shape of `1,1,1,4096,4096`.
+
+Took 34 minutes to run conversion with this command:
+
+```
+$ ome2024-ngff-challenge --input-bucket=idr --input-endpoint=https://uk1s3.embassy.ebi.ac.uk --input-anon zarr/v0.4/idr0083A/9822152.zarr 9822152.zarr --output-shards=1,1,1,4096,4096 --output-chunks=1,1,1,1024,1024 --log debug
+```
+
+<hr>
+
+Took 9 hours to run this conversion:
+
+```
+$ ome2024-ngff-challenge 9846151.zarr/0 will/9846151_2D_chunks_3.zarr --output-shards=1,1,1,4096,4096 --output-chunks=1,1,1,1024,1024 --log debug
+```
+
+<hr>
+
+Plate conversion, took 19 minutes, choosing a shard size that contained a whole
+image. Image shape is `1,3,1,1024,1280`.
+
+```
+$ ome2024-ngff-challenge --input-bucket=bia-integrator-data --input-endpoint=https://uk1s3.embassy.ebi.ac.uk --input-anon S-BIAD847/0762bf96-4f01-454d-9b13-5c8438ea384f/0762bf96-4f01-454d-9b13-5c8438ea384f.zarr /data/will/idr0035/Week9_090907.zarr --output-shards=1,3,1,1024,2048 --output-chunks=1,1,1,1024,1024 --log debug
+```
+
+ </details>
 
 ## Converting your data
 
