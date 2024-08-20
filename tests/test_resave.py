@@ -147,7 +147,7 @@ def test_remote_simple_with_download(tmp_path):
             IDR_3D,
             str(tmp_path / "out.zarr"),
             "--output-shards=1,10,512,512",
-            "--output-chunks=1,1,256,256"
+            "--output-chunks=1,1,256,256",
         ]
     )
 
