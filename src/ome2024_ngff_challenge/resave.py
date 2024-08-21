@@ -274,8 +274,25 @@ class Config:
     def fs_string(self):
         return str(self.path / self.subpath) if self.subpath else str(self.path)
 
+    def is_s3(self):
+        return bool(self.bucket)
+
+    def s3_endpoint(self):
+        """
+        Returns a representation of the S3 endpoint set on this configuration.
+
+          * "" if this is not an S3 configuration
+          * "default" if no explicit endpoint is set
+          * otherwise the URL is returned
+        """
+        if self.is_s3():
+            if self.endpoint:
+                return self.endpoint
+            return "default"
+        return ""
+
     def __str__(self):
-        if self.bucket:
+        if self.is_s3():
             return self.s3_string()
         return self.fs_string()
 
@@ -444,11 +461,38 @@ def convert_array(
 
     after = TSMetrics(input_config.ts_config, write_config, before)
 
+    stats = {
+        "input": input_config.s3_endpoint(),
+        "output": output_config.s3_endpoint(),
+        "start": before.time,
+        "stop": after.time,
+        "read": after.read(),
+        "written": after.written(),
+        "elapsed": after.elapsed(),
+    }
     LOGGER.info(f"""Re-encode (tensorstore) {input_config} to {output_config}
-        read: {after.read()}
-        write: {after.written()}
-        time: {after.elapsed()}
+        read: {stats["read"]}
+        write: {stats["written"]}
+        time: {stats["elapsed"]}
     """)
+
+    ## TODO: there is likely an easier way of doing this
+    metadata = write.kvstore["zarr.json"]
+    metadata = json.loads(metadata)
+    if "attributes" in metadata:
+        attributes = metadata["attributes"]
+    else:
+        attributes = {}
+        metadata["attributes"] = attributes
+    attributes["_ome2024_ngff_challenge_stats"] = stats
+    metadata = json.dumps(metadata)
+    write.kvstore["zarr.json"] = metadata
+
+    ## TODO: This is not working with v3 branch nor with released version
+    ## zr_array = zarr.open_array(store=output_config.zr_store, mode="a", zarr_format=3)
+    ## zr_array.update_attributes({
+    ##     "_ome2024_ngff_challenge_stats": stats,
+    ## })
 
     verify = ts.open(verify_config).result()
     LOGGER.info(f"Verifying <{output_config}>\t{read.shape}\t")
@@ -772,6 +816,8 @@ def main(ns: argparse.Namespace, rocrate: ROCrateWriter | None = None) -> int:
             # ...replaces all other versions - remove
             strip_version(value)
             ome_attrs[key] = value
+
+        add_creator(ome_attrs)
 
         if output_config.zr_group is not None:  # otherwise dry run
             # dev2: everything is under 'ome' key
