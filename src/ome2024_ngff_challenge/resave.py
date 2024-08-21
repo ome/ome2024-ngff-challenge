@@ -9,6 +9,7 @@ import math
 import random
 import shutil
 import time
+import warnings
 from importlib.metadata import version as lib_version
 from pathlib import Path
 
@@ -875,7 +876,7 @@ def cli(subparsers: argparse._SubParsersAction):
     desc = f"""
 
 # Basic invocation
-{cmd} input.zarr output.zarr
+{cmd} --cc-by input.zarr output.zarr
 
     """
     parser = subparsers.add_parser(
@@ -901,12 +902,83 @@ def cli(subparsers: argparse._SubParsersAction):
         default=16,
         help="number of simultaneous write threads",
     )
-    parser.add_argument("--rocrate-name", type=str)
-    parser.add_argument("--rocrate-description", type=str)
-    parser.add_argument("--rocrate-license", type=str)
-    parser.add_argument("--rocrate-organism", type=str)
-    parser.add_argument("--rocrate-modality", type=str)
-    parser.add_argument("--rocrate-skip", action="store_true")
+
+    # Very recommended metadata (SHOULD!)
+    def license_action(group, arg: str, url: str, recommended: bool = True):
+        class LicenseAction(argparse.Action):
+            def __call__(self, parser, args, *unused, **ignore):  # noqa: ARG002
+                args.rocrate_license = url
+                if not recommended:
+                    warnings.warn(
+                        f"This license is not recommended: {url}", stacklevel=1
+                    )
+
+        desc = url
+        if not recommended:
+            desc = "(not recommended) " + url
+        group.add_argument(arg, action=LicenseAction, nargs=0, help=desc)
+
+    group_lic = parser.add_mutually_exclusive_group()
+    license_action(
+        group_lic, "--cc0", "https://creativecommons.org/publicdomain/zero/1.0/"
+    )
+    license_action(group_lic, "--cc-by", "https://creativecommons.org/licenses/by/4.0/")
+    license_action(
+        group_lic,
+        "--cc-by-sa",
+        "https://creativecommons.org/licenses/by-sa/4.0/",
+        recommended=False,
+    )
+    license_action(
+        group_lic,
+        "--cc-by-nc",
+        "https://creativecommons.org/licenses/by-nc/4.0/",
+        recommended=False,
+    )
+    license_action(
+        group_lic,
+        "--cc-by-nc-sa",
+        "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+        recommended=False,
+    )
+    license_action(
+        group_lic,
+        "--cc-by-nd",
+        "https://creativecommons.org/licenses/by-nd/4.0/",
+        recommended=False,
+    )
+    group_lic.add_argument(
+        "--rocrate-license",
+        type=str,
+        help="URL to another license, e.g., 'https://creativecommons.org/licenses/by/4.0/'",
+    )
+
+    # Recommended metadata (SHOULD)
+    parser.add_argument(
+        "--rocrate-organism",
+        type=str,
+        help="NCBI identifier of the form 'NCBI:txid7227'",
+    )
+    parser.add_argument(
+        "--rocrate-modality",
+        type=str,
+        help="FBbi identifier of the form 'obo:FBbi_00000243'",
+    )
+
+    # Optional metadata (MAY)
+    parser.add_argument(
+        "--rocrate-name",
+        type=str,
+        help="optional name of the dataset; taken from the NGFF metadata if available",
+    )
+    parser.add_argument(
+        "--rocrate-description", type=str, help="optional description of the dataset"
+    )
+    parser.add_argument(
+        "--rocrate-skip",
+        action="store_true",
+        help="skips the creation of the RO-Crate file",
+    )
     parser.add_argument(
         "--log", default="warn", help="'error', 'warn', 'info', 'debug' or 'trace'"
     )
@@ -954,8 +1026,12 @@ def parse(ns: argparse.Namespace):
     ns.rocrate = None
     if not ns.rocrate_skip:
         setup = {}
-        for key in ("name", "description", "license", "organism", "modality"):
+        for key in ("name", "description", "organism", "modality"):
             value = getattr(ns, f"rocrate_{key}", None)
             if value:
                 setup[key] = value
+        if not ns.rocrate_license:
+            message = "No license set. Choose on of the Creative Commons license (e.g., `--cc-by`) or skip RO-Crate creation (`--rocrate-skip`)"
+            raise SystemExit(message)
+        setup["data_license"] = ns.rocrate_license
         ns.rocrate = ROCrateWriter(**setup)

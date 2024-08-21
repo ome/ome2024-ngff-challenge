@@ -37,6 +37,7 @@ def test_bad_chunks(tmp_path):
         dispatch(
             [
                 "resave",
+                "--cc-by",
                 str(tmp_path / "in.zarr"),
                 str(tmp_path / "out.zarr"),
                 "--output-chunks=xxx",
@@ -49,6 +50,7 @@ def test_conflicting_args(tmp_path):
         dispatch(
             [
                 "resave",
+                "--cc-by",
                 str(tmp_path / "in.zarr"),
                 str(tmp_path / "out.zarr"),
                 "--output-chunks=xxx",
@@ -67,6 +69,7 @@ def test_rocrate_name(tmp_path):
         dispatch(
             [
                 "resave",
+                "--cc-by",
                 "--rocrate-skip",
                 "data/2d.zarr",
                 str(tmp_path / "out.zarr"),
@@ -83,6 +86,7 @@ def test_rocrate_set_name(tmp_path):
         dispatch(
             [
                 "resave",
+                "--cc-by",
                 "--rocrate-name=XXX",
                 "data/2d.zarr",
                 str(tmp_path / "out.zarr"),
@@ -102,6 +106,7 @@ def test_rocrate_full_example(tmp_path):
         dispatch(
             [
                 "resave",
+                "--cc-by",
                 "--rocrate-name=test name",
                 "--rocrate-description=this should be a full description",
                 f"--rocrate-organism={organism}",
@@ -135,6 +140,7 @@ def test_remote_hcs_with_scripts(tmp_path):
     dispatch(
         [
             "resave",
+            "--cc-by",
             *IDR_BUCKET,
             IDR_PLATE,
             str(tmp_path / "out.zarr"),
@@ -150,6 +156,7 @@ def test_remote_simple_with_download(tmp_path):
     dispatch(
         [
             "resave",
+            "--cc-by",
             *IDR_BUCKET,
             IDR_3D,
             str(tmp_path / "out.zarr"),
@@ -186,6 +193,7 @@ def test_local_tests(tmp_path, input, expected, args, func):
         dispatch(
             [
                 "resave",
+                "--cc-by",
                 *args,
                 f"data/{input}.zarr",
                 str(tmp_path / "out.zarr"),
