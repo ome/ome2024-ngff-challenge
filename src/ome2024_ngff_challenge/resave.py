@@ -343,7 +343,6 @@ class ROCrateWriter:
         if self.description:
             values["description"] = self.description
 
-        self.data_license = None
         if self.data_license:
             values["license"] = self.data_license
         else:
