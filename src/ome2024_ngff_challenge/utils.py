@@ -334,7 +334,7 @@ class Config:
 
     def zr_write_text(self, path: Path, text: str):
         text = TextBuffer(text)
-        filename = self.path / self.subpath / path if self.subpath else self.path / path
+        filename = self.subpath / path if self.subpath else path
         sync(self.zr_store.set(str(filename), text))
 
     def zr_read_text(self, path: str | Path):
