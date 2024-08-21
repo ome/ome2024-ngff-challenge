@@ -49,7 +49,7 @@ def parse(ns: argparse.Namespace):
 def main(ns: argparse.Namespace):
     text = ns.text
     url = f"https://www.ebi.ac.uk/ols4/api/search?q={text}&obsoletes=false&local=false&rows=10&start=0&format=json&lang=en"
-    response = requests.get(url)
+    response = requests.get(url, timeout=(5, 30))
     if response.status_code == 200:
         result = response.json()
         docs = result["response"]["docs"]
