@@ -312,9 +312,9 @@ def convert_image(
 class ROCrateWriter:
     def __init__(
         self,
-        name: str = "dataset name",
-        description: str = "dataset description",
-        data_license: str = "https://creativecommons.org/licenses/by/4.0/",
+        name: str | None = None,
+        description: str | None = None,
+        data_license: str | None = None,
         organism: str | None = None,
         modality: str | None = None,
     ):
@@ -335,11 +335,20 @@ class ROCrateWriter:
         Return a dictionary containing the base properties
         like name, description, and license
         """
-        return {
-            "name": self.name,
-            "description": self.description,
-            "license": self.data_license,
-        }
+
+        values = {}
+        if self.name:
+            values["name"] = self.name
+        if self.description:
+            values["description"] = self.description
+
+        self.data_license = None
+        if self.data_license:
+            values["license"] = self.data_license
+        else:
+            warnings.warn("No license specified!", stacklevel=1)
+
+        return values
 
     def generate(self, dataset="./") -> None:
         """
