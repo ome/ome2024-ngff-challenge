@@ -257,7 +257,7 @@ def convert_image(
                 dimsn_txt = ",".join(map(str, dimension_names))
                 output_config.zr_write_text(
                     Path(ds_path) / "convert.sh",
-                    f"zarrs_reencode --chunk-shape {chunk_txt} --shard-shape {shard_txt} --dimension-names {dimsn_txt} --validate {input_config} {output_config}\n",
+                    f"zarrs_reencode --chunk-shape {chunk_txt} --shard-shape {shard_txt} --dimension-names {dimsn_txt} --validate {ds_input_config} {ds_output_config}\n",
                 )
             else:
                 convert_array(
