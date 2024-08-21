@@ -575,13 +575,12 @@ METADATA
     Modality: bright-field microscopy        {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000243
     Modality: confocal microscopy            {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000251
     Modality: two-photon laser scanning      {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000253
-    Modality: two-photon laser scanning      {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000253
-    Modality: scanning electrom microscopy   {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000257
+    Modality: scanning electron microscopy   {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000257
 
     Define a name                            {cmd} --cc-by in.zarr out.zarr --rocrate-name="my experiment"
     Define a description                     {cmd} --cc-by in.zarr out.zarr --rocrate-description="More text here"
 
-    No metadata (INVALID DATASET!)           {cmd} --cc-by in.zarr out.zarr --rocrate-skip
+    No metadata (INVALID DATASET!)           {cmd} --rocrate-skip in.zarr out.zarr
 
     For more information see the online resources for each metadata term:
     - https://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/
@@ -758,7 +757,7 @@ def parse(ns: argparse.Namespace):
             if value:
                 setup[key] = value
         if not ns.rocrate_license:
-            message = "No license set. Choose on of the Creative Commons license (e.g., `--cc-by`) or skip RO-Crate creation (`--rocrate-skip`)"
+            message = "No license set. Choose one of the Creative Commons license (e.g., `--cc-by`) or skip RO-Crate creation (`--rocrate-skip`)"
             raise SystemExit(message)
         setup["data_license"] = ns.rocrate_license
         ns.rocrate = ROCrateWriter(**setup)

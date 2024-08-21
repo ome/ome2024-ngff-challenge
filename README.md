@@ -154,14 +154,14 @@ is the most basic invocation of the tool. If you do not choose a license, the
 application will fail with:
 
 ```
-No license set. Choose on of the Creative Commons license (e.g., `--cc-by`) or skip RO-Crate creation (`--rocrate-skip`)
+No license set. Choose one of the Creative Commons license (e.g., `--cc-by`) or skip RO-Crate creation (`--rocrate-skip`)
 ```
 
 #### Licenses
 
 There are a number of other license options to choose from. We suggest one of:
 
-- `--cc-by` credit must be give to the creator
+- `--cc-by` credit must be given to the creator
 - `--cc0`: Add your data to the public domain
 
 Alternatively, you can choose your own license, e.g.,
