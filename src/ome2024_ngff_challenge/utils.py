@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import itertools
 import json
+import logging
 import shutil
 import time
 from importlib.metadata import version as lib_version
@@ -47,6 +48,21 @@ class SafeEncoder(json.JSONEncoder):
             return super().default(o)
         except TypeError:
             return str(o)
+
+
+def configure_logging(ns: argparse.Namespace, logger: logging.Logger):
+    if ns.log.upper() == "TRACE":
+        numeric_level = 5
+    else:
+        numeric_level = getattr(logging, ns.log.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError(f"Invalid log level: {ns.log}. Use 'info' or 'debug'")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    logger.setLevel(numeric_level)
 
 
 def guess_shards(shape: list, chunks: list):

@@ -20,6 +20,7 @@ from .utils import (
     TSMetrics,
     add_creator,
     chunk_iter,
+    configure_logging,
     csv_int,
     guess_shards,
     strip_version,
@@ -745,19 +746,7 @@ def parse(ns: argparse.Namespace):
     """
     Parse the namespace arguments provided by the dispatcher
     """
-    # configure logging
-    if ns.log.upper() == "TRACE":
-        numeric_level = 5
-    else:
-        numeric_level = getattr(logging, ns.log.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError(f"Invalid log level: {ns.log}. Use 'info' or 'debug'")
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    LOGGER.setLevel(numeric_level)
+    configure_logging(ns, LOGGER)
 
     ns.rocrate = None
     if not ns.rocrate_skip:

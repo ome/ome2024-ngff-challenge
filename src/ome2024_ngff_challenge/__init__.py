@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import sys
 
+from .lookup import cli as lookup_cli
 from .resave import cli as resave_cli
 
 __version__ = "0.0.0"
@@ -25,9 +26,9 @@ def dispatch(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     subparsers = parser.add_subparsers(help="subparser help")
     resave_cli(subparsers)
+    lookup_cli(subparsers)
     # Upcoming parsers to be moved to submodules
     subparsers.add_parser("validate", help="TBD: evaluate a converted fileset locally")
-    subparsers.add_parser("lookup", help="TBD: lookup the identifier for an OLS term")
     subparsers.add_parser(
         "update", help="TBD: updated the RO-Crate metadata in a fileset"
     )
