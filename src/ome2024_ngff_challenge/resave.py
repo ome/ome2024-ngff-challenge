@@ -817,6 +817,8 @@ def main(ns: argparse.Namespace, rocrate: ROCrateWriter | None = None) -> int:
             strip_version(value)
             ome_attrs[key] = value
 
+        add_creator(ome_attrs)
+
         if output_config.zr_group is not None:  # otherwise dry run
             # dev2: everything is under 'ome' key
             output_config.zr_attrs["ome"] = ome_attrs
