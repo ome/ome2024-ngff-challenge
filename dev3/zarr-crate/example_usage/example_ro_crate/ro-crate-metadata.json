@@ -23,7 +23,7 @@
       "@type": "Dataset",
       "name": "Light microscopy photo of a fly",
       "description": "Light microscopy photo of a fruit fly.",
-      "licence": "https://creativecommons.org/licenses/by/4.0/",
+      "license": "https://creativecommons.org/licenses/by/4.0/",
       "resultOf": {
         "@id": "#16e30b5b-9995-4ff2-97e6-66a9c025f0d3"
       }

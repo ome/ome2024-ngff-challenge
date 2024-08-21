@@ -338,7 +338,7 @@ class ROCrateWriter:
         return {
             "name": self.name,
             "description": self.description,
-            "licence": self.data_license,
+            "license": self.data_license,
         }
 
     def generate(self, dataset="./") -> None:

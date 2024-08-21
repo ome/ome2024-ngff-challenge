@@ -53,7 +53,7 @@ imagining technique.
             "@type": "Dataset",
             "name": "Light microscopy photo of a fly",
             "description": "Light microscopy photo of a fruit fly.",
-            "licence": "https://creativecommons.org/licenses/by/4.0/",
+            "license": "https://creativecommons.org/licenses/by/4.0/",
             "hasPart": {
                 "@id": "./dros-mel-image.zarr/"
             }
@@ -138,7 +138,7 @@ The metadata json file would look like:
             "@type": "Dataset",
             "name": "Light microscopy photo of a fly",
             "description": "Light microscopy photo of a fruit fly.",
-            "licence": "https://creativecommons.org/licenses/by/4.0/",
+            "license": "https://creativecommons.org/licenses/by/4.0/",
             "hasPart": {
                 "@id": "./dros-mel-image.zarr/"
             }
