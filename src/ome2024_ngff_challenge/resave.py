@@ -8,7 +8,6 @@ import logging
 import math
 import random
 import shutil
-import sys
 import time
 from importlib.metadata import version as lib_version
 from pathlib import Path
@@ -722,11 +721,16 @@ class ROCrateWriter:
         config.zr_write_text(filename, text)
 
 
-def main(ns: argparse.Namespace, rocrate: ROCrateWriter | None = None) -> int:
+def main(ns: argparse.Namespace) -> int:
     """
-    Returns the number of images converted
+    If no images are converted, raises
+    SystemExit. Otherwise, return the number of images.
     """
-    converted = 0
+
+    converted: int = 0
+
+    parse(ns)
+    rocrate: ROCrateWriter = ns.rocrate
 
     input_config = Config(ns, "input", "r")
     output_config = Config(ns, "output", "w")
@@ -856,16 +860,19 @@ def main(ns: argparse.Namespace, rocrate: ROCrateWriter | None = None) -> int:
     else:
         LOGGER.warning(f"no convertible metadata: {input_config.zr_attrs.keys()}")
 
+    if converted == 0:
+        raise SystemExit(1)
     return converted
 
 
-def cli(args=sys.argv[1:]):
+def cli(subparsers: argparse._SubParsersAction):
     """
     Parses the arguments contained in `args` and passes
     them to `main`. If no images are converted, raises
     SystemExit. Otherwise, return the number of images.
     """
-    parser = argparse.ArgumentParser()
+    parser = subparsers.add_parser("resave")
+    parser.set_defaults(func=main)
     parser.add_argument("--input-bucket")
     parser.add_argument("--input-endpoint")
     parser.add_argument("--input-anon", action="store_true")
@@ -912,8 +919,12 @@ def cli(args=sys.argv[1:]):
     )
     parser.add_argument("input_path", type=Path)
     parser.add_argument("output_path", type=Path)
-    ns = parser.parse_args(args)
 
+
+def parse(ns: argparse.Namespace):
+    """
+    Parse the namespace arguments provided by the dispatcher
+    """
     # configure logging
     if ns.log.upper() == "TRACE":
         numeric_level = 5
@@ -928,20 +939,11 @@ def cli(args=sys.argv[1:]):
     )
     LOGGER.setLevel(numeric_level)
 
-    rocrate = None
+    ns.rocrate = None
     if not ns.rocrate_skip:
         setup = {}
         for key in ("name", "description", "license", "organism", "modality"):
             value = getattr(ns, f"rocrate_{key}", None)
             if value:
                 setup[key] = value
-        rocrate = ROCrateWriter(**setup)
-
-    converted = main(ns, rocrate)
-    if converted == 0:
-        raise SystemExit(1)
-    return converted
-
-
-if __name__ == "__main__":
-    cli(sys.argv[1:])
+        ns.rocrate = ROCrateWriter(**setup)

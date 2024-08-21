@@ -65,7 +65,7 @@ enable = true
 substitution.files = ["src/ome2024_ngff_challenge/__init__.py"]
 
 [tool.poetry.scripts]
-ome2024-ngff-challenge = "ome2024_ngff_challenge.resave:cli"
+ome2024-ngff-challenge = "ome2024_ngff_challenge:dispatch"
 
 [tool.setuptools_scm]
 write_to = "src/ome2024_ngff_challenge/_version.py"

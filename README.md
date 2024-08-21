@@ -145,7 +145,7 @@ a full copy of the data will be created at the chosen location.
 ### Getting started
 
 ```
-ome2024-ngff-challenge input.zarr output.zarr
+ome2024-ngff-challenge resave input.zarr output.zarr
 ```
 
 is the most basic invocation of the tool. If you would like to re-run the script
@@ -153,7 +153,7 @@ with different parameters, you can additionally set `--output-overwrite` to
 ignore a previous conversion:
 
 ```
-ome2024-ngff-challenge input.zarr output.zarr --output-overwrite
+ome2024-ngff-challenge resave input.zarr output.zarr --output-overwrite
 ```
 
 ### Writing in parallel
@@ -162,7 +162,7 @@ By default, 16 chunks of data will be processed simultaneously in order to bound
 memory usage. You can increase this number based on your local resources:
 
 ```
-ome2024-ngff-challenge input.zarr output.zarr --output-threads=128
+ome2024-ngff-challenge resave input.zarr output.zarr --output-threads=128
 ```
 
 ### Reading/writing remotely
@@ -172,7 +172,7 @@ set S3 parameters on the command-line which will then treat the input and/or
 output datasets as a prefix within an S3 bucket:
 
 ```
-ome2024-ngff-challenge \
+ome2024-ngff-challenge resave \
         --input-bucket=BUCKET \
         --input-endpoint=HOST \
         --input-anon \
@@ -183,7 +183,7 @@ ome2024-ngff-challenge \
 A small example you can try yourself:
 
 ```
-ome2024-ngff-challenge \
+ome2024-ngff-challenge resave \
         --input-bucket=idr \
         --input-endpoint=https://uk1s3.embassy.ebi.ac.uk \
         --input-anon \
@@ -201,7 +201,7 @@ executed later.
 For example, running:
 
 ```
-ome2024-ngff-challenge dev2/input.zarr /tmp/scripts.zarr --output-script
+ome2024-ngff-challenge resave dev2/input.zarr /tmp/scripts.zarr --output-script
 ```
 
 produces a dataset with one `zarr.json` file and 3 `convert.sh` scripts:
@@ -233,14 +233,14 @@ sizes that will work for all data. Pass the `--output-chunks` and
 resolutions:
 
 ```
-ome2024-ngff-challenge input.zarr output.zarr --output-chunks=1,1,1,256,256 --output-shards=1,1,1,2048,2048
+ome2024-ngff-challenge resave input.zarr output.zarr --output-chunks=1,1,1,256,256 --output-shards=1,1,1,2048,2048
 ```
 
 Alternatively, you can use a JSON file to review and manually optimize the
 chunking and sharding parameters on a per-resolution basis:
 
 ```
-ome2024-ngff-challenge input.zarr parameters.json --output-write-details
+ome2024-ngff-challenge resave input.zarr parameters.json --output-write-details
 ```
 
 This will write a JSON file of the form:
@@ -254,7 +254,7 @@ the "multiscales". Edits to this file can be read back in using the
 `output-read-details` flag:
 
 ```
-ome2024-ngff-challenge input.zarr output.zarr --output-read-details=parameters.json
+ome2024-ngff-challenge resave input.zarr output.zarr --output-read-details=parameters.json
 ```
 
 Note: Changes to the shape are ignored.
