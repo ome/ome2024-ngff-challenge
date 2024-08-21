@@ -871,7 +871,19 @@ def cli(subparsers: argparse._SubParsersAction):
     them to `main`. If no images are converted, raises
     SystemExit. Otherwise, return the number of images.
     """
-    parser = subparsers.add_parser("resave")
+    cmd = "ome2024-ngff-challenge resave"
+    desc = f"""
+
+# Basic invocation
+{cmd} input.zarr output.zarr
+
+    """
+    parser = subparsers.add_parser(
+        "resave",
+        help="convert Zarr v2 dataset to Zarr v3",
+        description=desc,
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     parser.set_defaults(func=main)
     parser.add_argument("--input-bucket")
     parser.add_argument("--input-endpoint")
