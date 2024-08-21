@@ -583,8 +583,9 @@ METADATA
 
     Modality: bright-field microscopy        {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000243
     Modality: confocal microscopy            {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000251
-    Modality: two-photon laser scanning      {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000253
+    Modality: light-sheet microscopy (SPIM)  {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000369
     Modality: scanning electron microscopy   {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000257
+    Modality: two-photon laser scanning      {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000253
 
     Define a name                            {cmd} --cc-by in.zarr out.zarr --rocrate-name="my experiment"
     Define a description                     {cmd} --cc-by in.zarr out.zarr --rocrate-description="More text here"
