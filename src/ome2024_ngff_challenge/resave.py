@@ -589,30 +589,6 @@ def cli(subparsers: argparse._SubParsersAction):
         group_lic, "--cc0", "https://creativecommons.org/publicdomain/zero/1.0/"
     )
     license_action(group_lic, "--cc-by", "https://creativecommons.org/licenses/by/4.0/")
-    license_action(
-        group_lic,
-        "--cc-by-sa",
-        "https://creativecommons.org/licenses/by-sa/4.0/",
-        recommended=False,
-    )
-    license_action(
-        group_lic,
-        "--cc-by-nc",
-        "https://creativecommons.org/licenses/by-nc/4.0/",
-        recommended=False,
-    )
-    license_action(
-        group_lic,
-        "--cc-by-nc-sa",
-        "https://creativecommons.org/licenses/by-nc-sa/4.0/",
-        recommended=False,
-    )
-    license_action(
-        group_lic,
-        "--cc-by-nd",
-        "https://creativecommons.org/licenses/by-nd/4.0/",
-        recommended=False,
-    )
     group_lic.add_argument(
         "--rocrate-license",
         type=str,
