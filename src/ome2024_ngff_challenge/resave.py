@@ -541,83 +541,86 @@ def cli(subparsers: argparse._SubParsersAction):
     cmd = "ome2024-ngff-challenge resave"
     desc = f"""
 
-The `resave` subcommand will convert an existing Zarr v2 dataset into
-a Zarr v3 dataset according to the challenge specification. Additionally,
-a number of options are available for adding metadata
+
+The `resave` subcommand will convert an existing Zarr v2 dataset into a Zarr v3 dataset according
+to the challenge specification. Additionally, a number of options are available for adding metadata
+
 
 
 BASIC
 
-Simplest example:                        {cmd} --cc-by in.zarr out.zarr
-Overwrite existing output:               {cmd} --cc-by in.zarr out.zarr --output-overwrite
+    Simplest example:                        {cmd} --cc-by in.zarr out.zarr
+    Overwrite existing output:               {cmd} --cc-by in.zarr out.zarr --output-overwrite
 
 
 METADATA
 
-There are three levels of metadata that the challenge is looking for:
+    There are three levels of metadata that the challenge is looking for:
 
-    - strongly recommended: license
-    - recommended: organism and modality
-    - optional: name and description
+        - strongly recommended: license
+        - recommended: organism and modality
+        - optional: name and description
 
-Most suggested license                   {cmd} in.zarr out.zarr --cc-by
-Public domain license                    {cmd} in.zarr out.zarr --cc0
-Choose your own license                  {cmd} in.zarr out.zarr --rocrate-license=https://creativecommons.org/licenses/by-nc/4.0/
+    License: CC-BY (most suggested)          {cmd} in.zarr out.zarr --cc-by
+    License: public domain                   {cmd} in.zarr out.zarr --cc0
+    License: choose your own                 {cmd} in.zarr out.zarr --rocrate-license=https://creativecommons.org/licenses/by-sa/4.0/
 
-Organism: Arabidopsis thaliana           {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid3702
-Organism: Drosophila melanogaster        {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid7227
-Organism: Escherichia coli               {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid562
-Organism: Homo sapiens                   {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid9606
-Organism: Mus musculus                   {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid10090
-Organism: Saccharomyces cerevisiae       {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid4932
+    Organism: Arabidopsis thaliana           {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid3702
+    Organism: Drosophila melanogaster        {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid7227
+    Organism: Escherichia coli               {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid562
+    Organism: Homo sapiens                   {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid9606
+    Organism: Mus musculus                   {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid10090
+    Organism: Saccharomyces cerevisiae       {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid4932
 
-Modality: bright-field microscopy        {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000243
-Modality: confocal microscopy            {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000251
-Modality: two-photon laser scanning      {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000253
-Modality: two-photon laser scanning      {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000253
-Modality: scanning electrom microscopy   {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000257
+    Modality: bright-field microscopy        {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000243
+    Modality: confocal microscopy            {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000251
+    Modality: two-photon laser scanning      {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000253
+    Modality: two-photon laser scanning      {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000253
+    Modality: scanning electrom microscopy   {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000257
 
-Define a name                            {cmd} --cc-by in.zarr out.zarr --rocrate-name="my experiment"
-Define a description                     {cmd} --cc-by in.zarr out.zarr --rocrate-description="More text here"
+    Define a name                            {cmd} --cc-by in.zarr out.zarr --rocrate-name="my experiment"
+    Define a description                     {cmd} --cc-by in.zarr out.zarr --rocrate-description="More text here"
 
-No metadata (INVALID DATASET!)           {cmd} --cc-by in.zarr out.zarr --rocrate-skip
+    No metadata (INVALID DATASET!)           {cmd} --cc-by in.zarr out.zarr --rocrate-skip
 
-For more information see the online resources for each metadata term:
-  - https://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/
-  - https://www.ebi.ac.uk/ols4/ontologies/fbbi
+    For more information see the online resources for each metadata term:
+    - https://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/
+    - https://www.ebi.ac.uk/ols4/ontologies/fbbi
 
 
 CHUNKS/SHARDS
 
-With the introduction of sharding, it may be necessary to choose a different chunk
-size for your dataset.
+    With the introduction of sharding, it may be necessary to choose a different chunk
+    size for your dataset.
 
-Set the same value for all resolutions   {cmd} --cc-by in.zarr out.zarr --output-chunks=1,1,1,256,256 --output-shards=1,1,1,2048,2048
-Log the current values for all images    {cmd} --cc-by in.zarr cfg.json --output-write-details
-Read values from an edited config file   {cmd} --cc-by in.zarr out.zarr --output-read-details=cfg.json
+    Set the same value for all resolutions   {cmd} --cc-by in.zarr out.zarr --output-chunks=1,1,1,256,256 --output-shards=1,1,1,2048,2048
+    Log the current values for all images    {cmd} --cc-by in.zarr cfg.json --output-write-details
+    Read values from an edited config file   {cmd} --cc-by in.zarr out.zarr --output-read-details=cfg.json
 
 
 REMOTE (S3)
 
-For both the input and output filesets, a number of arguments are available:
+    For both the input and output filesets, a number of arguments are available:
 
-  * bucket (required): setting this activates remote access
-  * endpoint (optional): if not using AWS S3, set this to your provider's endpoint
-  * region (optional): set the region that you would like to access
-  * anon (optional): do not attempt to authenticate with the service
+    * bucket (required): setting this activates remote access
+    * endpoint (optional): if not using AWS S3, set this to your provider's endpoint
+    * region (optional): set the region that you would like to access
+    * anon (optional): do not attempt to authenticate with the service
 
-By default, S3 access will try to make use of your environment variables (e.g. AWS_ACCESS_KEY_ID)
-or your local configuration (~/.aws) which you may need to deactivate.
+    By default, S3 access will try to make use of your environment variables (e.g. AWS_ACCESS_KEY_ID)
+    or your local configuration (~/.aws) which you may need to deactivate.
 
-Read from IDR's bucket:         {cmd} --cc-by --input-anon --input-endpoint=https://uk1s3.embassy.ebi.ac.uk --input-bucket=idr \
-                                              bucket-path/in.zarr out.zarr
+    Read from IDR's bucket:                  {cmd} --cc-by bucket-path/in.zarr out.zarr \\
+                                                   --input-anon \\
+                                                   --input-bucket=idr \\
+                                                   --input-endpoint=https://uk1s3.embassy.ebi.ac.uk
 
-ADVANCED (TBD)
+ADVANCED
 
-  --output-script
-  --output-threads OUTPUT_THREADS
-  --log LOG             'error', 'warn', 'info', 'debug' or 'trace'
-
+    Prepare scripts for conversion.          {cmd} --cc-by in.zarr out.zarr --output-script
+    Set number of parallel threads           {cmd} --cc-by in.zarr out.zarr --output-threads=128
+    Increase logging                         {cmd} --cc-by in.zarr out.zarr --log=debug
+    Increase logging even more               {cmd} --cc-by in.zarr out.zarr --log=trace
     """
     parser = subparsers.add_parser(
         "resave",
@@ -634,8 +637,16 @@ ADVANCED (TBD)
     parser.add_argument("--output-endpoint")
     parser.add_argument("--output-anon", action="store_true")
     parser.add_argument("--output-region", default="us-east-1")
-    parser.add_argument("--output-overwrite", action="store_true")
-    parser.add_argument("--output-script", action="store_true")
+    parser.add_argument(
+        "--output-overwrite",
+        action="store_true",
+        help="CAUTION: Overwrite a previous conversion run",
+    )
+    parser.add_argument(
+        "--output-script",
+        action="store_true",
+        help="CAUTION: Do not run conversion. Instead prepare scripts for later conversion",
+    )
     parser.add_argument(
         "--output-threads",
         type=int,
