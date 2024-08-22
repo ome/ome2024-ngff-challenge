@@ -182,24 +182,25 @@ def check_bf2raw(tmp_path, input, expected, args):
     [
         pytest.param("2d", 1, [], None),
         pytest.param("2d", 1, ["--output-script"], None),
+        pytest.param("2d", 1, ["--conversion-notes=INFO"], None),
         pytest.param("bf2raw", 2, [], check_bf2raw),
         pytest.param("bf2raw", 2, ["--output-script"], check_bf2raw),
+        pytest.param("bf2raw", 2, ["--conversion-notes=INFO"], check_bf2raw),
         pytest.param("hcs", 8, [], None),
         pytest.param("hcs", 8, ["--output-script"], None),
+        pytest.param("hcs", 8, ["--conversion-notes=INFO"], None),
     ],
 )
 def test_local_tests(tmp_path, input, expected, args, func):
-    assert (
-        dispatch(
-            [
-                "resave",
-                "--cc-by",
-                *args,
-                f"data/{input}.zarr",
-                str(tmp_path / "out.zarr"),
-            ]
-        )
-        == expected
+    converted = dispatch(
+        [
+            "resave",
+            "--cc-by",
+            *args,
+            f"data/{input}.zarr",
+            str(tmp_path / "out.zarr"),
+        ]
     )
+    assert converted == expected
     if func:
         func(tmp_path, input, expected, args)

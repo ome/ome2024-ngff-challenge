@@ -122,10 +122,16 @@ def strip_version(possible_dict) -> None:
         del possible_dict["version"]
 
 
-def add_creator(json_dict) -> None:
+def add_creator(json_dict: dict, notes: str | None = None) -> None:
     # Add _creator - NB: this will overwrite any existing _creator info
     pkg_version = lib_version("ome2024-ngff-challenge")
-    json_dict["_creator"] = {"name": "ome2024-ngff-challenge", "version": pkg_version}
+    json_dict["_creator"] = {
+        "name": "ome2024-ngff-challenge",
+        "version": pkg_version,
+        "notes": notes,
+    }
+    if notes:
+        json_dict["_creator"]["notes"] = notes
 
 
 class TextBuffer(Buffer):
