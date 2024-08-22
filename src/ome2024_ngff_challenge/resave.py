@@ -140,8 +140,10 @@ def convert_array(
         "elapsed": after.elapsed(),
         "threads": threads,
         "cpu_count": multiprocessing.cpu_count(),
-        "sched_affinity": os.sched_getaffinity(0),
     }
+    if hasattr(os, "sched_getaffinity"):
+        stats["sched_affinity"] = len(os.sched_getaffinity(0))
+
     LOGGER.info(f"""Re-encode (tensorstore) {input_config} to {output_config}
         read: {stats["read"]}
         write: {stats["written"]}
