@@ -72,6 +72,8 @@ Other samples:
   Shape `1,3,1402,5192,2947`, Size `66.04 GB`, from idr0048.
 - [Week9_090907.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/idr0035/Week9_090907.zarr)
   plate from idr0035.
+- [l4_sample/color](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://data-humerus.webknossos.org/data/zarr3_experimental/scalable_minds/l4_sample/color)
+  from WebKnossos.
 
  <details><summary>Expand for more details on creation of these samples</summary>
 
@@ -159,9 +161,9 @@ No license set. Choose one of the Creative Commons license (e.g., `--cc-by`) or 
 
 #### Licenses
 
-There are a number of other license options to choose from. We suggest one of:
+There are several license options to choose from. We suggest one of:
 
-- `--cc-by` credit must be given to the creator
+- `--cc-by`: credit must be given to the creator
 - `--cc0`: Add your data to the public domain
 
 Alternatively, you can choose your own license, e.g.,
@@ -173,6 +175,31 @@ collection at all.
 
 **Note:** you will need to add metadata later for your dataset to be considered
 valid.
+
+#### Metadata
+
+There are four additional fields of metadata that are being collected for the
+challenge:
+
+- organism and modality: RECOMMENDED
+- name and description: SUGGESTED
+
+These can be set via the properties prefixed with `--rocrate-` since they will
+be stored in the standard [RO-Crate](https://w3id.org/ro/crate/) JSON file
+(`./ro-crate-metadata.json`) at the top-level of the Zarr dataset.
+
+```
+ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --rocrate-organism=NCBI:txid9606      # Human
+ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --rocrate-modality=obo:FBbi_00000369  # SPIM
+ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --rocrate-name="short name of dataset"
+ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --rocrate-description="and a longer description"
+```
+
+For other examples including several other NCBI and FBbi terms, please see:
+
+```
+ome2024-ngff-challenge resave --help
+```
 
 #### Re-running the script
 
@@ -254,10 +281,18 @@ export PATH=$PATH:$HOME/.cargo/bin
 
 #### Optimizing chunks and shards
 
-Finally, there is not yet a single heuristic for determining the chunk and shard
-sizes that will work for all data. Pass the `--output-chunks` and
-`--output-shards` flags in order to set the size of chunks and shards for all
-resolutions:
+Zarr v3 supports shards, which are files that contain multiple chunks. The shape
+of a shard must be a multiple of the chunk size in every dimension. There is not
+yet a single heuristic for determining the chunk and shard sizes that will work
+for all data. **The default shard shape chosen by resave is the full shape of
+the image array.**
+
+In order to limit the size of a shard, if the shard exceeds 100,000,000 pixels
+then you must specify the shard-shape. You can specify the shard shape, using
+--output-shards, which will be used for all pyramid resolutions. This may cause
+issues if the chunk shape changes for lower resolutions (to match the smaller
+image shape). In this case, you should also specify the chunk-shape to be used
+for all resolutions:
 
 ```
 ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --output-chunks=1,1,1,256,256 --output-shards=1,1,1,2048,2048
@@ -285,6 +320,25 @@ ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --output-read-detai
 ```
 
 Note: Changes to the shape are ignored.
+
+#### More information
+
+See `ome2024-ngff-challenge resave -h` for more arguments and examples.
+
+### `lookup`: finding ontology terms (WIP)
+
+The `ome2024-ngff-challenge` tool can also be used to look up terms from the EBI
+OLS for setting metadata fields like `--rocrate-modality` and
+`--rocrate-organism`:
+
+```
+ome2024-ngff-challenge lookup "homo sapiens"
+ONTOLOGY  	TERM                	LABEL                         	DESCRIPTION
+ncbitaxon 	NCBITaxon_9606      	Homo sapiens
+vto       	VTO_0011993         	Homo sapiens
+snomed    	SNOMED_337915000    	Homo sapiens
+...
+```
 
 ## Related work
 
