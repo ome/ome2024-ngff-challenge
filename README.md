@@ -191,11 +191,11 @@ be stored in the standard [RO-Crate](https://w3id.org/ro/crate/) JSON file
 ```
 ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --rocrate-organism=NCBI:txid9606      # Human
 ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --rocrate-modality=obo:FBbi_00000369  # SPIM
-ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --rocrate-name="your name here"
+ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --rocrate-name="short name of dataset"
 ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --rocrate-description="and a longer description"
 ```
 
-For other examples including severa other NCBI and FBbi terms, please see:
+For other examples including several other NCBI and FBbi terms, please see:
 
 ```
 ome2024-ngff-challenge resave --help
