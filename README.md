@@ -136,43 +136,70 @@ $ ome2024-ngff-challenge --input-bucket=bia-integrator-data --input-endpoint=htt
 
  </details>
 
-## Converting your data
+## CLI Commands
+
+### `resave`: convert your data
 
 The `ome2024-ngff-challenge` tool can be used to convert an OME-Zarr 0.4 dataset
 that is based on Zarr v2. The input data will **not be modified** in any way and
 a full copy of the data will be created at the chosen location.
 
-### Getting started
+#### Getting started
 
 ```
-ome2024-ngff-challenge input.zarr output.zarr
+ome2024-ngff-challenge resave --cc-by input.zarr output.zarr
 ```
 
-is the most basic invocation of the tool. If you would like to re-run the script
-with different parameters, you can additionally set `--output-overwrite` to
-ignore a previous conversion:
+is the most basic invocation of the tool. If you do not choose a license, the
+application will fail with:
 
 ```
-ome2024-ngff-challenge input.zarr output.zarr --output-overwrite
+No license set. Choose one of the Creative Commons license (e.g., `--cc-by`) or skip RO-Crate creation (`--rocrate-skip`)
 ```
 
-### Writing in parallel
+#### Licenses
+
+There are a number of other license options to choose from. We suggest one of:
+
+- `--cc-by` credit must be given to the creator
+- `--cc0`: Add your data to the public domain
+
+Alternatively, you can choose your own license, e.g.,
+
+`--rocrate-license=https://creativecommons.org/licenses/by-nc/4.0/`
+
+to restrict commercial use of your data. Additionally, you can disable metadata
+collection at all.
+
+**Note:** you will need to add metadata later for your dataset to be considered
+valid.
+
+#### Re-running the script
+
+If you would like to re-run the script with different parameters, you can
+additionally set `--output-overwrite` to ignore a previous conversion:
+
+```
+ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --output-overwrite
+```
+
+#### Writing in parallel
 
 By default, 16 chunks of data will be processed simultaneously in order to bound
 memory usage. You can increase this number based on your local resources:
 
 ```
-ome2024-ngff-challenge input.zarr output.zarr --output-threads=128
+ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --output-threads=128
 ```
 
-### Reading/writing remotely
+#### Reading/writing remotely
 
 If you would like to avoid downloading and/or upload the Zarr datasets, you can
 set S3 parameters on the command-line which will then treat the input and/or
 output datasets as a prefix within an S3 bucket:
 
 ```
-ome2024-ngff-challenge \
+ome2024-ngff-challenge resave --cc-by \
         --input-bucket=BUCKET \
         --input-endpoint=HOST \
         --input-anon \
@@ -183,7 +210,7 @@ ome2024-ngff-challenge \
 A small example you can try yourself:
 
 ```
-ome2024-ngff-challenge \
+ome2024-ngff-challenge resave --cc-by \
         --input-bucket=idr \
         --input-endpoint=https://uk1s3.embassy.ebi.ac.uk \
         --input-anon \
@@ -191,7 +218,7 @@ ome2024-ngff-challenge \
         /tmp/6001240.zarr
 ```
 
-### Reading/writing via a script
+#### Reading/writing via a script
 
 Another R/W option is to have `resave.py` generate a script which you can
 execute later. If you pass `--output-script`, then rather than generate the
@@ -201,7 +228,7 @@ executed later.
 For example, running:
 
 ```
-ome2024-ngff-challenge dev2/input.zarr /tmp/scripts.zarr --output-script
+ome2024-ngff-challenge resave --cc-by dev2/input.zarr /tmp/scripts.zarr --output-script
 ```
 
 produces a dataset with one `zarr.json` file and 3 `convert.sh` scripts:
@@ -225,7 +252,7 @@ cargo install zarrs_tools
 export PATH=$PATH:$HOME/.cargo/bin
 ```
 
-### Optimizing chunks and shards
+#### Optimizing chunks and shards
 
 Finally, there is not yet a single heuristic for determining the chunk and shard
 sizes that will work for all data. Pass the `--output-chunks` and
@@ -233,14 +260,14 @@ sizes that will work for all data. Pass the `--output-chunks` and
 resolutions:
 
 ```
-ome2024-ngff-challenge input.zarr output.zarr --output-chunks=1,1,1,256,256 --output-shards=1,1,1,2048,2048
+ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --output-chunks=1,1,1,256,256 --output-shards=1,1,1,2048,2048
 ```
 
 Alternatively, you can use a JSON file to review and manually optimize the
 chunking and sharding parameters on a per-resolution basis:
 
 ```
-ome2024-ngff-challenge input.zarr parameters.json --output-write-details
+ome2024-ngff-challenge resave --cc-by input.zarr parameters.json --output-write-details
 ```
 
 This will write a JSON file of the form:
@@ -254,7 +281,7 @@ the "multiscales". Edits to this file can be read back in using the
 `output-read-details` flag:
 
 ```
-ome2024-ngff-challenge input.zarr output.zarr --output-read-details=parameters.json
+ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --output-read-details=parameters.json
 ```
 
 Note: Changes to the shape are ignored.

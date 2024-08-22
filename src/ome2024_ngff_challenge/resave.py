@@ -2,367 +2,34 @@
 from __future__ import annotations
 
 import argparse
-import itertools
 import json
 import logging
 import math
 import random
-import shutil
-import sys
 import time
-from importlib.metadata import version as lib_version
+import warnings
 from pathlib import Path
 
-import numpy as np
 import tensorstore as ts
 import tqdm
-import zarr
-from zarr.api.synchronous import sync
-from zarr.buffer import Buffer, BufferPrototype
 
+from .utils import (
+    Batched,
+    Config,
+    SafeEncoder,
+    TSMetrics,
+    add_creator,
+    chunk_iter,
+    configure_logging,
+    csv_int,
+    guess_shards,
+    strip_version,
+)
 from .zarr_crate.rembi_extension import Biosample, ImageAcquistion, Specimen
 from .zarr_crate.zarr_extension import ZarrCrate
 
 NGFF_VERSION = "0.5"
 LOGGER = logging.getLogger(__file__)
-
-#
-# Helpers
-#
-
-
-class Batched:
-    """
-    implementation of itertools.batched for pre-3.12 Python versions
-    from https://mathspp.com/blog/itertools-batched
-    """
-
-    def __init__(self, iterable, n: int):
-        if n < 1:
-            msg = f"n must be at least one ({n})"
-            raise ValueError(msg)
-        self.iter = iter(iterable)
-        self.n = n
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        batch = tuple(itertools.islice(self.iter, self.n))
-        if not batch:
-            raise StopIteration()
-        return batch
-
-
-class SafeEncoder(json.JSONEncoder):
-    # Handle any TypeErrors so we are safe to use this for logging
-    # E.g. dtype obj is not JSON serializable
-    def default(self, o):
-        try:
-            return super().default(o)
-        except TypeError:
-            return str(o)
-
-
-def guess_shards(shape: list, chunks: list):
-    """
-    Method to calculate best shard sizes. These values can be written to
-    a file for the current dataset by using:
-
-    ./resave.py input.zarr output.json --output-write-details
-    """
-    # TODO: hard-coded to return the full size
-    assert chunks is not None  # fixes unused parameter
-    return shape
-
-
-def chunk_iter(shape: list, chunks: list):
-    """
-    Returns a series of tuples, each containing chunk slice
-    E.g. for 2D shape/chunks: ((slice(0, 512, 1), slice(0, 512, 1)), (slice(0, 512, 1), slice(512, 1024, 1))...)
-    Thanks to Davis Bennett.
-    """
-    assert len(shape) == len(chunks)
-    chunk_iters = []
-    for chunk_size, dim_size in zip(chunks, shape):
-        chunk_tuple = tuple(
-            slice(
-                c_index * chunk_size,
-                min(dim_size, c_index * chunk_size + chunk_size),
-                1,
-            )
-            for c_index in range(-(-dim_size // chunk_size))
-        )
-        chunk_iters.append(chunk_tuple)
-    return tuple(itertools.product(*chunk_iters))
-
-
-def csv_int(vstr, sep=",") -> list:
-    """Convert a string of comma separated values to integers
-    @returns iterable of floats
-    """
-    values = []
-    for v0 in vstr.split(sep):
-        try:
-            v = int(v0)
-            values.append(v)
-        except ValueError as ve:
-            raise argparse.ArgumentError(
-                message=f"Invalid value {v0}, values must be a number"
-            ) from ve
-    return values
-
-
-def strip_version(possible_dict) -> None:
-    """
-    If argument is a dict with the key "version", remove it
-    """
-    if isinstance(possible_dict, dict) and "version" in possible_dict:
-        del possible_dict["version"]
-
-
-def add_creator(json_dict) -> None:
-    # Add _creator - NB: this will overwrite any existing _creator info
-    pkg_version = lib_version("ome2024-ngff-challenge")
-    json_dict["_creator"] = {"name": "ome2024-ngff-challenge", "version": pkg_version}
-
-
-class TextBuffer(Buffer):
-    """
-    Zarr Buffer implementation that simplify saves text at a given location.
-    """
-
-    def __init__(self, text):
-        self.text = text
-        if isinstance(text, str):
-            text = np.array(text.encode())
-        self._data = text
-
-
-class TSMetrics:
-    """
-    Instances of this class capture the current tensorstore metrics.
-
-    If an existing instance is passed in on creation, it will be stored
-    in order to deduct previous values from those measured by this instance.
-    """
-
-    CHUNK_CACHE_READS = "/tensorstore/cache/chunk_cache/reads"
-    CHUNK_CACHE_WRITES = "/tensorstore/cache/chunk_cache/writes"
-
-    BATCH_READ = "/tensorstore/kvstore/{store_type}/batch_read"
-    BYTES_READ = "/tensorstore/kvstore/{store_type}/bytes_read"
-    BYTES_WRITTEN = "/tensorstore/kvstore/{store_type}/bytes_written"
-
-    OTHER = (
-        "/tensorstore/cache/hit_count"
-        "/tensorstore/cache/kvs_cache_read"
-        "/tensorstore/cache/miss_count"
-        "/tensorstore/kvstore/{store_type}/delete_range"
-        "/tensorstore/kvstore/{store_type}/open_read"
-        "/tensorstore/kvstore/{store_type}/read"
-        "/tensorstore/kvstore/{store_type}/write"
-        "/tensorstore/thread_pool/active"
-        "/tensorstore/thread_pool/max_delay_ns"
-        "/tensorstore/thread_pool/started"
-        "/tensorstore/thread_pool/steal_count"
-        "/tensorstore/thread_pool/task_providers"
-        "/tensorstore/thread_pool/total_queue_time_ns"
-        "/tensorstore/thread_pool/work_time_ns"
-    )
-
-    def __init__(self, read_config, write_config, start=None):
-        self.time = time.time()
-        self.read_type = read_config["kvstore"]["driver"]
-        self.write_type = write_config["kvstore"]["driver"]
-        self.start = start
-        self.data = ts.experimental_collect_matching_metrics()
-
-    def value(self, key):
-        rv = None
-        for item in self.data:
-            k = item["name"]
-            v = item["values"]
-            if k == key:
-                if len(v) > 1:
-                    raise Exception(f"Multiple values for {key}: {v}")
-                rv = v[0]["value"]
-                break
-        if rv is None:
-            raise Exception(f"unknown key: {key} from {self.data}")
-
-        orig = self.start.value(key) if self.start is not None else 0
-
-        return rv - orig
-
-    def read(self):
-        return self.value(self.BYTES_READ.format(store_type=self.read_type))
-
-    def written(self):
-        return self.value(self.BYTES_WRITTEN.format(store_type=self.write_type))
-
-    def elapsed(self):
-        return self.start is not None and (self.time - self.start.time) or self.time
-
-
-class Config:
-    """
-    Filesystem and S3 configuration information for both tensorstore and zarr-python
-    """
-
-    def __init__(
-        self,
-        ns: argparse.Namespace,
-        selection: str,
-        mode: str,
-        subpath: Path | str | None = None,
-    ):
-        self.ns = ns
-        self.selection = selection
-        self.mode = mode
-        self.subpath = None if not subpath else Path(subpath)
-
-        self.overwrite = False
-        if selection == "output":
-            self.overwrite = ns.output_overwrite
-
-        self.path = getattr(ns, f"{selection}_path")
-        self.anon = getattr(ns, f"{selection}_anon")
-        self.bucket = getattr(ns, f"{selection}_bucket")
-        self.endpoint = getattr(ns, f"{selection}_endpoint")
-        self.region = getattr(ns, f"{selection}_region")
-
-        if self.bucket:
-            self.ts_store = {
-                "driver": "s3",
-                "bucket": self.bucket,
-                "aws_region": self.region,
-            }
-            if self.anon:
-                self.ts_store["aws_credentials"] = {"anonymous": self.anon}
-            if self.endpoint:
-                self.ts_store["endpoint"] = self.endpoint
-
-            store_class = zarr.store.RemoteStore
-            self.zr_store = store_class(
-                url=self.s3_string(),
-                anon=self.anon,
-                endpoint_url=self.endpoint,
-                mode=mode,
-            )
-
-        else:
-            self.ts_store = {
-                "driver": "file",
-            }
-
-            store_class = zarr.store.LocalStore
-            self.zr_store = store_class(self.fs_string(), mode=mode)
-
-        self.ts_store["path"] = self.fs_string()
-        self.ts_config = {
-            "driver": "zarr" if selection == "input" else "zarr3",
-            "kvstore": self.ts_store,
-        }
-
-        self.zr_group = None
-        self.zr_attrs = None
-
-    def s3_string(self):
-        return f"s3://{self.bucket}/{self.fs_string()}"
-
-    def fs_string(self):
-        return str(self.path / self.subpath) if self.subpath else str(self.path)
-
-    def is_s3(self):
-        return bool(self.bucket)
-
-    def s3_endpoint(self):
-        """
-        Returns a representation of the S3 endpoint set on this configuration.
-
-          * "" if this is not an S3 configuration
-          * "default" if no explicit endpoint is set
-          * otherwise the URL is returned
-        """
-        if self.is_s3():
-            if self.endpoint:
-                return self.endpoint
-            return "default"
-        return ""
-
-    def __str__(self):
-        if self.is_s3():
-            return self.s3_string()
-        return self.fs_string()
-
-    def __repr__(self):
-        return (
-            f"Config<{self.__str__()}, {self.selection}, {self.mode}, {self.overwrite}>"
-        )
-
-    def check_or_delete_path(self):
-        # If this is local, then delete.
-        if self.bucket:
-            raise Exception(f"bucket set ({self.bucket}). Refusing to delete.")
-
-        if self.path.exists():
-            # TODO: This should really be an option on zarr-python
-            # as with tensorstore.
-            if self.overwrite:
-                if self.path.is_file():
-                    self.path.unlink()
-                else:
-                    shutil.rmtree(self.path)
-            else:
-                raise Exception(
-                    f"{self.path} exists. Use --output-overwrite to overwrite"
-                )
-
-    def open_group(self):
-        # Needs zarr_format=2 or we get ValueError("store mode does not support writing")
-        self.zr_group = zarr.open_group(store=self.zr_store, zarr_format=2)
-        self.zr_attrs = self.zr_group.attrs
-
-    def create_group(self):
-        self.zr_group = zarr.Group.create(self.zr_store)
-        self.zr_attrs = self.zr_group.attrs
-
-    def sub_config(self, subpath: str, create_or_open_group: bool = True):
-        sub = Config(
-            self.ns,
-            self.selection,
-            self.mode,
-            subpath if not self.subpath else self.subpath / subpath,
-        )
-        if create_or_open_group:
-            if sub.selection == "input":
-                sub.open_group()
-            elif sub.selection == "output":
-                sub.create_group()
-            else:
-                raise Exception(f"unknown selection: {self.selection}")
-        return sub
-
-    def ts_read(self):
-        return ts.open(self.ts_config).result()
-
-    def zr_write_text(self, path: Path, text: str):
-        text = TextBuffer(text)
-        filename = self.path / self.subpath / path if self.subpath else self.path / path
-        sync(self.zr_store.set(str(filename), text))
-
-    def zr_read_text(self, path: str | Path):
-        return sync(
-            self.zr_store.get(str(path), prototype=BufferPrototype(TextBuffer, None))
-        )
-
-
-class Location:
-    """
-    High-level collection of objects and configuration
-    options related to a source or target location for conversion.
-    """
 
 
 def convert_array(
@@ -591,7 +258,7 @@ def convert_image(
                 dimsn_txt = ",".join(map(str, dimension_names))
                 output_config.zr_write_text(
                     Path(ds_path) / "convert.sh",
-                    f"zarrs_reencode --chunk-shape {chunk_txt} --shard-shape {shard_txt} --dimension-names {dimsn_txt} --validate {input_config} {output_config}\n",
+                    f"zarrs_reencode --chunk-shape {chunk_txt} --shard-shape {shard_txt} --dimension-names {dimsn_txt} --validate {ds_input_config} {ds_output_config}\n",
                 )
             else:
                 convert_array(
@@ -646,9 +313,9 @@ def convert_image(
 class ROCrateWriter:
     def __init__(
         self,
-        name: str = "dataset name",
-        description: str = "dataset description",
-        data_license: str = "https://creativecommons.org/licenses/by/4.0/",
+        name: str | None = None,
+        description: str | None = None,
+        data_license: str | None = None,
         organism: str | None = None,
         modality: str | None = None,
     ):
@@ -669,11 +336,19 @@ class ROCrateWriter:
         Return a dictionary containing the base properties
         like name, description, and license
         """
-        return {
-            "name": self.name,
-            "description": self.description,
-            "licence": self.data_license,
-        }
+
+        values = {}
+        if self.name:
+            values["name"] = self.name
+        if self.description:
+            values["description"] = self.description
+
+        if self.data_license:
+            values["license"] = self.data_license
+        else:
+            warnings.warn("No license specified!", stacklevel=1)
+
+        return values
 
     def generate(self, dataset="./") -> None:
         """
@@ -722,11 +397,16 @@ class ROCrateWriter:
         config.zr_write_text(filename, text)
 
 
-def main(ns: argparse.Namespace, rocrate: ROCrateWriter | None = None) -> int:
+def main(ns: argparse.Namespace) -> int:
     """
-    Returns the number of images converted
+    If no images are converted, raises
+    SystemExit. Otherwise, return the number of images.
     """
-    converted = 0
+
+    converted: int = 0
+
+    parse(ns)
+    rocrate: ROCrateWriter = ns.rocrate
 
     input_config = Config(ns, "input", "r")
     output_config = Config(ns, "output", "w")
@@ -856,16 +536,108 @@ def main(ns: argparse.Namespace, rocrate: ROCrateWriter | None = None) -> int:
     else:
         LOGGER.warning(f"no convertible metadata: {input_config.zr_attrs.keys()}")
 
+    if converted == 0:
+        raise SystemExit(1)
     return converted
 
 
-def cli(args=sys.argv[1:]):
+def cli(subparsers: argparse._SubParsersAction):
     """
     Parses the arguments contained in `args` and passes
     them to `main`. If no images are converted, raises
     SystemExit. Otherwise, return the number of images.
     """
-    parser = argparse.ArgumentParser()
+    cmd = "ome2024-ngff-challenge resave"
+    desc = f"""
+
+
+The `resave` subcommand will convert an existing Zarr v2 dataset into a Zarr v3 dataset according
+to the challenge specification. Additionally, a number of options are available for adding metadata
+
+
+
+BASIC
+
+    Simplest example:                        {cmd} --cc-by in.zarr out.zarr
+    Overwrite existing output:               {cmd} --cc-by in.zarr out.zarr --output-overwrite
+
+
+METADATA
+
+    There are three levels of metadata that the challenge is looking for:
+
+        - strongly recommended: license
+        - recommended: organism and modality
+        - optional: name and description
+
+    License: CC-BY (most suggested)          {cmd} in.zarr out.zarr --cc-by
+    License: public domain                   {cmd} in.zarr out.zarr --cc0
+    License: choose your own                 {cmd} in.zarr out.zarr --rocrate-license=https://creativecommons.org/licenses/by-sa/4.0/
+
+    Organism: Arabidopsis thaliana           {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid3702
+    Organism: Drosophila melanogaster        {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid7227
+    Organism: Escherichia coli               {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid562
+    Organism: Homo sapiens                   {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid9606
+    Organism: Mus musculus                   {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid10090
+    Organism: Saccharomyces cerevisiae       {cmd} in.zarr out.zarr --cc0 --rocrate-organism=NCBI:txid4932
+
+    Modality: bright-field microscopy        {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000243
+    Modality: confocal microscopy            {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000251
+    Modality: light-sheet microscopy (SPIM)  {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000369
+    Modality: scanning electron microscopy   {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000257
+    Modality: two-photon laser scanning      {cmd} in.zarr out.zarr --cc0 --rocrate-modality=obo:FBbi_00000253
+
+    Define a name                            {cmd} --cc-by in.zarr out.zarr --rocrate-name="my experiment"
+    Define a description                     {cmd} --cc-by in.zarr out.zarr --rocrate-description="More text here"
+
+    No metadata (INVALID DATASET!)           {cmd} --rocrate-skip in.zarr out.zarr
+
+    For more information see the online resources for each metadata term:
+    - https://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/
+    - https://www.ebi.ac.uk/ols4/ontologies/fbbi
+
+
+CHUNKS/SHARDS
+
+    With the introduction of sharding, it may be necessary to choose a different chunk
+    size for your dataset.
+
+    Set the same value for all resolutions   {cmd} --cc-by in.zarr out.zarr --output-chunks=1,1,1,256,256 --output-shards=1,1,1,2048,2048
+    Log the current values for all images    {cmd} --cc-by in.zarr cfg.json --output-write-details
+    Read values from an edited config file   {cmd} --cc-by in.zarr out.zarr --output-read-details=cfg.json
+
+
+REMOTE (S3)
+
+    For both the input and output filesets, a number of arguments are available:
+
+    * bucket (required): setting this activates remote access
+    * endpoint (optional): if not using AWS S3, set this to your provider's endpoint
+    * region (optional): set the region that you would like to access
+    * anon (optional): do not attempt to authenticate with the service
+
+    By default, S3 access will try to make use of your environment variables (e.g. AWS_ACCESS_KEY_ID)
+    or your local configuration (~/.aws) which you may need to deactivate.
+
+    Read from IDR's bucket:                  {cmd} --cc-by bucket-path/in.zarr out.zarr \\
+                                                   --input-anon \\
+                                                   --input-bucket=idr \\
+                                                   --input-endpoint=https://uk1s3.embassy.ebi.ac.uk
+
+ADVANCED
+
+    Prepare scripts for conversion.          {cmd} --cc-by in.zarr out.zarr --output-script
+    Set number of parallel threads           {cmd} --cc-by in.zarr out.zarr --output-threads=128
+    Increase logging                         {cmd} --cc-by in.zarr out.zarr --log=debug
+    Increase logging even more               {cmd} --cc-by in.zarr out.zarr --log=trace
+    """
+    parser = subparsers.add_parser(
+        "resave",
+        help="convert Zarr v2 dataset to Zarr v3",
+        description=desc,
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser.set_defaults(func=main)
     parser.add_argument("--input-bucket")
     parser.add_argument("--input-endpoint")
     parser.add_argument("--input-anon", action="store_true")
@@ -874,20 +646,75 @@ def cli(args=sys.argv[1:]):
     parser.add_argument("--output-endpoint")
     parser.add_argument("--output-anon", action="store_true")
     parser.add_argument("--output-region", default="us-east-1")
-    parser.add_argument("--output-overwrite", action="store_true")
-    parser.add_argument("--output-script", action="store_true")
+    parser.add_argument(
+        "--output-overwrite",
+        action="store_true",
+        help="CAUTION: Overwrite a previous conversion run",
+    )
+    parser.add_argument(
+        "--output-script",
+        action="store_true",
+        help="CAUTION: Do not run conversion. Instead prepare scripts for later conversion",
+    )
     parser.add_argument(
         "--output-threads",
         type=int,
         default=16,
         help="number of simultaneous write threads",
     )
-    parser.add_argument("--rocrate-name", type=str)
-    parser.add_argument("--rocrate-description", type=str)
-    parser.add_argument("--rocrate-license", type=str)
-    parser.add_argument("--rocrate-organism", type=str)
-    parser.add_argument("--rocrate-modality", type=str)
-    parser.add_argument("--rocrate-skip", action="store_true")
+
+    # Very recommended metadata (SHOULD!)
+    def license_action(group, arg: str, url: str, recommended: bool = True):
+        class LicenseAction(argparse.Action):
+            def __call__(self, parser, args, *unused, **ignore):  # noqa: ARG002
+                args.rocrate_license = url
+                if not recommended:
+                    warnings.warn(
+                        f"This license is not recommended: {url}", stacklevel=1
+                    )
+
+        desc = url
+        if not recommended:
+            desc = "(not recommended) " + url
+        group.add_argument(arg, action=LicenseAction, nargs=0, help=desc)
+
+    group_lic = parser.add_mutually_exclusive_group()
+    license_action(
+        group_lic, "--cc0", "https://creativecommons.org/publicdomain/zero/1.0/"
+    )
+    license_action(group_lic, "--cc-by", "https://creativecommons.org/licenses/by/4.0/")
+    group_lic.add_argument(
+        "--rocrate-license",
+        type=str,
+        help="URL to another license, e.g., 'https://creativecommons.org/licenses/by/4.0/'",
+    )
+
+    # Recommended metadata (SHOULD)
+    parser.add_argument(
+        "--rocrate-organism",
+        type=str,
+        help="NCBI identifier of the form 'NCBI:txid7227'",
+    )
+    parser.add_argument(
+        "--rocrate-modality",
+        type=str,
+        help="FBbi identifier of the form 'obo:FBbi_00000243'",
+    )
+
+    # Optional metadata (MAY)
+    parser.add_argument(
+        "--rocrate-name",
+        type=str,
+        help="optional name of the dataset; taken from the NGFF metadata if available",
+    )
+    parser.add_argument(
+        "--rocrate-description", type=str, help="optional description of the dataset"
+    )
+    parser.add_argument(
+        "--rocrate-skip",
+        action="store_true",
+        help="skips the creation of the RO-Crate file",
+    )
     parser.add_argument(
         "--log", default="warn", help="'error', 'warn', 'info', 'debug' or 'trace'"
     )
@@ -912,36 +739,23 @@ def cli(args=sys.argv[1:]):
     )
     parser.add_argument("input_path", type=Path)
     parser.add_argument("output_path", type=Path)
-    ns = parser.parse_args(args)
 
-    # configure logging
-    if ns.log.upper() == "TRACE":
-        numeric_level = 5
-    else:
-        numeric_level = getattr(logging, ns.log.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError(f"Invalid log level: {ns.log}. Use 'info' or 'debug'")
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    LOGGER.setLevel(numeric_level)
 
-    rocrate = None
+def parse(ns: argparse.Namespace):
+    """
+    Parse the namespace arguments provided by the dispatcher
+    """
+    configure_logging(ns, LOGGER)
+
+    ns.rocrate = None
     if not ns.rocrate_skip:
         setup = {}
-        for key in ("name", "description", "license", "organism", "modality"):
+        for key in ("name", "description", "organism", "modality"):
             value = getattr(ns, f"rocrate_{key}", None)
             if value:
                 setup[key] = value
-        rocrate = ROCrateWriter(**setup)
-
-    converted = main(ns, rocrate)
-    if converted == 0:
-        raise SystemExit(1)
-    return converted
-
-
-if __name__ == "__main__":
-    cli(sys.argv[1:])
+        if not ns.rocrate_license:
+            message = "No license set. Choose one of the Creative Commons license (e.g., `--cc-by`) or skip RO-Crate creation (`--rocrate-skip`)"
+            raise SystemExit(message)
+        setup["data_license"] = ns.rocrate_license
+        ns.rocrate = ROCrateWriter(**setup)

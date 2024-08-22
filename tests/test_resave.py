@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from ome2024_ngff_challenge import resave
+from ome2024_ngff_challenge import dispatch
 
 #
 # Helpers
@@ -34,8 +34,10 @@ def all_files(path):
 
 def test_bad_chunks(tmp_path):
     with pytest.raises(SystemExit):
-        resave.cli(
+        dispatch(
             [
+                "resave",
+                "--cc-by",
                 str(tmp_path / "in.zarr"),
                 str(tmp_path / "out.zarr"),
                 "--output-chunks=xxx",
@@ -45,8 +47,10 @@ def test_bad_chunks(tmp_path):
 
 def test_conflicting_args(tmp_path):
     with pytest.raises(SystemExit):
-        resave.cli(
+        dispatch(
             [
+                "resave",
+                "--cc-by",
                 str(tmp_path / "in.zarr"),
                 str(tmp_path / "out.zarr"),
                 "--output-chunks=xxx",
@@ -62,8 +66,10 @@ def test_conflicting_args(tmp_path):
 
 def test_rocrate_name(tmp_path):
     assert (
-        resave.cli(
+        dispatch(
             [
+                "resave",
+                "--cc-by",
                 "--rocrate-skip",
                 "data/2d.zarr",
                 str(tmp_path / "out.zarr"),
@@ -77,8 +83,10 @@ def test_rocrate_name(tmp_path):
 
 def test_rocrate_set_name(tmp_path):
     assert (
-        resave.cli(
+        dispatch(
             [
+                "resave",
+                "--cc-by",
                 "--rocrate-name=XXX",
                 "data/2d.zarr",
                 str(tmp_path / "out.zarr"),
@@ -95,8 +103,10 @@ def test_rocrate_full_example(tmp_path):
     organism = "NCBI:txid7227"
     modality = "obo:FBbi_00000243"
     assert (
-        resave.cli(
+        dispatch(
             [
+                "resave",
+                "--cc-by",
                 "--rocrate-name=test name",
                 "--rocrate-description=this should be a full description",
                 f"--rocrate-organism={organism}",
@@ -127,8 +137,10 @@ IDR_3D = "zarr/v0.4/idr0062A/6001240.zarr"
 
 @pytest.mark.skip(reason="too slow")
 def test_remote_hcs_with_scripts(tmp_path):
-    resave.cli(
+    dispatch(
         [
+            "resave",
+            "--cc-by",
             *IDR_BUCKET,
             IDR_PLATE,
             str(tmp_path / "out.zarr"),
@@ -141,8 +153,10 @@ def test_remote_simple_with_download(tmp_path):
     # The labels for `6001240.zarr` have chunks like [1,59,69,136] which is
     # not compatible with default shard (whole image, [1,236,275,271]),
     # so we need to specify both:
-    resave.cli(
+    dispatch(
         [
+            "resave",
+            "--cc-by",
             *IDR_BUCKET,
             IDR_3D,
             str(tmp_path / "out.zarr"),
@@ -176,8 +190,10 @@ def check_bf2raw(tmp_path, input, expected, args):
 )
 def test_local_tests(tmp_path, input, expected, args, func):
     assert (
-        resave.cli(
+        dispatch(
             [
+                "resave",
+                "--cc-by",
                 *args,
                 f"data/{input}.zarr",
                 str(tmp_path / "out.zarr"),

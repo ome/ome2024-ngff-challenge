@@ -11,7 +11,7 @@ if __name__ == "__main__":
         properties={
             "name": "Light microscopy photo of a fly",
             "description": "Light microscopy photo of a fruit fly.",
-            "licence": "https://creativecommons.org/licenses/by/4.0/",
+            "license": "https://creativecommons.org/licenses/by/4.0/",
         },
     )
     biosample = crate.add(
