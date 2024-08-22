@@ -5,6 +5,8 @@ import argparse
 import json
 import logging
 import math
+import multiprocessing
+import os
 import random
 import time
 import warnings
@@ -136,6 +138,9 @@ def convert_array(
         "read": after.read(),
         "written": after.written(),
         "elapsed": after.elapsed(),
+        "threads": threads,
+        "cpu_count": multiprocessing.cpu_count(),
+        "sched_affinity": os.sched_getaffinity(0),
     }
     LOGGER.info(f"""Re-encode (tensorstore) {input_config} to {output_config}
         read: {stats["read"]}
@@ -181,6 +186,7 @@ def convert_image(
     output_write_details: bool,
     output_script: bool,
     threads: int,
+    notes: str | None,
 ):
     dimension_names = None
     # top-level version...
@@ -194,7 +200,7 @@ def convert_image(
         ome_attrs[key] = value
 
     # Add _creator - NB: this will overwrite existing _creator info
-    add_creator(ome_attrs)
+    add_creator(ome_attrs, notes)
 
     if output_config.zr_group is not None:  # otherwise dry-run
         # dev2: everything is under 'ome' key
@@ -307,6 +313,7 @@ def convert_image(
                 output_write_details,
                 output_script,
                 threads,
+                notes,
             )
 
 
@@ -430,6 +437,7 @@ def main(ns: argparse.Namespace) -> int:
             ns.output_write_details,
             ns.output_script,
             ns.output_threads,
+            ns.conversion_notes,
         )
         converted += 1
 
@@ -441,7 +449,7 @@ def main(ns: argparse.Namespace) -> int:
             strip_version(value)
             ome_attrs[key] = value
 
-        add_creator(ome_attrs)
+        add_creator(ome_attrs, ns.conversion_notes)
 
         if output_config.zr_group is not None:  # otherwise dry run
             # dev2: everything is under 'ome' key
@@ -486,6 +494,7 @@ def main(ns: argparse.Namespace) -> int:
                     ns.output_write_details,
                     ns.output_script,
                     ns.output_threads,
+                    ns.conversion_notes,
                 )
                 converted += 1
     # Note: plates can *also* contain this metadata
@@ -497,7 +506,7 @@ def main(ns: argparse.Namespace) -> int:
             strip_version(value)
             ome_attrs[key] = value
 
-        add_creator(ome_attrs)
+        add_creator(ome_attrs, ns.conversion_notes)
 
         if output_config.zr_group is not None:  # otherwise dry run
             # dev2: everything is under 'ome' key
@@ -531,6 +540,7 @@ def main(ns: argparse.Namespace) -> int:
                 ns.output_write_details,
                 ns.output_script,
                 ns.output_threads,
+                ns.conversion_notes,
             )
             converted += 1
     else:
@@ -630,6 +640,7 @@ ADVANCED
     Set number of parallel threads           {cmd} --cc-by in.zarr out.zarr --output-threads=128
     Increase logging                         {cmd} --cc-by in.zarr out.zarr --log=debug
     Increase logging even more               {cmd} --cc-by in.zarr out.zarr --log=trace
+    Record details about the conversion      {cmd} --cc-by in.zarr out.zarr --conversion-notes="run on a virtual machine"
     """
     parser = subparsers.add_parser(
         "resave",
@@ -736,6 +747,10 @@ ADVANCED
         "--output-shards",
         help="comma separated list of shards sizes for all subresolutions",
         type=csv_int,
+    )
+    parser.add_argument(
+        "--conversion-notes",
+        help="free-text notes on this conversion (e.g., 'run on AWS EC2 instance in docker')",
     )
     parser.add_argument("input_path", type=Path)
     parser.add_argument("output_path", type=Path)
