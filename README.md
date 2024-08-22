@@ -163,7 +163,7 @@ No license set. Choose one of the Creative Commons license (e.g., `--cc-by`) or 
 
 There are several license options to choose from. We suggest one of:
 
-- `--cc-by` credit must be given to the creator
+- `--cc-by`: credit must be given to the creator
 - `--cc0`: Add your data to the public domain
 
 Alternatively, you can choose your own license, e.g.,
