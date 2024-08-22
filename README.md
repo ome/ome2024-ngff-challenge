@@ -281,10 +281,18 @@ export PATH=$PATH:$HOME/.cargo/bin
 
 #### Optimizing chunks and shards
 
-Finally, there is not yet a single heuristic for determining the chunk and shard
-sizes that will work for all data. Pass the `--output-chunks` and
-`--output-shards` flags in order to set the size of chunks and shards for all
-resolutions:
+Zarr v3 supports shards, which are files that contain multiple chunks. The shape
+of a shard must be a multiple of the chunk size in every dimension. There is not
+yet a single heuristic for determining the chunk and shard sizes that will work
+for all data. **The default shard shape chosen by resave is the full shape of
+the image array.**
+
+In order to limit the size of a shard, if the shard exceeds 100,000,000 pixels
+then you must specify the shard-shape. You can specify the shard shape, using
+--output-shards, which will be used for all pyramid resolutions. This may cause
+issues if the chunk shape changes for lower resolutions (to match the smaller
+image shape). In this case, you should also specify the chunk-shape to be used
+for all resolutions:
 
 ```
 ome2024-ngff-challenge resave --cc-by input.zarr output.zarr --output-chunks=1,1,1,256,256 --output-shards=1,1,1,2048,2048
