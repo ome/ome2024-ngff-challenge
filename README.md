@@ -74,7 +74,11 @@ Other samples:
   plate from idr0035.
 - [l4_sample/color](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://data-humerus.webknossos.org/data/zarr3_experimental/scalable_minds/l4_sample/color)
   from WebKnossos.
-- Plates from idr0090: [190129.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/idr0090/190129.zarr) Size `1.0 TB`,  [190206.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/idr0090/190206.zarr) Size `485 GB`.
+- Plates from idr0090:
+  [190129.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/idr0090/190129.zarr)
+  Size `1.0 TB`,
+  [190206.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/idr0090/190206.zarr)
+  Size `485 GB`.
 
  <details><summary>Expand for more details on creation of these samples</summary>
 
