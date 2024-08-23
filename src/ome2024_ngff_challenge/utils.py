@@ -323,7 +323,7 @@ class Config:
                 raise Exception(f"{check} exists. Use --output-overwrite to overwrite")
 
         # If this is local, then delete.
-        if self.path.exists():
+        elif self.path.exists():
             # TODO: This should really be an option on zarr-python
             # as with tensorstore.
             if self.overwrite:
