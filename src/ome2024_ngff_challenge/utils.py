@@ -309,10 +309,20 @@ class Config:
         )
 
     def check_or_delete_path(self):
-        # If this is local, then delete.
+        # Check remote bucket
         if self.bucket:
-            raise Exception(f"bucket set ({self.bucket}). Refusing to delete.")
+            check = f"s3://{self.bucket}/{self.path / 'zarr.json'}"
+            exists = self.zr_store._fs.exists(check)
+            # https://github.com/getmoto/moto/issues/2964
+            # try:
+            #     exists = bool(self.zr_store._fs.read_text(check))
+            # except FileNotFoundError:
+            #     exists = False
 
+            if exists and not self.overwrite:
+                raise Exception(f"{check} exists. Use --output-overwrite to overwrite")
+
+        # If this is local, then delete.
         if self.path.exists():
             # TODO: This should really be an option on zarr-python
             # as with tensorstore.
