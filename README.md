@@ -81,6 +81,8 @@ Other samples:
   Size `485 GB`,
   [190211.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190211.zarr)
   Size `704 GB`.
+- [76-45.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0010/76-45.zarr)
+  plate from idr0010
 
  <details><summary>Expand for more details on creation of these samples</summary>
 
