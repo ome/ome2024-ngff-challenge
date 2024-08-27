@@ -66,19 +66,21 @@ Other samples:
 
 - [4496763.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/4496763.zarr)
   Shape `4,25,2048,2048`, Size `589.81 MB`, from idr0047.
-- [9822152.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/9822152.zarr)
+- [9822152.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0083/9822152.zarr)
   Shape `1,1,1,93184,144384`, Size `21.57 GB`, from idr0083.
-- [9846151.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/9846151.zarr)
+- [9846151.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0048/9846151.zarr)
   Shape `1,3,1402,5192,2947`, Size `66.04 GB`, from idr0048.
-- [Week9_090907.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/idr0035/Week9_090907.zarr)
+- [Week9_090907.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0035/Week9_090907.zarr)
   plate from idr0035.
 - [l4_sample/color](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://data-humerus.webknossos.org/data/zarr3_experimental/scalable_minds/l4_sample/color)
   from WebKnossos.
 - Plates from idr0090:
-  [190129.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/idr0090/190129.zarr)
+  [190129.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190129.zarr)
   Size `1.0 TB`,
-  [190206.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/idr0090/190206.zarr)
-  Size `485 GB`.
+  [190206.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190206.zarr)
+  Size `485 GB`,
+  [190211.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190211.zarr)
+  Size `704 GB`.
 
  <details><summary>Expand for more details on creation of these samples</summary>
 
