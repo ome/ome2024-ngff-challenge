@@ -78,7 +78,8 @@ Other samples:
   [190129.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190129.zarr)
   Size `1.0 TB`,
   [190206.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190206.zarr)
-  Size `485 GB`, [190211.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190211.zarr)
+  Size `485 GB`,
+  [190211.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190211.zarr)
   Size `704 GB`.
 
  <details><summary>Expand for more details on creation of these samples</summary>
