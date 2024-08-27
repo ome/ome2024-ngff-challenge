@@ -33,7 +33,7 @@ rocrate = "^0.10"
 s3fs = ">=2024.6.1"
 tensorstore = ">=0.1.63"
 tqdm = "^4.66"
-zarr = ">=3.0.0a0"
+zarr = "3.0.0a0"
 
 furo = { version = ">=2023.08.17", optional = true }
 myst_parser = { version = ">=0.13", optional = true }
