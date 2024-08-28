@@ -406,10 +406,9 @@ class ROCrateWriter:
         config.zr_write_text(filename, text)
 
 
-def main(ns: argparse.Namespace) -> int:
+def main(ns: argparse.Namespace) -> None:
     """
-    If no images are converted, raises
-    SystemExit. Otherwise, return the number of images.
+    If no images are converted, raises SystemExit.
     """
 
     converted: int = 0
@@ -550,7 +549,6 @@ def main(ns: argparse.Namespace) -> int:
 
     if converted == 0:
         raise SystemExit(1)
-    return converted
 
 
 def cli(subparsers: argparse._SubParsersAction):
