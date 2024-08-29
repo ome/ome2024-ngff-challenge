@@ -406,10 +406,10 @@ class ROCrateWriter:
         config.zr_write_text(filename, text)
 
 
-def main(ns: argparse.Namespace) -> int:
+def main(ns: argparse.Namespace) -> int | None:
     """
-    If no images are converted, raises
-    SystemExit. Otherwise, return the number of images.
+    If no images are converted, raises SystemExit.
+    Otherwise, return the number of images, unless --silent.
     """
 
     converted: int = 0
@@ -550,6 +550,11 @@ def main(ns: argparse.Namespace) -> int:
 
     if converted == 0:
         raise SystemExit(1)
+
+    # Support for nextflow etc where response is interpreted as an error.
+    if ns.silent:
+        return None
+
     return converted
 
 
@@ -675,6 +680,7 @@ ADVANCED
         default=16,
         help="number of simultaneous write threads",
     )
+    parser.add_argument("--silent", action="store_true", help="Command returns nothing")
 
     # Very recommended metadata (SHOULD!)
     def license_action(group, arg: str, url: str, recommended: bool = True):
