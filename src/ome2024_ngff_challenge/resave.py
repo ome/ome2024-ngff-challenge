@@ -680,7 +680,7 @@ ADVANCED
         default=16,
         help="number of simultaneous write threads",
     )
-    parser.add_argument("--silent", action="store_true", help="Command returns nothing")
+    parser.add_argument("--silent", action="store_true", help="Command returns nothing; required for nextflow")
 
     # Very recommended metadata (SHOULD!)
     def license_action(group, arg: str, url: str, recommended: bool = True):
