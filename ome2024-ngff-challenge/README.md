@@ -10,4 +10,6 @@ $ npm install
 $ npm run dev
 ```
 
-More details to come...
+Go to
+http://localhost:5173/?csv=https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/ngff_samples.csv
+to open a csv file.

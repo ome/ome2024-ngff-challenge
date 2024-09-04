@@ -15,30 +15,36 @@
     showPlaceholder = true;
   }
 
-  console.log("csvUrl", csvUrl);
-
   let tableRows = [];
 
   ngffTable.subscribe((rows) => {
     tableRows = rows;
   });
 
-  if (csvUrl) {
-      // load csv and use this for the left side of the table...
-      Papa.parse(csvUrl, {
-        header: false,
-        download: true,
-        complete: function (results) {
-          console.log("Finished:", results.data);
-          ngffTable.addRows(results.data);
+  function loadCsv(csvUrl) {
+    console.log("loadCsv", csvUrl);
 
-          // test: add some rows after 5 seconds
-          // setTimeout(() => {
-          //   ngffTable.addRows(["row1", "row2", "row3"]);
-          // }, 5000);
-        },
-      });
-    }
+    Papa.parse(csvUrl, {
+      header: false,
+      download: true,
+      complete: function (results) {
+        console.log("Finished:", results.data);
+        // We add the zarr URLs to the table and load any child CSVs
+        let zarrUrls = results.data.filter((row) => row[0].includes(".zarr"));
+        let childCsvUrls = results.data.filter((row) => row[0].includes(".csv"));
+        ngffTable.addRows(zarrUrls);
+        // recursively load child CSVs
+        childCsvUrls.forEach((childCsvUrl) => {
+          loadCsv(childCsvUrl[0]);
+        });
+      },
+    });
+  }
+
+  // kick off loading the CSV...
+  if (csvUrl) {
+    loadCsv(csvUrl);
+  }
 </script>
 
 <main>
