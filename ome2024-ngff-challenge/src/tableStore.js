@@ -1,5 +1,30 @@
 import { writable, get } from "svelte/store";
 
+async function loadMultiscales(url) {
+  console.log("LOADING MULTISCALES", url);
+  let zarrData = await fetch(`${url}/zarr.json`).then((response) =>
+    response.json(),
+  );
+
+  const attributes = zarrData?.attributes?.ome;
+  if (!attributes) {
+    return undefined;
+  }
+  console.log("attributes", attributes);
+  if (attributes.multiscales) {
+    return [attributes.multiscales, url];
+  } else if (attributes.plate) {
+    let well = attributes.plate.wells[0];
+    // assume the first image in the well is under "/0"
+    let imgPath = `${url}/${well.path}/0`;
+    console.log("well", well, imgPath);
+    return await loadMultiscales(imgPath);
+  } else if (attributes["bioformats2raw.layout"]) {
+    let bf2rawUrl = `${url}/0`;
+    return await loadMultiscales(bf2rawUrl);
+  }
+}
+
 class NgffTable {
   constructor() {
     this.store = writable([]);
@@ -15,11 +40,11 @@ class NgffTable {
     });
   }
 
-  populateRow(zarrUrl, version) {
+  populateRow(zarrUrl, rowValues) {
     this.store.update((table) => {
       table = table.map((row) => {
         if (row[0] === zarrUrl) {
-          row = [zarrUrl, version];
+          row = [zarrUrl, ...rowValues];
         }
         return row;
       });
@@ -28,12 +53,25 @@ class NgffTable {
   }
 
   async loadNgffMetadata(zarrUrl) {
-    let zarrData = await fetch(`${zarrUrl}/zarr.json`).then((response) =>
-      response.json(),
-    );
-    console.log(zarrData);
-    const version = zarrData?.attributes?.ome?.version;
-    this.populateRow(zarrUrl, version);
+    const [multiscales, msUrl] = await loadMultiscales(zarrUrl);
+    let version = "No version found";
+    let shape = [];
+    if (multiscales) {
+      version = multiscales.version;
+      // only consider the first multiscale
+      const dataset = multiscales[0]?.datasets[0];
+      const path = dataset?.path;
+      if (path) {
+        const arrayData = await fetch(`${msUrl}/${path}/zarr.json`).then(
+          (response) => response.json(),
+        );
+        shape = arrayData?.shape;
+      }
+    } else {
+      console.log("No multiscales found");
+      return;
+    }
+    this.populateRow(zarrUrl, [version, shape]);
   }
 
   subscribe(run) {
