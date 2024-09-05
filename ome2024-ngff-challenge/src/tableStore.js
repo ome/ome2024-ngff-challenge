@@ -31,9 +31,10 @@ class NgffTable {
   }
 
   addRows(rows) {
+    // Each row is a dict {"url": "http...zarr"}
     this.store.update((table) => {
       rows.forEach((row) => {
-        this.loadNgffMetadata(row[0]);
+        this.loadNgffMetadata(row.url);
       });
       table.push(...rows);
       return table;
@@ -43,8 +44,9 @@ class NgffTable {
   populateRow(zarrUrl, rowValues) {
     this.store.update((table) => {
       table = table.map((row) => {
-        if (row[0] === zarrUrl) {
-          row = [zarrUrl, ...rowValues];
+        if (row.url === zarrUrl) {
+          row = { url: zarrUrl, ...rowValues };
+          console.log("populateRow", rowValues, row);
         }
         return row;
       });
@@ -54,11 +56,10 @@ class NgffTable {
 
   async loadNgffMetadata(zarrUrl) {
     const [multiscales, msUrl] = await loadMultiscales(zarrUrl);
-    let version = "No version found";
     let shape = [];
+    let written = 0;
     if (multiscales) {
-      version = multiscales.version;
-      // only consider the first multiscale
+      // only consider the first multiscale and load highest resolution dataset
       const dataset = multiscales[0]?.datasets[0];
       const path = dataset?.path;
       if (path) {
@@ -66,12 +67,13 @@ class NgffTable {
           (response) => response.json(),
         );
         shape = arrayData?.shape;
+        written = arrayData?.attributes?._ome2024_ngff_challenge_stats?.written;
       }
     } else {
       console.log("No multiscales found");
       return;
     }
-    this.populateRow(zarrUrl, [version, shape]);
+    this.populateRow(zarrUrl, { shape, written });
   }
 
   subscribe(run) {
