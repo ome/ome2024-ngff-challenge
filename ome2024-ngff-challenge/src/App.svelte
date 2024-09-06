@@ -88,17 +88,30 @@
   <table>
     <thead>
       <tr>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th colspan="2">Bytes written</th>
+      </tr>
+      <tr>
         <th>Url</th>
-        <th>Bytes written</th>
         <th>Shape</th>
+        <th>Wells</th>
+        <th>Images</th>
+        <th>per Image</th>
+        <th>total</th>
       </tr>
     </thead>
     <tbody>
       {#each tableRows as row}
         <tr>
           <td><a href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={row.url}" target="_blank">{linkText(row.url)}</a></td>
-          <td>{filesizeformat(row.written)}</td>
           <td>{row.shape || ""}</td>
+          <td>{row.well_count || ""}</td>
+          <td>{row.well_count ? row.well_count * row.field_count : ""}</td>
+          <td>{filesizeformat(row.written)}</td>
+          <td>{filesizeformat(row.written * (row.well_count ? row.well_count * row.field_count : 1))}</td>
         </tr>
       {/each}
     </tbody>

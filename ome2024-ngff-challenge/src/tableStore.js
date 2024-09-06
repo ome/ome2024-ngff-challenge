@@ -1,7 +1,6 @@
 import { writable, get } from "svelte/store";
 
 async function loadMultiscales(url) {
-  console.log("LOADING MULTISCALES", url);
   let zarrData = await fetch(`${url}/zarr.json`).then((response) =>
     response.json(),
   );
@@ -10,15 +9,14 @@ async function loadMultiscales(url) {
   if (!attributes) {
     return undefined;
   }
-  console.log("attributes", attributes);
   if (attributes.multiscales) {
     return [attributes.multiscales, url];
   } else if (attributes.plate) {
     let well = attributes.plate.wells[0];
     // assume the first image in the well is under "/0"
     let imgPath = `${url}/${well.path}/0`;
-    console.log("well", well, imgPath);
-    return await loadMultiscales(imgPath);
+    let [msData, msUrl] = await loadMultiscales(imgPath);
+    return [msData, msUrl, attributes.plate];
   } else if (attributes["bioformats2raw.layout"]) {
     let bf2rawUrl = `${url}/0`;
     return await loadMultiscales(bf2rawUrl);
@@ -55,9 +53,15 @@ class NgffTable {
   }
 
   async loadNgffMetadata(zarrUrl) {
-    const [multiscales, msUrl] = await loadMultiscales(zarrUrl);
+    const [multiscales, msUrl, plate] = await loadMultiscales(zarrUrl);
     let shape = [];
     let written = 0;
+    let well_count = 0;
+    let field_count = 0;
+    if (plate) {
+      well_count = plate.wells.length;
+      field_count = plate.field_count || 1;
+    }
     if (multiscales) {
       // only consider the first multiscale and load highest resolution dataset
       const dataset = multiscales[0]?.datasets[0];
@@ -73,7 +77,8 @@ class NgffTable {
       console.log("No multiscales found");
       return;
     }
-    this.populateRow(zarrUrl, { shape, written });
+    // The data that is added to the Table
+    this.populateRow(zarrUrl, { shape, written, well_count, field_count });
   }
 
   subscribe(run) {
