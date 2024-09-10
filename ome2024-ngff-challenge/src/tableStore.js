@@ -78,7 +78,14 @@ class NgffTable {
       return;
     }
     // The data that is added to the Table
-    this.populateRow(zarrUrl, { shape, written, well_count, field_count });
+    const total_written = written * (well_count ? well_count * field_count : 1);
+    this.populateRow(zarrUrl, {
+      shape,
+      written,
+      well_count,
+      field_count,
+      total_written,
+    });
   }
 
   subscribe(run) {
