@@ -81,8 +81,6 @@
 
   {#if showPlaceholder}
     <p>Upload a CSV file of zarr URLs to get started: ?url=https://path/to/data.csv</p>
-  {:else}
-    Yey! You have a CSV file of zarr URLs. Let's get started!
   {/if}
 
   <table>
@@ -119,4 +117,11 @@
 
 <style>
 
+table {
+  border-collapse: collapse;
+}
+td {
+  border: lightgrey 1px solid;
+  padding: 0.5em;
+}
 </style>
