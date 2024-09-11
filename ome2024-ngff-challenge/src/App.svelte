@@ -1,7 +1,7 @@
 <script>
   import { ngffTable } from "./tableStore";
 
-  import { filesizeformat, loadCsv } from "./util";
+  import { filesizeformat, loadCsv, lookupOrganism } from "./util";
 
   let showPlaceholder = false;
 
@@ -15,6 +15,7 @@
   }
 
   let tableRows = [];
+  let organismLookup = {};
 
   ngffTable.subscribe((rows) => {
     tableRows = rows;
@@ -28,10 +29,36 @@
   }
 
   function linkText(url) {
-    return url.replace(
+    let truncated = url.replace(
       "https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/",
       ""
     );
+    if (truncated.length > 50) {
+      truncated = truncated.slice(0, 20) + "..." + truncated.slice(-20);
+    }
+    return truncated;
+  }
+
+  function handleLoadRocrate() {
+    ngffTable.loadRocrateJson();
+  }
+
+  // This is called by the <table> if we are missing organisms from the lookup dict.
+  // Updating organismLookup should trigger all table rows to be re-rendered
+  function loadOrganism(organismId) {
+    console.log("loadOrganism", organismId);
+    if (!organismId) {
+      return "";
+    }
+    if (organismLookup[organismId]) {
+      return organismLookup[organismId];
+    }
+    // put a placeholder to avoid multiple requests while we wait for the lookup
+    organismLookup[organismId] = organismId;
+    lookupOrganism(organismId).then((organism) => {
+      organismLookup = { ...organismLookup, [organismId]: organism };
+    });
+    return organismId;
   }
 </script>
 
@@ -52,6 +79,7 @@
         <td>Zarr Samples (URLs)</td>
         <td>Images</td>
         <td>Bytes written</td>
+        <td>Organisms</td>
       </tr>
       <tr class="stats">
         <td>{tableRows.length}</td>
@@ -67,10 +95,16 @@
             tableRows.reduce((acc, row) => acc + (row.total_written || 0), 0)
           )}</td
         >
+        <td>
+          {#if Object.keys(organismLookup).length === 0}
+            <button on:click={handleLoadRocrate}>Load Ro-Crate metadata</button>
+          {:else}
+            {Object.keys(organismLookup).length}
+          {/if}
+        </td>
       </tr>
     </table>
   </div>
-
 
   <table>
     <thead>
@@ -79,8 +113,10 @@
         <th>Shape</th>
         <th>Wells</th>
         <th>Images</th>
-        <th>per Image</th>
-        <th>total</th>
+        <th>Image size</th>
+        <th>Total size</th>
+        <th>Organism</th>
+        <th>Imaging</th>
       </tr>
     </thead>
     <tbody>
@@ -97,6 +133,12 @@
           <td>{row.well_count ? row.well_count * row.field_count : ""}</td>
           <td>{filesizeformat(row.written)}</td>
           <td>{filesizeformat(row.total_written)}</td>
+          <td title="{row.organism_id || ''}">
+            {#if row.organism_id}
+              {organismLookup[row.organism_id] || loadOrganism(row.organism_id)}
+            {/if}
+          </td>
+          <td>{row.fbbi_id || ""}</td>
         </tr>
       {/each}
     </tbody>
@@ -111,11 +153,20 @@
     border-collapse: collapse;
     width: 100%;
   }
-  td {
+  td, th {
     border: lightgrey 1px solid;
     padding: 0.5em;
   }
   .stats {
     font-size: 48px;
+  }
+
+  button {
+    font-size: 12px;
+    background-color:aliceblue;
+    border-radius: 5px;
+    border-color: coral;
+    vertical-align: middle;
+    margin-bottom: 7px;
   }
 </style>

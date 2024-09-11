@@ -28,6 +28,29 @@ export function loadCsv(csvUrl) {
   });
 }
 
+export async function getJson(url) {
+  return await fetch(url).then((rsp) => rsp.json());
+}
+
+export async function lookupOrganism(taxonId) {
+  // taxonId e.g. NCBI:txid9606
+  let id = taxonId.replace("NCBI:txid", "");
+  const orgJson = await getJson(
+    `https://rest.ensembl.org/taxonomy/id/${id}?content-type=application/json`,
+  );
+  return orgJson.name || taxonId;
+}
+
+export async function lookupImagingMethod(fbbiId) {
+  // fbbiId e.g. FBbi_00000246
+  // http://purl.obolibrary.org/obo/FBbi_00000246
+  // https://www.ebi.ac.uk/ols4/api/ontologies/fbbi/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FFBbi_00000246
+  const methodJson = await getJson(
+    `https://www.ebi.ac.uk/ols4/api/ontologies/fbbi/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F${fbbiId}`,
+  );
+  return methodJson.label;
+}
+
 export function filesizeformat(bytes) {
   /*
   Formats the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB,

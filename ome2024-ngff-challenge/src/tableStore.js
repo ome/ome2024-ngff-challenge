@@ -43,7 +43,7 @@ class NgffTable {
     this.store.update((table) => {
       table = table.map((row) => {
         if (row.url === zarrUrl) {
-          row = { url: zarrUrl, ...rowValues };
+          row = { ...row, ...rowValues };
           console.log("populateRow", rowValues, row);
         }
         return row;
@@ -85,6 +85,31 @@ class NgffTable {
       well_count,
       field_count,
       total_written,
+    });
+  }
+
+  loadRocrateJson() {
+    get(this.store).forEach((row) => {
+      const zarrUrl = row.url;
+      if (row.organism_id) {
+        return;
+      }
+      fetch(`${zarrUrl}/ro-crate-metadata.json`)
+        .then((response) => response.json())
+        .then((jsonData) => {
+          // parse ro-crate json...
+          let biosample = jsonData["@graph"].find(
+            (item) => item["@type"] === "biosample",
+          );
+          let organism_id = biosample?.organism_classification?.["@id"];
+          let image_acquisition = jsonData["@graph"].find(
+            (item) => item["@type"] === "image_acquisition",
+          );
+          let fbbi_id = image_acquisition?.fbbi_id?.["@id"];
+
+          // I guess we could store more JSON data in the table, but let's keep columns to strings/IDs for now...
+          this.populateRow(zarrUrl, { organism_id, fbbi_id });
+        });
     });
   }
 
