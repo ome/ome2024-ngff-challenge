@@ -1,7 +1,7 @@
 <script>
   import { ngffTable } from "./tableStore";
 
-  import { filesizeformat, loadCsv, lookupOrganism } from "./util";
+  import { filesizeformat, loadCsv, lookupImagingModality, lookupOrganism } from "./util";
 
   let showPlaceholder = false;
 
@@ -16,6 +16,7 @@
 
   let tableRows = [];
   let organismLookup = {};
+  let imagingModalityLookup = {};
 
   ngffTable.subscribe((rows) => {
     tableRows = rows;
@@ -59,6 +60,21 @@
       organismLookup = { ...organismLookup, [organismId]: organism };
     });
     return organismId;
+  }
+
+  function loadImagingModality(fbbiId) {
+    if (!fbbiId) {
+      return "";
+    }
+    if (imagingModalityLookup[fbbiId]) {
+      return imagingModalityLookup[fbbiId];
+    }
+    // put a placeholder to avoid multiple requests while we wait for the lookup
+    imagingModalityLookup[fbbiId] = fbbiId;
+    lookupImagingModality(fbbiId).then((imagingModality) => {
+      imagingModalityLookup = { ...imagingModalityLookup, [fbbiId]: imagingModality };
+    });
+    return fbbiId;
   }
 </script>
 
@@ -138,7 +154,11 @@
               {organismLookup[row.organism_id] || loadOrganism(row.organism_id)}
             {/if}
           </td>
-          <td>{row.fbbi_id || ""}</td>
+          <td title="{row.fbbi_id || ''}">
+            {#if row.fbbi_id}
+              {organismLookup[row.fbbi_id] || loadImagingModality(row.fbbi_id)}
+            {/if}
+          </td>
         </tr>
       {/each}
     </tbody>
