@@ -91,3 +91,8 @@ export function filesizeformat(bytes) {
     return (bytes / (1024 * 1024 * 1024 * 1024 * 1024)).toFixed(round) + " PB";
   }
 }
+
+export function range(start, end) {
+  // range(5, 10) -> [5, 6, 7, 8, 9]
+  return Array.from({ length: end - start }, (_, i) => i + start);
+}

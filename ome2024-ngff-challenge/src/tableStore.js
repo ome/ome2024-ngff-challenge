@@ -1,4 +1,5 @@
 import { writable, get } from "svelte/store";
+import { range } from "./util.js";
 
 async function loadMultiscales(url) {
   let zarrData = await fetch(`${url}/zarr.json`).then((response) =>
@@ -31,10 +32,20 @@ class NgffTable {
   addRows(rows) {
     // Each row is a dict {"url": "http...zarr"}
     this.store.update((table) => {
-      rows.forEach((row) => {
-        this.loadNgffMetadata(row.url);
-      });
       table.push(...rows);
+      // Load metadata for each row - 5 at a time
+      const BATCH_SIZE = 5;
+      async function loadMetadata(rows) {
+        for (let i = 0; i < rows.length; i = i + BATCH_SIZE) {
+          let promises = range(i, Math.min(i + BATCH_SIZE, rows.length)).map(
+            (j) => {
+              return this.loadNgffMetadata(rows[j].url);
+            },
+          );
+          await Promise.all(promises);
+        }
+      }
+      loadMetadata.bind(this)(rows);
       return table;
     });
   }
