@@ -126,6 +126,7 @@
     <thead>
       <tr>
         <th>Url</th>
+        <th>Source</th>
         <th>Shape</th>
         <th>Wells</th>
         <th>Images</th>
@@ -144,6 +145,7 @@
               target="_blank">{linkText(row.url)}</a
             ></td
           >
+          <td>{row.source || ""}</td>
           <td>{row.shape || ""}</td>
           <td>{row.well_count || ""}</td>
           <td>{row.well_count ? row.well_count * row.field_count : ""}</td>

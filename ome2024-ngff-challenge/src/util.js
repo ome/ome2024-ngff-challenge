@@ -3,7 +3,7 @@ import Papa from "papaparse";
 // singleton table store
 import { ngffTable } from "./tableStore";
 
-export function loadCsv(csvUrl) {
+export function loadCsv(csvUrl, parentRow = {}) {
   console.log("loadCsv", csvUrl);
 
   Papa.parse(csvUrl, {
@@ -20,22 +20,25 @@ export function loadCsv(csvUrl) {
       let firstRow = results.data[0];
       if (firstRow.length > 1) {
         colNames = firstRow;
+        results.data.shift(); // remove header row
       }
       let dataRows = results.data.map((row) => {
-        // return a dict with column names as keys
-        let rowObj = {};
+        // return a dict with column names as keys, overwriting parentRow
+        let rowObj = { ...parentRow };
         for (let i = 0; i < colNames.length; i++) {
           rowObj[colNames[i]] = row[i];
         }
         return rowObj;
       });
       console.log("dataRows", dataRows);
-      let zarrUrlRows = dataRows.filter((row) => row["url"].includes(".zarr"));
-      let childCsvRows = dataRows.filter((row) => row["url"].includes(".csv"));
+      let zarrUrlRows = dataRows.filter((row) => row["url"]?.includes(".zarr"));
+      let childCsvRows = dataRows.filter((row) => row["url"]?.includes(".csv"));
       ngffTable.addRows(zarrUrlRows);
       // recursively load child CSVs
-      childCsvRows.forEach((childCsvUrl) => {
-        loadCsv(childCsvUrl["url"]);
+      childCsvRows.forEach((childCsvRow) => {
+        let csvUrl = childCsvRow["url"];
+        childCsvRow["url"] = undefined;
+        loadCsv(csvUrl, childCsvRow);
       });
     },
   });
