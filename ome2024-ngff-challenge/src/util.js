@@ -9,20 +9,33 @@ export function loadCsv(csvUrl) {
   Papa.parse(csvUrl, {
     header: false,
     download: true,
+    skipEmptyLines: "greedy",
     complete: function (results) {
       console.log("Finished:", results.data);
       // We add the zarr URLs to the table and load any child CSVs
       // Each row in the table is a dict. {'url': 'https://path/to/data.zarr'}
-      let zarrUrlRows = results.data
-        .filter((row) => row[0].includes(".zarr"))
-        .map((row) => {
-          return { url: row[0] };
-        });
-      let childCsvRows = results.data.filter((row) => row[0].includes(".csv"));
+
+      // Either we have single column with URLs or we have multiple columns
+      let colNames = ["url"];
+      let firstRow = results.data[0];
+      if (firstRow.length > 1) {
+        colNames = firstRow;
+      }
+      let dataRows = results.data.map((row) => {
+        // return a dict with column names as keys
+        let rowObj = {};
+        for (let i = 0; i < colNames.length; i++) {
+          rowObj[colNames[i]] = row[i];
+        }
+        return rowObj;
+      });
+      console.log("dataRows", dataRows);
+      let zarrUrlRows = dataRows.filter((row) => row["url"].includes(".zarr"));
+      let childCsvRows = dataRows.filter((row) => row["url"].includes(".csv"));
       ngffTable.addRows(zarrUrlRows);
       // recursively load child CSVs
       childCsvRows.forEach((childCsvUrl) => {
-        loadCsv(childCsvUrl[0]);
+        loadCsv(childCsvUrl["url"]);
       });
     },
   });
