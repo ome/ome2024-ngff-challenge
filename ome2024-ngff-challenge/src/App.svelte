@@ -76,6 +76,19 @@
     });
     return fbbiId;
   }
+
+  let sortedBy = "";
+  let sortAscending = true;
+  function handleSort(colname) {
+    console.log("handleSort", colname, 'sortedBy', sortedBy);
+    if (sortedBy === colname) {
+      sortAscending = !sortAscending;
+    } else {
+      sortAscending = true;
+    }
+    sortedBy = colname;
+    ngffTable.sortTable(colname, sortAscending);
+  }
 </script>
 
 <main>
@@ -125,13 +138,13 @@
   <table>
     <thead>
       <tr>
-        <th>Url</th>
+        <th>Url <button on:click={() => handleSort('url')}>sort {#if sortedBy == 'url'} {sortAscending ? "v" : "^"}{/if}</button></th>
         <th>Source</th>
         <th>Shape</th>
-        <th>Wells</th>
+        <th>Wells <button on:click={() => handleSort('well_count')}>sort {#if sortedBy == 'well_count'} {sortAscending ? "v" : "^"} {/if}</button></th>
         <th>Images</th>
-        <th>Image size</th>
-        <th>Total size</th>
+        <th>Image size <button on:click={() => handleSort('written')}>sort {#if sortedBy == 'written'} {sortAscending ? "v" : "^"} {/if}</button></th>
+        <th>Total size <button on:click={() => handleSort('total_written')}>sort {#if sortedBy == 'total_written'} {sortAscending ? "v" : "^"} {/if}</button></th>
         <th>Organism</th>
         <th>Imaging</th>
       </tr>

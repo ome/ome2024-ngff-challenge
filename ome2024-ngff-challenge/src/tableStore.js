@@ -124,6 +124,35 @@ class NgffTable {
     });
   }
 
+  compareRows(a, b) {
+    let aVal = a[this.sortColumn];
+    let bVal = b[this.sortColumn];
+    if (aVal === undefined) {
+      aVal = "";
+    }
+    if (bVal === undefined) {
+      bVal = "";
+    }
+
+    let comp = 0;
+    // TODO: handle specific column names, e.g. shape
+    if (typeof aVal === "number") {
+      comp = aVal - bVal;
+    } else {
+      comp = aVal.localeCompare(bVal);
+    }
+    return this.sortAscending ? comp : -comp;
+  }
+
+  sortTable(colName, ascending = true) {
+    this.sortColumn = colName;
+    this.sortAscending = ascending;
+    this.store.update((table) => {
+      table.sort((a, b) => this.compareRows(a, b));
+      return table;
+    });
+  }
+
   subscribe(run) {
     return this.store.subscribe(run);
   }
