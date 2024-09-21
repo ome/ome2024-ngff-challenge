@@ -2,13 +2,22 @@ import { writable, get } from "svelte/store";
 import { range } from "./util.js";
 
 async function loadMultiscales(url) {
-  let zarrData = await fetch(`${url}/zarr.json`).then((response) =>
-    response.json(),
-  );
+  let zarrData = await fetch(`${url}/zarr.json`)
+    .then((response) => {
+      console.log("loadMultiscales response", response.status);
+      if (response.status === 404) {
+        throw new Error(`${url}/zarr.json not found`);
+      }
+      return response.json();
+    })
+    .catch((error) => {
+      console.log("----> Failed to load zarr.json", error);
+      return [undefined, url];
+    });
 
   const attributes = zarrData?.attributes?.ome;
   if (!attributes) {
-    return undefined;
+    return [undefined, url];
   }
   if (attributes.multiscales) {
     return [attributes.multiscales, url];
