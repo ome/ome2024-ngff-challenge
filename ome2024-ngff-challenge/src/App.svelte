@@ -133,6 +133,8 @@
         </td>
       </tr>
     </table>
+
+    <progress value={tableRows.filter(row => row.loaded).length} max={tableRows.length}></progress>
   </div>
 
   <table>
@@ -150,7 +152,7 @@
       </tr>
     </thead>
     <tbody>
-      {#each tableRows as row}
+      {#each tableRows as row (row.url)}
         <tr>
           <td
             ><a
@@ -159,7 +161,7 @@
             ></td
           >
           <td>{row.source || ""}</td>
-          <td>{row.shape || ""}</td>
+          <td>{row.load_failed ? "x" : row.shape || ""}</td>
           <td>{row.well_count || ""}</td>
           <td>{row.well_count ? row.well_count * row.field_count : ""}</td>
           <td>{filesizeformat(row.written)}</td>
@@ -191,6 +193,9 @@
   td, th {
     border: lightgrey 1px solid;
     padding: 0.5em;
+  }
+  progress {
+    width: 100%;
   }
   .stats {
     font-size: 48px;

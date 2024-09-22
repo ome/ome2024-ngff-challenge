@@ -78,6 +78,8 @@ class NgffTable {
     let written = 0;
     let well_count = 0;
     let field_count = 0;
+    let load_failed = false;
+    let loaded = true;
     if (plate) {
       well_count = plate.wells.length;
       field_count = plate.field_count || 1;
@@ -95,7 +97,8 @@ class NgffTable {
       }
     } else {
       console.log("No multiscales found");
-      return;
+      load_failed = true;
+      shape = [0];
     }
     // The data that is added to the Table
     const total_written = written * (well_count ? well_count * field_count : 1);
@@ -105,6 +108,8 @@ class NgffTable {
       well_count,
       field_count,
       total_written,
+      load_failed,
+      loaded, // always true - just means we tried to load the data
     });
   }
 
