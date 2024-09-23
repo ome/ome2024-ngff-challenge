@@ -1,5 +1,6 @@
 import { writable, get } from "svelte/store";
 import { range } from "./util.js";
+const BATCH_SIZE = 5;
 
 async function loadMultiscales(url) {
   let zarrData = await fetch(`${url}/zarr.json`)
@@ -43,7 +44,6 @@ class NgffTable {
     this.store.update((table) => {
       table.push(...rows);
       // Load metadata for each row - 5 at a time
-      const BATCH_SIZE = 5;
       async function loadMetadata(rows) {
         for (let i = 0; i < rows.length; i = i + BATCH_SIZE) {
           let promises = range(i, Math.min(i + BATCH_SIZE, rows.length)).map(
@@ -113,29 +113,44 @@ class NgffTable {
     });
   }
 
-  loadRocrateJson() {
-    get(this.store).forEach((row) => {
-      const zarrUrl = row.url;
-      if (row.organism_id) {
-        return;
-      }
-      fetch(`${zarrUrl}/ro-crate-metadata.json`)
-        .then((response) => response.json())
-        .then((jsonData) => {
-          // parse ro-crate json...
-          let biosample = jsonData["@graph"].find(
-            (item) => item["@type"] === "biosample",
-          );
-          let organism_id = biosample?.organism_classification?.["@id"];
-          let image_acquisition = jsonData["@graph"].find(
-            (item) => item["@type"] === "image_acquisition",
-          );
-          let fbbi_id = image_acquisition?.fbbi_id?.["@id"];
+  async loadRocrateJson(zarrUrl) {
+    await fetch(`${zarrUrl}/ro-crate-metadata.json`)
+      .then((response) => {
+        console.log("loadMultiscales response", response.status);
+        if (response.status === 404) {
+          throw new Error(`${zarrUrl}/ro-crate-metadata.json not found`);
+        }
+        return response.json();
+      })
+      .then((jsonData) => {
+        // parse ro-crate json...
+        let biosample = jsonData["@graph"].find(
+          (item) => item["@type"] === "biosample",
+        );
+        let organism_id = biosample?.organism_classification?.["@id"];
+        let image_acquisition = jsonData["@graph"].find(
+          (item) => item["@type"] === "image_acquisition",
+        );
+        let fbbi_id = image_acquisition?.fbbi_id?.["@id"];
 
-          // I guess we could store more JSON data in the table, but let's keep columns to strings/IDs for now...
-          this.populateRow(zarrUrl, { organism_id, fbbi_id });
-        });
-    });
+        // I guess we could store more JSON data in the table, but let's keep columns to strings/IDs for now...
+        this.populateRow(zarrUrl, { organism_id, fbbi_id });
+      })
+      .catch((error) => {
+        console.log("Failed to load ro-crate-metadata.json", error);
+      });
+  }
+
+  async loadRocrateJsonAllRows() {
+    let rows = get(this.store);
+    for (let i = 0; i < rows.length; i = i + BATCH_SIZE) {
+      let promises = range(i, Math.min(i + BATCH_SIZE, rows.length)).map(
+        (j) => {
+          return this.loadRocrateJson(rows[j].url);
+        },
+      );
+      await Promise.all(promises);
+    }
   }
 
   compareRows(a, b) {

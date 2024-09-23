@@ -41,7 +41,7 @@
   }
 
   function handleLoadRocrate() {
-    ngffTable.loadRocrateJson();
+    ngffTable.loadRocrateJsonAllRows();
   }
 
   // This is called by the <table> if we are missing organisms from the lookup dict.
