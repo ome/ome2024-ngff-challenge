@@ -80,6 +80,9 @@ class NgffTable {
     let field_count = 0;
     let load_failed = false;
     let loaded = true;
+    // TODO: include 'omero' attrs for rendering settings
+    let image_attrs = { multiscales };
+    let image_url = msUrl;
     if (plate) {
       well_count = plate.wells.length;
       field_count = plate.field_count || 1;
@@ -103,6 +106,8 @@ class NgffTable {
     // The data that is added to the Table
     const total_written = written * (well_count ? well_count * field_count : 1);
     this.populateRow(zarrUrl, {
+      image_attrs,
+      image_url,
       shape,
       written,
       well_count,

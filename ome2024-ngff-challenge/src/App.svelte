@@ -1,5 +1,6 @@
 <script>
   import { ngffTable } from "./tableStore";
+  import Thumbnail from "./Thumbnail.svelte";
 
   import { filesizeformat, loadCsv, lookupImagingModality, lookupOrganism } from "./util";
 
@@ -140,6 +141,7 @@
   <table>
     <thead>
       <tr>
+        <th>Thumb</th>
         <th>Url <button on:click={() => handleSort('url')}>sort {#if sortedBy == 'url'} {sortAscending ? "v" : "^"}{/if}</button></th>
         <th>Source</th>
         <th>Shape</th>
@@ -154,11 +156,26 @@
     <tbody>
       {#each tableRows as row (row.url)}
         <tr>
+          <td>
+            {#if row.image_attrs}
+              <Thumbnail attrs={row.image_attrs} source={row.image_url}></Thumbnail>
+            {/if}
+          </td>
           <td
-            ><a
-              href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={row.url}"
-              target="_blank">{linkText(row.url)}</a
-            ></td
+            >
+            {#if row.csv_row_count && row.csv}
+              <a
+                href="{window.location.origin}?csv={row.csv}"
+                target="_blank"
+                >{row.csv.split("/").pop()} ({row.csv_row_count})</a
+              >
+            {:else}
+              <a
+                href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={row.url}"
+                target="_blank">{linkText(row.url)}</a
+              >
+            {/if}
+            </td
           >
           <td>{row.source || ""}</td>
           <td>{row.load_failed ? "x" : row.shape || ""}</td>
