@@ -1,5 +1,6 @@
 <script>
   import { ngffTable } from "./tableStore";
+  import ThumbGallery from "./ThumbGallery.svelte";
   import Thumbnail from "./Thumbnail.svelte";
 
   import { filesizeformat, loadCsv, lookupImagingModality, lookupOrganism } from "./util";
@@ -94,6 +95,8 @@
 
 <main>
   <h1>OME 2024 NGFF Challenge</h1>
+
+  <ThumbGallery />
 
   {#if showPlaceholder}
     <p>
