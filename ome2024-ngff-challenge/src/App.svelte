@@ -1,5 +1,5 @@
 <script>
-  import { ngffTable } from "./tableStore";
+  import { ngffTable, galleryTable } from "./tableStore";
   import ThumbGallery from "./ThumbGallery.svelte";
   import Thumbnail from "./Thumbnail.svelte";
 
@@ -20,15 +20,22 @@
   let organismLookup = {};
   let imagingModalityLookup = {};
 
+  // The galleryTable is loaded initially - for gallery at top of page...
+  galleryTable.subscribe((rows) => {
+    console.log("galleryTable.subscribe", rows);
+    tableRows = rows;
+  });
+  // When a gallery image is clicked, the ngffTable is loaded with the csv file
+  // so we can display the table of images (replacing original galleryTable)
   ngffTable.subscribe((rows) => {
+    console.log("ngffTable.subscribe", rows);
     tableRows = rows;
   });
 
-  // kick off loading the CSV...
+  // kick off loading the CSV to populate galleryTable...
   // This will recursively load other csv files if they are linked in the first one
-  // and populate the ngffTable store
   if (csvUrl) {
-    loadCsv(csvUrl);
+    loadCsv(csvUrl, galleryTable);
   }
 
   function linkText(url) {

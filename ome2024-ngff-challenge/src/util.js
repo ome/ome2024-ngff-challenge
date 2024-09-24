@@ -1,9 +1,7 @@
 import Papa from "papaparse";
 
-// singleton table store
-import { ngffTable } from "./tableStore";
-
-export function loadCsv(csvUrl, parentRow = {}, childCount) {
+export function loadCsv(csvUrl, ngffTable, parentRow = {}, childCount) {
+  csvUrl = csvUrl + "?_=" + Date.now(); // prevent caching
   Papa.parse(csvUrl, {
     header: false,
     download: true,
@@ -36,15 +34,16 @@ export function loadCsv(csvUrl, parentRow = {}, childCount) {
           return { ...row, csv_row_count: childRowCount };
         });
       }
-      let childCsvRows = dataRows.filter((row) => row["url"]?.includes(".csv"));
       ngffTable.addRows(zarrUrlRows);
+
       // recursively load child CSVs
+      let childCsvRows = dataRows.filter((row) => row["url"]?.includes(".csv"));
       childCsvRows.forEach((childCsvRow) => {
         let csvUrl = childCsvRow["url"];
         childCsvRow["url"] = undefined;
         childCsvRow["csv"] = csvUrl;
         // Only load a single child CSV
-        loadCsv(csvUrl, childCsvRow, 1);
+        loadCsv(csvUrl, ngffTable, childCsvRow, 1);
       });
     },
   });

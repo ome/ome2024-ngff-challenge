@@ -187,9 +187,14 @@ class NgffTable {
     });
   }
 
+  emptyTable() {
+    this.store.set([]);
+  }
+
   subscribe(run) {
     return this.store.subscribe(run);
   }
 }
 
+export const galleryTable = new NgffTable();
 export const ngffTable = new NgffTable();
