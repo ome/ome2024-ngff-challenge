@@ -11,14 +11,14 @@
 
 <div class="gallery">
   {#each tableRows as row (row.url)}
-   <div class="item">
-    {#if row.image_attrs}
-      <Thumbnail attrs={row.image_attrs} source={row.image_url}></Thumbnail>
-    {/if}
     {#if row.csv_row_count && row.csv}
+    <div class="item">
+      {#if row.image_attrs}
+        <Thumbnail attrs={row.image_attrs} source={row.image_url}></Thumbnail>
+      {/if}
       {row.csv_row_count} {row.well_count ? "plates" : "images"}
-    {/if}
     </div>
+    {/if}
   {/each}
 </div>
 
