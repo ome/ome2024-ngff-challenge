@@ -1,20 +1,6 @@
 source,url
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/6001240_labels.zarr
 
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/4496763.zarr
-
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0010/76-45.zarr
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0035/Week9_090907.zarr
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0044/4007801.zarr
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0048/9846151.zarr
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0048/9846151_3D_chunks.zarr
-
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0054/Tonsil 1.zarr
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0054/Tonsil 2.zarr
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0054/Tonsil 3.zarr
-
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0083/9822152.zarr
+IDR,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/other_samples.csv
 
 IDR,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/idr0090_samples.csv
 
