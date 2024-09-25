@@ -29,6 +29,7 @@
 
   $: showSourceColumn = tableRows.some((row) => row.source);
   $: showOriginColumn = tableRows.some((row) => row.origin);
+  $: showPlateColumns = tableRows.some((row) => row.well_count);
   $: showLoadRoCrateButton = !tableRows.some((row) => row.rocrate_loaded);
 
   // kick off loading the CSV to populate ngffTable...
@@ -159,10 +160,12 @@
           <th>Data Origin</th>
         {/if}
         <th>Shape</th>
-        <th>Wells <button on:click={() => handleSort('well_count')}>sort {#if sortedBy == 'well_count'} {sortAscending ? "v" : "^"} {/if}</button></th>
-        <th>Images</th>
         <th>Image size <button on:click={() => handleSort('written')}>sort {#if sortedBy == 'written'} {sortAscending ? "v" : "^"} {/if}</button></th>
-        <th>Total size <button on:click={() => handleSort('total_written')}>sort {#if sortedBy == 'total_written'} {sortAscending ? "v" : "^"} {/if}</button></th>
+        {#if showPlateColumns}
+          <th>Wells <button on:click={() => handleSort('well_count')}>sort {#if sortedBy == 'well_count'} {sortAscending ? "v" : "^"} {/if}</button></th>
+          <th>Images</th>
+          <th>Total size <button on:click={() => handleSort('total_written')}>sort {#if sortedBy == 'total_written'} {sortAscending ? "v" : "^"} {/if}</button></th>
+        {/if}
         <th>Organism</th>
         <th>Imaging</th>
       </tr>
@@ -201,10 +204,12 @@
             </td>
           {/if}
           <td>{row.load_failed ? "x" : row.shape || ""}</td>
-          <td>{row.well_count || ""}</td>
-          <td>{row.well_count ? row.well_count * row.field_count : ""}</td>
           <td>{filesizeformat(row.written)}</td>
-          <td>{filesizeformat(row.total_written)}</td>
+          {#if showPlateColumns}
+            <td>{row.well_count || ""}</td>
+            <td>{row.well_count ? row.well_count * row.field_count : ""}</td>
+            <td>{filesizeformat(row.total_written)}</td>
+          {/if}
           <td title="{row.organism_id || ''}">
             {#if row.organism_id}
               {organismLookup[row.organism_id] || loadOrganism(row.organism_id)}
