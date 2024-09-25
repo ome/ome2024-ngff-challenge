@@ -139,7 +139,11 @@ class NgffTable {
         let fbbi_id = image_acquisition?.fbbi_id?.["@id"];
 
         // I guess we could store more JSON data in the table, but let's keep columns to strings/IDs for now...
-        this.populateRow(zarrUrl, { organism_id, fbbi_id });
+        this.populateRow(zarrUrl, {
+          organism_id,
+          fbbi_id,
+          rocrate_loaded: true,
+        });
       })
       .catch((error) => {
         console.log("Failed to load ro-crate-metadata.json", error);
@@ -196,5 +200,4 @@ class NgffTable {
   }
 }
 
-export const galleryTable = new NgffTable();
 export const ngffTable = new NgffTable();

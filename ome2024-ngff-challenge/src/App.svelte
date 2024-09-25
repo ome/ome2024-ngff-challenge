@@ -1,5 +1,5 @@
 <script>
-  import { ngffTable, galleryTable } from "./tableStore";
+  import { ngffTable } from "./tableStore";
   import ThumbGallery from "./ThumbGallery.svelte";
   import Thumbnail from "./Thumbnail.svelte";
 
@@ -17,25 +17,24 @@
   }
 
   let tableRows = [];
+  let showSourceColumn = false;
   let organismLookup = {};
   let imagingModalityLookup = {};
 
-  // The galleryTable is loaded initially - for gallery at top of page...
-  galleryTable.subscribe((rows) => {
-    console.log("galleryTable.subscribe", rows);
-    tableRows = rows;
-  });
-  // When a gallery image is clicked, the ngffTable is loaded with the csv file
-  // so we can display the table of images (replacing original galleryTable)
+  // The ngffTable is loaded initially - for gallery at top of page...
+  // Also updated when a gallery item is clicked to show the table of images
   ngffTable.subscribe((rows) => {
-    console.log("ngffTable.subscribe", rows);
     tableRows = rows;
   });
 
-  // kick off loading the CSV to populate galleryTable...
+  $: showSourceColumn = tableRows.some((row) => row.source);
+  $: showOriginColumn = tableRows.some((row) => row.origin);
+  $: showLoadRoCrateButton = !tableRows.some((row) => row.rocrate_loaded);
+
+  // kick off loading the CSV to populate ngffTable...
   // This will recursively load other csv files if they are linked in the first one
   if (csvUrl) {
-    loadCsv(csvUrl, galleryTable);
+    loadCsv(csvUrl, ngffTable);
   }
 
   function linkText(url) {
@@ -136,7 +135,7 @@
           )}</td
         >
         <td>
-          {#if Object.keys(organismLookup).length === 0}
+          {#if showLoadRoCrateButton}
             <button on:click={handleLoadRocrate}>Load Ro-Crate metadata</button>
           {:else}
             {Object.keys(organismLookup).length}
@@ -153,7 +152,12 @@
       <tr>
         <th>Thumb</th>
         <th>Url <button on:click={() => handleSort('url')}>sort {#if sortedBy == 'url'} {sortAscending ? "v" : "^"}{/if}</button></th>
-        <th>Source</th>
+        {#if showSourceColumn}
+          <th>Source</th>
+        {/if}
+        {#if showOriginColumn}
+          <th>Data Origin</th>
+        {/if}
         <th>Shape</th>
         <th>Wells <button on:click={() => handleSort('well_count')}>sort {#if sortedBy == 'well_count'} {sortAscending ? "v" : "^"} {/if}</button></th>
         <th>Images</th>
@@ -187,7 +191,15 @@
             {/if}
             </td
           >
-          <td>{row.source || ""}</td>
+          <!-- TODO: calculate dataHasColumn() just once, not for every row! -->
+          {#if showSourceColumn}
+            <td>{row.source || ""}</td>
+          {/if}
+          {#if showOriginColumn}
+            <td>
+              {#if row.origin}<a href={row.origin} target="_blank">...{row.origin.slice(-10)}</a>{/if}
+            </td>
+          {/if}
           <td>{row.load_failed ? "x" : row.shape || ""}</td>
           <td>{row.well_count || ""}</td>
           <td>{row.well_count ? row.well_count * row.field_count : ""}</td>

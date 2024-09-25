@@ -1,11 +1,11 @@
 <script>
-  import { galleryTable, ngffTable } from "./tableStore";
+  import { ngffTable } from "./tableStore";
   import Thumbnail from "./Thumbnail.svelte";
   import { loadCsv } from "./util";
 
   let tableRows = [];
 
-  galleryTable.subscribe((rows) => {
+  let unsubscribe = ngffTable.subscribe((rows) => {
     tableRows = rows;
   });
 
@@ -19,6 +19,8 @@
   // kick off loading the CSV...
   // This will load images and recursively load other child csv files - All displayed in table
   function handleThumbClick(row) {
+    // We need to unsubscribe from the table store so the gallery doesn't update
+    unsubscribe();
     ngffTable.emptyTable();
     loadCsv(row.csv, ngffTable);
   }
