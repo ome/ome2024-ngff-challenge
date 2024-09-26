@@ -68,6 +68,9 @@
         if (axes[index] == "z") {
           return parseInt((dimSize / 2) + "");
         }
+        if (axes[index] == "t") {
+          return parseInt((dimSize / 2) + "");
+        }
         return 0;
       });
       return zarr.get(arr, slices);
