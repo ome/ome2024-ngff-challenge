@@ -1,5 +1,4 @@
-url,origin
-written,written_human_readable,
+url,written,written_human_readable,origin
 https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0010/76-45.ome.zarr,282816000.0,269.71 MB,https://idr.openmicroscopy.org/webclient/?show=plate-5912
 https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0010/65-12.ome.zarr,293931955.20000005,280.32 MB,https://idr.openmicroscopy.org/webclient/?show=plate-5901
 https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0010/34-30.ome.zarr,295543756.79999995,281.85 MB,https://idr.openmicroscopy.org/webclient/?show=plate-5878
