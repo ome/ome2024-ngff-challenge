@@ -254,5 +254,6 @@
     border-color: coral;
     vertical-align: middle;
     margin-bottom: 7px;
+    color: #222;
   }
 </style>
