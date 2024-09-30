@@ -3,9 +3,8 @@
   import ThumbGallery from "./ThumbGallery.svelte";
   import Thumbnail from "./Thumbnail.svelte";
 
-  import { filesizeformat, loadCsv, lookupImagingModality, lookupOrganism } from "./util";
+  import { SAMPLES_HOME, filesizeformat, loadCsv, lookupImagingModality, lookupOrganism } from "./util";
 
-  let showPlaceholder = false;
 
   // check for ?csv=url
   const params = new URLSearchParams(window.location.search);
@@ -13,7 +12,8 @@
   try {
     new URL(csvUrl);
   } catch (error) {
-    showPlaceholder = true;
+    console.error("Invalid csv URL", csvUrl);
+    csvUrl = SAMPLES_HOME;
   }
 
   let tableRows = [];
@@ -103,14 +103,7 @@
 <main>
   <h1>OME 2024 NGFF Challenge</h1>
 
-  <ThumbGallery />
-
-  {#if showPlaceholder}
-    <p>
-      Upload a CSV file of zarr URLs to get started:
-      ?url=https://path/to/data.csv
-    </p>
-  {/if}
+  <ThumbGallery {csvUrl} />
 
   <div class="summary">
     Totals:

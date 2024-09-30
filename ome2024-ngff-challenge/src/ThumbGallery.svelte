@@ -1,7 +1,11 @@
 <script>
+  import { scale } from "svelte/transition";
+  import Header from "./Header.svelte";
   import { ngffTable } from "./tableStore";
   import Thumbnail from "./Thumbnail.svelte";
-  import { loadCsv } from "./util";
+  import { SAMPLES_HOME, loadCsv } from "./util";
+
+  export let csvUrl;
 
   let tableRows = [];
 
@@ -9,49 +13,75 @@
     tableRows = rows;
   });
 
-  $: zarr_url_count = tableRows.reduce((acc, row) => acc + (row.csv_row_count || 0), 0);
-  $: csv_file_count = tableRows.reduce((acc, row) => acc + (row.csv_row_count ? 1 : 0), 0);
-
   function csvShortName(row) {
     return row.csv.split("/").at(-1);
   }
 
   // kick off loading the CSV...
   // This will load images and recursively load other child csv files - All displayed in table
-  function handleThumbClick(row) {
-    // We need to unsubscribe from the table store so the gallery doesn't update
-    unsubscribe();
+  function handleThumbClick(csv_url) {
+    // If we're loading any page other than HOME page,
+    // we need to unsubscribe from the table store so the gallery doesn't update
+    console.log("handleThumbClick", csv_url, SAMPLES_HOME);
+    if (csv_url !== SAMPLES_HOME) {
+      unsubscribe();
+    }
     ngffTable.emptyTable();
-    loadCsv(row.csv, ngffTable);
+    csvUrl = csv_url;
+    loadCsv(csvUrl, ngffTable);
   }
 </script>
 
-{#if zarr_url_count > 0}
-<h2>
-  {zarr_url_count} zarrs in {csv_file_count} collections
-</h2>
-{/if}
+<Header {tableRows} {csvUrl}></Header>
+
 <div class="gallery">
   {#each tableRows as row (row.url)}
     {#if row.csv_row_count && row.csv}
-    <a on:click|preventDefault={() => handleThumbClick(row)} href="{window.location.origin}?csv={row.csv}">
-    <div class="item">
-      {#if row.image_attrs}
-        <Thumbnail attrs={row.image_attrs} source={row.image_url}></Thumbnail>
-      {/if}
-      {row.csv_row_count} {row.well_count ? "plates" : "images"}
+      <a
+        on:click|preventDefault={() => handleThumbClick(row.csv)}
+        href="{window.location.origin}?csv={row.csv}"
+      >
+        <div class="item">
+          {#if row.image_attrs}
+            <Thumbnail attrs={row.image_attrs} source={row.image_url}
+            ></Thumbnail>
+          {/if}
+          {row.csv_row_count}
+          {row.well_count ? "plates" : "images"}
 
-      <div class="hoverInfo">
-        {row.source || ""}
-        {csvShortName(row)}
-      </div>
-    </div>
-  </a>
+          <div class="hoverInfo">
+            {row.source || ""}
+            {csvShortName(row)}
+          </div>
+        </div>
+      </a>
     {/if}
   {/each}
 </div>
 
+<p>
+  Loading samples from <a href={csvUrl}>{csvUrl}</a>
+</p>
+
+{#if csvUrl !== SAMPLES_HOME}
+  <p transition:scale={{ duration: 500, delay: 0, opacity: 0.5, start: 0.5 }}>
+    <a
+      on:click|preventDefault={() => handleThumbClick(SAMPLES_HOME)}
+      class="home"
+      title="Show ALL samples"
+      href="{window.location.origin}?csv={SAMPLES_HOME}">Show all samples</a
+    >
+  </p>
+{/if}
+
 <style>
+  .home {
+    display: inline-block;
+    background-color: rgb(241, 188, 13);
+    border-radius: 10px;
+    padding: 5px 10px;
+    color: black;
+  }
   .gallery {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));

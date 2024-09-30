@@ -1,5 +1,8 @@
 import Papa from "papaparse";
 
+export const SAMPLES_HOME =
+  "https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/ngff_samples.csv";
+
 export function loadCsv(csvUrl, ngffTable, parentRow = {}, childCount) {
   csvUrl = csvUrl + "?_=" + Date.now(); // prevent caching
   Papa.parse(csvUrl, {
