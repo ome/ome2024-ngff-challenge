@@ -35,6 +35,11 @@
     let chDim = axes.indexOf("c");
 
     let shape = arr.shape;
+    if (shape.at(-1) * shape.at(-2) > 512 * 512) {
+      console.log("Lowest resolution too large for Thumbnail: ", shape, source);
+      return;
+    }
+
     let dims = shape.length;
     let ch = arr.chunks;
 

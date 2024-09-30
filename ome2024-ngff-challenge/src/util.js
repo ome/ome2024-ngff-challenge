@@ -25,7 +25,19 @@ export function loadCsv(csvUrl, ngffTable, parentRow = {}, childCount) {
         }
         return rowObj;
       });
-      let zarrUrlRows = dataRows.filter((row) => row["url"]?.includes(".zarr"));
+      // we assume all urls except ".csv" are zarrs. (don't NEED to contain ".zarr")
+      let zarrUrlRows = dataRows.filter((row) => !row["url"]?.endsWith(".csv"));
+      // avoid duplicate urls
+      let zarrRowsByUrl = {};
+      zarrUrlRows.forEach((row) => {
+        if (zarrRowsByUrl[row["url"]]) {
+          console.warn("Removing duplicate URL:", row["url"]);
+          return;
+        }
+        zarrRowsByUrl[row["url"]] = row;
+      });
+      zarrUrlRows = Object.values(zarrRowsByUrl);
+
       // limit number of Zarrs to load
       if (childCount) {
         let childRowCount = zarrUrlRows.length;
