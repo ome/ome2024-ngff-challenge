@@ -96,7 +96,7 @@ class NgffTable {
           (response) => response.json(),
         );
         shape = arrayData?.shape;
-        written = arrayData?.attributes?._ome2024_ngff_challenge_stats?.written;
+        // written = arrayData?.attributes?._ome2024_ngff_challenge_stats?.written;
       }
     } else {
       console.log("No multiscales found");
@@ -104,15 +104,15 @@ class NgffTable {
       shape = [0];
     }
     // The data that is added to the Table
-    const total_written = written * (well_count ? well_count * field_count : 1);
+    // const total_written = written * (well_count ? well_count * field_count : 1);
     this.populateRow(zarrUrl, {
       image_attrs,
       image_url,
       shape,
-      written,
+      // written,
       well_count,
       field_count,
-      total_written,
+      // total_written,
       load_failed,
       loaded, // always true - just means we tried to load the data
     });

@@ -29,9 +29,16 @@ export function loadCsv(csvUrl, ngffTable, parentRow = {}, childCount) {
       // limit number of Zarrs to load
       if (childCount) {
         let childRowCount = zarrUrlRows.length;
+        let totalWritten = zarrUrlRows.reduce((acc, row) => {
+          return acc + parseInt(row["written"]) || 0;
+        }, 0);
         // add the original row count to the remaining row(s)
         zarrUrlRows = zarrUrlRows.slice(0, childCount).map((row) => {
-          return { ...row, csv_row_count: childRowCount };
+          return {
+            ...row,
+            csv_row_count: childRowCount,
+            written: totalWritten,
+          };
         });
       }
       ngffTable.addRows(zarrUrlRows);

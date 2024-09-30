@@ -1,13 +1,8 @@
-source,url
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/6001240_labels.zarr
-
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/4496763.zarr
-
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0044/4007801.zarr
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0048/9846151.zarr
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0048/9846151_3D_chunks.zarr
-
-IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0083/9822152.zarr
-
-IDR,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/idr0054_samples.csv
+source,url,written,written_human_readable
+IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr,0,0.00 B
+IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/6001240_labels.zarr,0,0.00 B
+IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/4496763.zarr,0,0.00 B
+IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0044/4007801.zarr,65024277657,60.56 GB
+IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0048/9846151.zarr,0,0.00 B
+IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0048/9846151_3D_chunks.zarr,67887988960,63.23 GB
+IDR,https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0083/9822152.zarr,0,0.00 B
