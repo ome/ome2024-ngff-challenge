@@ -12,7 +12,7 @@ async function loadMultiscales(url) {
       return response.json();
     })
     .catch((error) => {
-      console.log("----> Failed to load zarr.json", error);
+      console.log(`----> Failed to load ${url}/zarr.json`, error);
       return [undefined, url];
     });
 
@@ -92,9 +92,14 @@ class NgffTable {
       const dataset = multiscales[0]?.datasets[0];
       const path = dataset?.path;
       if (path) {
-        const arrayData = await fetch(`${msUrl}/${path}/zarr.json`).then(
-          (response) => response.json(),
-        );
+        const arrayData = await fetch(`${msUrl}/${path}/zarr.json`)
+          .then((response) => response.json())
+          .catch((error) => {
+            console.log(
+              `----> Failed to parse ${msUrl}/${path}/zarr.json`,
+              error,
+            );
+          });
         shape = arrayData?.shape;
         // written = arrayData?.attributes?._ome2024_ngff_challenge_stats?.written;
       }
