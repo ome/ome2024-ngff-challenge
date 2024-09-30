@@ -33,3 +33,5 @@ IDR,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_
 IDR,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/idr0157_samples.csv
 
 BioImage Archive,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/ebi-ngff-challenge-samples.csv
+
+JAX,https://raw.githubusercontent.com/TheJacksonLaboratory/jax-ngff-challenge-2024/refs/heads/main/KOMP_adult_lacZ.csv
