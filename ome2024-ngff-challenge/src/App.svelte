@@ -132,7 +132,9 @@
         >
         <td
           >{filesizeformat(
-            tableRows.reduce((acc, row) => acc + (row.total_written || 0), 0)
+            tableRows.reduce((acc, row) => {
+              return acc + parseInt(row["written"]) || 0;
+            }, 0)
           )}</td
         >
         <td>
@@ -164,7 +166,7 @@
         {#if showPlateColumns}
           <th>Wells <button on:click={() => handleSort('well_count')}>sort {#if sortedBy == 'well_count'} {sortAscending ? "v" : "^"} {/if}</button></th>
           <th>Images</th>
-          <th>Total size <button on:click={() => handleSort('total_written')}>sort {#if sortedBy == 'total_written'} {sortAscending ? "v" : "^"} {/if}</button></th>
+          <th>Total size <button on:click={() => handleSort('written')}>sort {#if sortedBy == 'written'} {sortAscending ? "v" : "^"} {/if}</button></th>
         {/if}
         <th>Organism</th>
         <th>Imaging</th>
@@ -208,7 +210,7 @@
           {#if showPlateColumns}
             <td>{row.well_count || ""}</td>
             <td>{row.well_count ? row.well_count * row.field_count : ""}</td>
-            <td>{filesizeformat(row.total_written)}</td>
+            <td>{filesizeformat(row.written)}</td>
           {/if}
           <td title="{row.organism_id || ''}">
             {#if row.organism_id}
