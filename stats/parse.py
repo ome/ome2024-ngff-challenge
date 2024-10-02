@@ -1,75 +1,138 @@
 #!/usr/bin/env python
+from __future__ import annotations
+
 import asyncio
-import aiohttp
-import fastparquet
-import math
 import os
-import pandas as pd
-import requests
+import time
 from collections import defaultdict
-from aiohttp_retry import RetryClient, ExponentialRetry
 
+import aiohttp
+import pandas as pd
+from aiohttp_retry import ExponentialRetry, RetryClient
 
+COLUMNS = ("source", "origin", "url", "written_human_readable", "written")
 CONNECTIONS = int(os.environ.get("CONNECTIONS", 80))
 RETRIES = int(os.environ.get("RETRIES", 3))
 TIMEOUT = float(os.environ.get("TIMEOUT", 60.0))
-
-cols = ('source', 'origin', 'url', 'written_human_readable', 'written')
-
-
+URL = os.environ.get(
+    "URL",
+    "https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/ngff_samples.csv",
+)
+WORKERS = int(os.environ.get("WORKERS", 40))
 
 
 class Event:
-
-    def __init__(self, depth, url):
+    def __init__(self, queue, depth, url):
+        self.queue = queue
         self.depth = depth
         self.url = url
         self.state = {}
 
+    def root(self):
+        """drops the /zarr.json suffix from urls"""
+        return self.url[:-10]
+
     def __str__(self):
         return f'{"\t"*self.depth}{self.url}'
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}<{self.url}>"
 
     async def load(self, rsp):
         raise NotImplementedError()
 
-class CSVEvent(Event):
 
+class CSVEvent(Event):
     def __init__(self, *args, **kwargs):
         Event.__init__(self, *args, **kwargs)
 
     async def load(self, rsp=None):
         self.state = {"type": "csv"}
 
+        df2 = pd.read_csv(f"{self.url}")
+
+        if not set(df2.columns).issubset(set(COLUMNS)):
+            print(f"invalid csv: {self.url}")
+            return
+
+        size = len(df2.index)
+
+        df2["csv"] = [self.url] * size
+        for colname in COLUMNS:
+            if colname not in df2.columns:
+                df2[colname] = [None] * size
+
+        for index2, row2 in df2.iterrows():
+            url = row2["url"]
+            if not url or not isinstance(url, str):
+                # TODO: debug?
+                continue
+            try:
+                if url.endswith(".csv"):
+                    # TODO: check for a sub-source
+                    await self.queue.put(CSVEvent(self.queue, self.depth + 1, url))
+                else:
+                    leaf = self.depth + 1
+                    zarr = f'{row2["url"]}/zarr.json'
+                    await self.queue.put(ZarrEvent(self.queue, self.depth + 1, zarr))
+            except Exception:
+                print(f"error: {url} (type={type(url)})")
+                raise
+
 
 class ZarrEvent(Event):
-
     def __init__(self, *args, **kwargs):
         Event.__init__(self, *args, **kwargs)
 
     async def load(self, rsp):
         data = await rsp.json()
         ome = data.get("attributes", {}).get("ome", {})
-        # Calcluate
+
+        # Array
         if "multiscales" in ome:
             self.state["type"] = "multiscales"
             inner = ome["multiscales"][0]["datasets"][0]["path"]
-            # FIXME
-            MultiscaleEvent(self.depth+1, f"{self.url}/{inner}")
+            await self.queue.put(
+                MultiscaleEvent(
+                    self.queue, self.depth + 1, f"{self.root()}/{inner}/zarr.json"
+                )
+            )
 
-        # Defer
-        for x in ("plate", "bioformats2raw.layout"):
-            if x in ome:
-                self.state["type"] = x
+        # Series
+        elif "plate" in ome:
+            self.state["type"] = "plate"
+            # TODO
+
+        # Series
+        elif "bioformats2raw.layout" in ome:
+            self.state["type"] = "bioformats2raw.layout"
+            await self.queue.put(
+                OMEEvent(self.queue, self.depth + 1, f"{self.root()}/OME/zarr.json")
+            )
 
         if "type" not in self.state:
             self.state["type"] = f"unknown: {ome.keys()}"
 
 
-class MultiscaleEvent(Event):
-
+class OMEEvent(Event):
     def __init__(self, *args, **kwargs):
         Event.__init__(self, *args, **kwargs)
-        self.state = {}
+
+    async def load(self, rsp):
+        data = await rsp.json()
+        self.state["type"] = "ome"
+        series = data["attributes"]["ome"]["series"]
+        for s in series:
+            await self.queue.put(
+                MultiscaleEvent(
+                    self.queue, self.depth + 1, f"{self.root()}/{s}/zarr.json"
+                )
+            )
+
+
+class MultiscaleEvent(Event):
+    def __init__(self, *args, **kwargs):
+        Event.__init__(self, *args, **kwargs)
 
     async def load(self, rsp):
         data = await rsp.json()
@@ -77,97 +140,81 @@ class MultiscaleEvent(Event):
         self.state["array"] = data
 
 
-def handle_csv(src, url, depth=1):
-    df2 = pd.read_csv(f'{url}')
+class ErrorEvent(Event):
+    def __init__(self, *args, **kwargs):
+        Event.__init__(self, *args, **kwargs)
 
-    if not set(df2.columns).issubset(set(cols)):
-        print(f"invalid csv: {url}")
-        return
-
-    yield CSVEvent(depth, url)
-    size = len(df2.index)
-
-    df2["csv"] = [url] * size
-    df2["who"] = [src] * size
-    for colname in cols:
-        if colname not in df2.columns:
-            df2[colname] = [None] * size
+    async def load(self, rsp):
+        self.state["type"] = "error"
 
 
-    for index2, row2 in df2.iterrows():
-        url = row2["url"]
-        if not url or not isinstance(url, str):
-            # TODO: debug?
-            continue
-        try:
-            if url.endswith(".csv"):
-                # TODO: check for a sub-source
-                yield from handle_csv(src, url, depth=depth+1)
-            else:
-                leaf = depth + 1
-                zarr = f'{row2["url"]}/zarr.json'
-                yield ZarrEvent(depth+1, zarr)
-        except Exception as e:
-            print(f"error: {url} (type={type(url)})")
-            raise
-
-def get_events():
-    valid = []
-
-    main_url = 'https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/ngff_samples.csv'
-    print(main_url)
-    df = pd.read_csv(main_url)
-    urls = []
-
-    events = []
-    for index, row in df.iterrows():
-
-        src = row['source']
-        url = row['url']
-        urls.append(url)
-        for event in handle_csv(src, url):
-            events.append(event)
-
-    return events
-
-
-async def get(event: Event, client: RetryClient):
+async def process(event: Event, client: RetryClient):
     timeout = aiohttp.ClientTimeout(total=None, sock_connect=TIMEOUT, sock_read=TIMEOUT)
     async with client.get(event.url, timeout=timeout) as response:
         print(event)
         await event.load(response)
 
 
+async def worker(queue, client, state):
+    while not queue.empty():
+        event = await queue.get()
+        try:
+            await process(event, client)
+            await state.put(event.state)
+        except Exception as e:
+            await state.put({"event": event, "error": e, "type": "error"})
+        finally:
+            queue.task_done()
+
 
 async def main():
+    start = time.time()
 
-    # Setup
+    # HTTP Setup
     connector = aiohttp.TCPConnector(limit=CONNECTIONS)
     session = aiohttp.ClientSession(connector=connector)
     options = ExponentialRetry(attempts=RETRIES)
     client = RetryClient(
-            client_session=session,
-            raise_for_status=False,
-            retry_options=options,
+        client_session=session,
+        raise_for_status=False,
+        retry_options=options,
     )
 
+    queue = asyncio.Queue()
+    state = asyncio.Queue()
+    csv = CSVEvent(queue, 0, URL)
+    await queue.put(csv)
+    await process(csv, client)
+
     # Loading
-    events = get_events()
-    ret = await asyncio.gather(*(get(event, client) for event in events))
+    consumers = [
+        asyncio.create_task(worker(queue, client, state)) for _ in range(WORKERS)
+    ]
+    await queue.join()
+    for c in consumers:
+        c.cancel()
 
     # Parsing
     try:
         tallies = defaultdict(int)
-        for event in events:
-            _type = event.state.get("type")
+        errors = []
+        while not state.empty():
+            v = await state.get()
+            _type = v.get("type")
             tallies[_type] += 1
-
+            if _type == "error":
+                errors.append(v)
         for k, v in tallies.items():
             print(k, v)
+        for err in errors:
+            print(err)
 
     # Cleaning
     finally:
         await client.close()
+
+    stop = time.time()
+    print(f"in {stop-start:0.2f} seconds")
 
 
 if __name__ == "__main__":
