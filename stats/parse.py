@@ -28,10 +28,6 @@ for index, row in df.iterrows():
 
         df2 = df2.reindex(columns=["who", "csv"] + cols)
 
-        filename = f"all.pq/csv={index}"
+        filename = f"all.pq/{index}.pq"
         df2.to_parquet(filename)
         valid.append(filename)
-
-fastparquet.writer.merge([filename for filename in valid])
-df_all = pd.read_parquet('all.pq')
-print(df_all)
