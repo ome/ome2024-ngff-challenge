@@ -2,6 +2,7 @@
   import { ngffTable } from "./tableStore";
   import ThumbGallery from "./ThumbGallery.svelte";
   import Thumbnail from "./Thumbnail.svelte";
+  import Pixel from "./Pixel.svelte";
 
   import { SAMPLES_HOME, filesizeformat, loadCsv, lookupImagingModality, lookupOrganism } from "./util";
 
@@ -100,8 +101,11 @@
   }
 </script>
 
+<Pixel/><Pixel/><Pixel/><Pixel/><Pixel/>
+<Pixel/><Pixel/><Pixel/><Pixel/><Pixel/>
+
 <main>
-  <h1>OME 2024 NGFF Challenge</h1>
+  <h1 class="title">OME 2024 NGFF Challenge</h1>
 
   <ThumbGallery {csvUrl} />
 
@@ -222,12 +226,20 @@
 </main>
 
 <style>
+
+  .title {
+    margin-top: 0;
+    padding-top: 20px;
+    z-index: 10;
+    position: relative;
+  }
   .summary {
     margin-bottom: 2em;
   }
   table {
     border-collapse: collapse;
     width: 100%;
+    background-color: white;
   }
   td, th {
     border: lightgrey 1px solid;

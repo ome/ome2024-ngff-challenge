@@ -123,7 +123,11 @@
     border: 1px solid #ccc;
     padding: 5px;
     border-radius: 5px;
+    background-color: white;
     color: black;
+    -webkit-box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
+    -moz-box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
+    box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
   }
 
   .source_icon {
