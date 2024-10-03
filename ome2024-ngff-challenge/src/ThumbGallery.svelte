@@ -5,9 +5,18 @@
   import Thumbnail from "./Thumbnail.svelte";
   import { SAMPLES_HOME, loadCsv } from "./util";
 
+
   export let csvUrl;
 
   let tableRows = [];
+
+  // Map of source to favicon domain
+  let faviconDomains = {
+    "IDR": "https://idr.openmicroscopy.org",
+    "Webknossos": "https://scalableminds.com",
+    "JAX": "http://jax.org",
+    "BioImage Archive": "https://www.ebi.ac.uk"
+  }
 
   let unsubscribe = ngffTable.subscribe((rows) => {
     tableRows = rows;
@@ -30,6 +39,17 @@
     csvUrl = csv_url;
     loadCsv(csvUrl, ngffTable);
   }
+
+  function getSourceIcon(source) {
+    if (source === "IDR") {
+      return "/idr-mark.svg";
+    }
+    let domain = faviconDomains[source];
+    if (!domain) {
+      return null;
+    }
+    return `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${domain}&size=24`;
+  }
 </script>
 
 <Header {tableRows} {csvUrl}></Header>
@@ -46,11 +66,16 @@
             <Thumbnail attrs={row.image_attrs} source={row.image_url}
             ></Thumbnail>
           {/if}
+          {#if getSourceIcon(row.source)}
+          <img alt="Icon from {row.source}" class="source_icon" src="{getSourceIcon(row.source)}">
+          {/if}
+          {#if row.source}
+            <span class="source">{row.source}:</span>
+          {/if}
           {row.csv_row_count}
           {row.well_count ? "plates" : "images"}
 
           <div class="hoverInfo">
-            {row.source || ""}
             {csvShortName(row)}
           </div>
         </div>
@@ -69,7 +94,7 @@
       on:click|preventDefault={() => handleThumbClick(SAMPLES_HOME)}
       class="home"
       title="Show ALL samples"
-      href="{window.location.origin}?csv={SAMPLES_HOME}">Show all samples</a
+      href="{window.location.origin}?csv={SAMPLES_HOME}">&lt; Show all samples</a
     >
   </p>
 {/if}
@@ -98,6 +123,22 @@
     border: 1px solid #ccc;
     padding: 5px;
     border-radius: 5px;
+    color: black;
+  }
+
+  .source_icon {
+    width: 24px;
+    height: 24px;
+    margin: 2px;
+    position: absolute;
+    background-color: white;
+    padding: 2px;
+    border-radius: 3px;
+    top: 6px;
+    left: 6px;
+  }
+  .source {
+    color: #666;
   }
 
   .hoverInfo {
