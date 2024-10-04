@@ -5,7 +5,6 @@
   import Thumbnail from "./Thumbnail.svelte";
   import { SAMPLES_HOME, loadCsv } from "./util";
 
-
   export let csvUrl;
 
   let tableRows = [];
@@ -13,11 +12,11 @@
 
   // Map of source to favicon domain
   let faviconDomains = {
-    "IDR": "https://idr.openmicroscopy.org",
-    "Webknossos": "https://scalableminds.com",
-    "JAX": "http://jax.org",
-    "BioImage Archive": "https://www.ebi.ac.uk"
-  }
+    IDR: "https://idr.openmicroscopy.org",
+    Webknossos: "https://scalableminds.com",
+    JAX: "http://jax.org",
+    "BioImage Archive": "https://www.ebi.ac.uk",
+  };
 
   let unsubscribe = ngffTable.subscribe((rows) => {
     tableRows = rows;
@@ -70,11 +69,18 @@
       >
         <div class="item">
           {#if row.image_attrs}
-            <Thumbnail attrs={row.image_attrs} source={row.image_url} max_size={maxThumbSize}
+            <Thumbnail
+              attrs={row.image_attrs}
+              source={row.image_url}
+              max_size={maxThumbSize}
             ></Thumbnail>
           {/if}
           {#if getSourceIcon(row.source)}
-          <img alt="Icon from {row.source}" class="source_icon" src="{getSourceIcon(row.source)}">
+            <img
+              alt="Icon from {row.source}"
+              class="source_icon"
+              src={getSourceIcon(row.source)}
+            />
           {/if}
           {#if row.source}
             <span class="source">{row.source}:</span>
@@ -101,7 +107,8 @@
       on:click|preventDefault={() => handleThumbClick(SAMPLES_HOME)}
       class="home"
       title="Show ALL samples"
-      href="{window.location.origin}?csv={SAMPLES_HOME}">&lt; Show all samples</a
+      href="{window.location.origin}?csv={SAMPLES_HOME}"
+      >&lt; Show all samples</a
     >
   </p>
 {/if}
@@ -134,9 +141,9 @@
     border-radius: 5px;
     background-color: white;
     color: black;
-    -webkit-box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
-    -moz-box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
-    box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
+    -webkit-box-shadow: 7px 6px 20px -8px rgba(115, 115, 115, 1);
+    -moz-box-shadow: 7px 6px 20px -8px rgba(115, 115, 115, 1);
+    box-shadow: 7px 6px 20px -8px rgba(115, 115, 115, 1);
   }
 
   .source_icon {
@@ -172,5 +179,19 @@
   }
   .item:hover .hoverInfo {
     display: block;
+  }
+
+  p {
+      padding: 10px;
+      background-color: white;
+      border: lightgrey 1px solid;
+      border-radius: 10px;
+    }
+
+  @media (prefers-color-scheme: dark) {
+    p {
+      background-color: rgb(51, 51, 51, 1);
+      border: solid #666 1px;
+    }
   }
 </style>
