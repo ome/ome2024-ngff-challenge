@@ -5,6 +5,7 @@
   import Pixel from "./Pixel.svelte";
 
   import { SAMPLES_HOME, filesizeformat, loadCsv, lookupImagingModality, lookupOrganism } from "./util";
+  import Nav from "./Nav.svelte";
 
 
   // check for ?csv=url
@@ -104,13 +105,14 @@
 <Pixel/><Pixel/><Pixel/><Pixel/><Pixel/>
 <Pixel/><Pixel/><Pixel/><Pixel/><Pixel/>
 
+<Nav/>
+
 <main>
   <h1 class="title">OME 2024 NGFF Challenge</h1>
 
   <ThumbGallery {csvUrl} />
 
   <div class="summary">
-    Totals:
     <table>
       <tr>
         <td>Zarr Samples (URLs)</td>
@@ -228,8 +230,6 @@
 <style>
 
   .title {
-    margin-top: 0;
-    padding-top: 20px;
     z-index: 10;
     position: relative;
   }
@@ -240,6 +240,11 @@
     border-collapse: collapse;
     width: 100%;
     background-color: white;
+    position: relative;
+    z-index: 10;
+    -webkit-box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
+    -moz-box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
+    box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
   }
   td, th {
     border: lightgrey 1px solid;
