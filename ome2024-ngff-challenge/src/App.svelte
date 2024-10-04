@@ -3,6 +3,7 @@
   import ThumbGallery from "./ThumbGallery.svelte";
   import Thumbnail from "./Thumbnail.svelte";
   import Pixel from "./Pixel.svelte";
+  import ColumnSort from "./ColumnSort.svelte";
 
   import { SAMPLES_HOME, filesizeformat, loadCsv, lookupImagingModality, lookupOrganism } from "./util";
   import Nav from "./Nav.svelte";
@@ -138,7 +139,7 @@
         >
         <td>
           {#if showLoadRoCrateButton}
-            <button on:click={handleLoadRocrate}>Load Ro-Crate metadata</button>
+            <button class="loadrocrate" on:click={handleLoadRocrate}>Load Ro-Crate metadata</button>
           {:else}
             {Object.keys(organismLookup).length}
           {/if}
@@ -153,19 +154,18 @@
     <thead>
       <tr>
         <th>Thumb</th>
-        <th>Url <button on:click={() => handleSort('url')}>sort {#if sortedBy == 'url'} {sortAscending ? "v" : "^"}{/if}</button></th>
+        <th><ColumnSort col_label={"Url"} col_name={"url"} {handleSort} {sortedBy} {sortAscending}/></th>
         {#if showSourceColumn}
-          <th>Source</th>
+          <th><ColumnSort col_label={"Source"} col_name={"source"} {handleSort} {sortedBy} {sortAscending}/></th>
         {/if}
         {#if showOriginColumn}
           <th>Data Origin</th>
         {/if}
         <th>Shape</th>
-        <th>Image size <button on:click={() => handleSort('written')}>sort {#if sortedBy == 'written'} {sortAscending ? "v" : "^"} {/if}</button></th>
+        <th><ColumnSort col_label={"Data size"} col_name={"written"} {handleSort} {sortedBy} {sortAscending}/></th>
         {#if showPlateColumns}
-          <th>Wells <button on:click={() => handleSort('well_count')}>sort {#if sortedBy == 'well_count'} {sortAscending ? "v" : "^"} {/if}</button></th>
+          <th><ColumnSort col_label={"Wells"} col_name={"well_count"} {handleSort} {sortedBy} {sortAscending}/></th>
           <th>Images</th>
-          <th>Total size <button on:click={() => handleSort('written')}>sort {#if sortedBy == 'written'} {sortAscending ? "v" : "^"} {/if}</button></th>
         {/if}
         <th>Organism</th>
         <th>Imaging</th>
@@ -195,7 +195,6 @@
             {/if}
             </td
           >
-          <!-- TODO: calculate dataHasColumn() just once, not for every row! -->
           {#if showSourceColumn}
             <td>{row.source || ""}</td>
           {/if}
@@ -209,7 +208,6 @@
           {#if showPlateColumns}
             <td>{row.well_count || ""}</td>
             <td>{row.well_count ? row.well_count * row.field_count : ""}</td>
-            <td>{filesizeformat(row.written)}</td>
           {/if}
           <td title="{row.organism_id || ''}">
             {#if row.organism_id}
@@ -232,6 +230,7 @@
   .title {
     z-index: 10;
     position: relative;
+    margin-bottom: 10px;
   }
   .summary {
     margin-bottom: 2em;
@@ -246,9 +245,16 @@
     -moz-box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
     box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
   }
+  @media (prefers-color-scheme: dark) {
+    table {
+      background-color: #333;
+    }
+  }
+
   td, th {
     border: lightgrey 1px solid;
     padding: 0.5em;
+    text-align: center;
   }
   progress {
     width: 100%;
@@ -257,7 +263,7 @@
     font-size: 48px;
   }
 
-  button {
+  .loadrocrate {
     font-size: 12px;
     background-color:aliceblue;
     border-radius: 5px;

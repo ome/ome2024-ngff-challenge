@@ -47,4 +47,9 @@
     position: absolute;
     z-index: 0;
   }
+  @media (prefers-color-scheme: dark) {
+  .pixel {
+    background-color: rgb(85, 69, 69);
+  }
+}
 </style>

@@ -59,7 +59,7 @@
   }
 </script>
 
-<Header {tableRows} {csvUrl}></Header>
+<Header {tableRows}></Header>
 
 <div class="gallery">
   {#each tableRows as row (row.url)}
