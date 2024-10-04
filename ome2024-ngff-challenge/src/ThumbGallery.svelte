@@ -9,6 +9,7 @@
   export let csvUrl;
 
   let tableRows = [];
+  let maxThumbSize = 512;
 
   // Map of source to favicon domain
   let faviconDomains = {
@@ -20,6 +21,12 @@
 
   let unsubscribe = ngffTable.subscribe((rows) => {
     tableRows = rows;
+    // If we don't have too many rows, we can afford to show larger thumbnails
+    if (rows.length < 100) {
+      maxThumbSize = 2048;
+    } else {
+      maxThumbSize = 512;
+    }
   });
 
   function csvShortName(row) {
@@ -63,7 +70,7 @@
       >
         <div class="item">
           {#if row.image_attrs}
-            <Thumbnail attrs={row.image_attrs} source={row.image_url}
+            <Thumbnail attrs={row.image_attrs} source={row.image_url} max_size={maxThumbSize}
             ></Thumbnail>
           {/if}
           {#if getSourceIcon(row.source)}

@@ -15,6 +15,8 @@
   // source is e.g. https://s3.embassy.ebi.ac.uk/idr/zarr/v0.4/6001240.zarr
   export let source;
   export let attrs;
+  // if the lowest resolution is above this size (squared), we don't try to load thumbnails
+  export let max_size = 512;
 
   let canvas;
   let cssWidth = 100;
@@ -35,7 +37,7 @@
     let chDim = axes.indexOf("c");
 
     let shape = arr.shape;
-    if (shape.at(-1) * shape.at(-2) > 512 * 512) {
+    if (shape.at(-1) * shape.at(-2) > max_size * max_size) {
       console.log("Lowest resolution too large for Thumbnail: ", shape, source);
       return;
     }
