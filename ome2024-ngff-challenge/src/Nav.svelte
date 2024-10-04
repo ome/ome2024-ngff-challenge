@@ -1,5 +1,6 @@
 <nav>
-  <h2>OME 2024 NGFF Challenge</h2>
+  <img style="height: 30px" alt="OME Logo" src="/ome-main-nav.svg"/>
+  <h2>2024 NGFF Challenge</h2>
 
   <ul>
     <li>
@@ -12,12 +13,13 @@
 <style>
   nav {
     position: relative;
-    display: block;
+    display: flex;
+    flex-direction: row;
     margin: 0;
-    padding: 5px;
-    flex: 0 0 48px;
+    padding: 5px 15px;
     background-color: #202428;
     z-index: 10;
+    align-items: center;
   }
 
   h2 {
