@@ -41,20 +41,29 @@ class NgffTable {
 
   addRows(rows) {
     // Each row is a dict {"url": "http...zarr"}
-    this.store.update((table) => {
-      table.push(...rows);
-      // Load metadata for each row - 5 at a time
-      async function loadMetadata(rows) {
-        for (let i = 0; i < rows.length; i = i + BATCH_SIZE) {
-          let promises = range(i, Math.min(i + BATCH_SIZE, rows.length)).map(
-            (j) => {
-              return this.loadNgffMetadata(rows[j].url);
-            },
-          );
-          await Promise.all(promises);
+    rows = rows.map((row) => {
+      if (row.written) {
+        row.written = parseFloat(row.written);
+      }
+      if (row.shape) {
+        let shape = row.shape.split(",").map((dim) => parseInt(dim));
+        let dim_names;
+        if (row.dimension_names) {
+          // e.g "t,c,z,y,x"
+          dim_names = row.dimension_names.split(",");
+        } else if (shape.length == 5) {
+          dim_names = ["t", "c", "z", "y", "x"];
+        }
+        if (dim_names && dim_names.length == shape.length) {
+          dim_names.forEach((dim, idx) => (row["size_" + dim] = shape[idx]));
         }
       }
-      loadMetadata.bind(this)(rows);
+      return row;
+    });
+    console.log("addRows", rows);
+
+    this.store.update((table) => {
+      table.push(...rows);
       return table;
     });
   }

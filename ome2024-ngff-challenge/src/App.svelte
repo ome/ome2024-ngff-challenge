@@ -162,6 +162,11 @@
           <th>Data Origin</th>
         {/if}
         <th>Shape</th>
+        <th><ColumnSort col_label={"X"} col_name={"size_x"} {handleSort} {sortedBy} {sortAscending}/></th>
+        <th><ColumnSort col_label={"Y"} col_name={"size_y"} {handleSort} {sortedBy} {sortAscending}/></th>
+        <th><ColumnSort col_label={"Z"} col_name={"size_z"} {handleSort} {sortedBy} {sortAscending}/></th>
+        <th><ColumnSort col_label={"C"} col_name={"size_c"} {handleSort} {sortedBy} {sortAscending}/></th>
+        <th><ColumnSort col_label={"T"} col_name={"size_t"} {handleSort} {sortedBy} {sortAscending}/></th>
         <th><ColumnSort col_label={"Data size"} col_name={"written"} {handleSort} {sortedBy} {sortAscending}/></th>
         {#if showPlateColumns}
           <th><ColumnSort col_label={"Wells"} col_name={"well_count"} {handleSort} {sortedBy} {sortAscending}/></th>
@@ -175,9 +180,7 @@
       {#each tableRows as row (row.url)}
         <tr>
           <td>
-            {#if row.image_attrs}
-              <Thumbnail attrs={row.image_attrs} source={row.image_url}></Thumbnail>
-            {/if}
+
           </td>
           <td
             >
@@ -203,7 +206,12 @@
               {#if row.origin}<a href={row.origin} target="_blank">...{row.origin.slice(-10)}</a>{/if}
             </td>
           {/if}
-          <td>{row.load_failed ? "x" : row.shape || ""}</td>
+          <td>{row.shape || ""}</td>
+          <td>{row.size_x || ""}</td>
+          <td>{row.size_y || ""}</td>
+          <td>{row.size_z || ""}</td>
+          <td>{row.size_c || ""}</td>
+          <td>{row.size_t || ""}</td>
           <td>{filesizeformat(row.written)}</td>
           {#if showPlateColumns}
             <td>{row.well_count || ""}</td>
