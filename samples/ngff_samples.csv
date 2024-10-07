@@ -1,11 +1,11 @@
 source,url
 
-IDR,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/idr_samples.csv
+IDR,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/idr_samples.csv
 
-BioImage Archive,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/ebi-ngff-challenge-samples.csv
+BioImage Archive,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/ebi-ngff-challenge-samples.csv
 
 JAX,https://raw.githubusercontent.com/TheJacksonLaboratory/jax-ngff-challenge-2024/refs/heads/main/KOMP_adult_lacZ.csv
 
 JAX,https://raw.githubusercontent.com/TheJacksonLaboratory/jax-ngff-challenge-2024/refs/heads/main/KOMP_histopathology.csv
 
-Webknossos,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/webknossos_samples.csv
+Webknossos,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/webknossos_samples.csv
