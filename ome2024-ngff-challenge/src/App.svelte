@@ -7,6 +7,7 @@
 
   import { SAMPLES_HOME, filesizeformat, loadCsv, lookupImagingModality, lookupOrganism } from "./util";
   import Nav from "./Nav.svelte";
+  import CanvasGallery from "./CanvasGallery.svelte";
 
 
   // check for ?csv=url
@@ -38,7 +39,7 @@
   // kick off loading the CSV to populate ngffTable...
   // This will recursively load other csv files if they are linked in the first one
   if (csvUrl) {
-    loadCsv(csvUrl, ngffTable);
+    // loadCsv(csvUrl, ngffTable);
   }
 
   function linkText(url) {
@@ -108,6 +109,9 @@
 
 <Nav/>
 
+<CanvasGallery />
+
+<!--
 <main>
   <h1 class="title">OME 2024 NGFF Challenge</h1>
 
@@ -224,6 +228,7 @@
     </tbody>
   </table>
 </main>
+-->
 
 <style>
 
