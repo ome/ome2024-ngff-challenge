@@ -10,6 +10,4 @@ if (process.env.GITHUB_REPOSITORY_OWNER) {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [svelte()],
-});
+export default defineConfig(config);
