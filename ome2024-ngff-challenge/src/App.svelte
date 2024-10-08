@@ -30,17 +30,15 @@
   let showSourceColumn = false;
   let organismLookup = {};
   let imagingModalityLookup = {};
+  let filterDims = "0";
 
   // The ngffTable is loaded initially - for gallery at top of page...
   // Also updated when a gallery item is clicked to show the table of images
   ngffTable.subscribe((rows) => {
-    tableRows = rows;
+    tableRows = filterRows(rows);
   });
 
   $: showSourceColumn = tableRows.some((row) => row.source);
-  $: showOriginColumn = tableRows.some((row) => row.origin);
-  $: showPlateColumns = tableRows.some((row) => row.well_count);
-  $: showLoadRoCrateButton = !tableRows.some((row) => row.rocrate_loaded);
 
   // kick off loading the CSV to populate ngffTable...
   // This will recursively load other csv files if they are linked in the first one
@@ -57,10 +55,6 @@
       truncated = truncated.slice(0, 20) + "..." + truncated.slice(-20);
     }
     return truncated;
-  }
-
-  function handleLoadRocrate() {
-    ngffTable.loadRocrateJsonAllRows();
   }
 
   // This is called by the <table> if we are missing organisms from the lookup dict.
@@ -117,6 +111,21 @@
     return tableRows[index].url;
   }
 
+  function filterRows(rows) {
+    console.log("filterRows() filterDims", filterDims);
+    if (filterDims !== "0") {
+      rows = rows.filter(row => {
+        console.log("filter row", row.dim_count, filterDims, row.dim_count == filterDims);
+        return row.dim_count == filterDims});
+    }
+    return rows;
+  }
+
+  function filterChanged(event) {
+    filterDims = event.target.value;
+    tableRows = filterRows(ngffTable.getRows());
+  }
+
 </script>
 
 <div class="app">
@@ -124,8 +133,6 @@
 
   <main>
     <h1 class="title">OME 2024 NGFF Challenge</h1>
-
-    <ThumbGallery {csvUrl} />
 
     <div class="summary">
       <p>
@@ -141,12 +148,24 @@
       </p>
       <div>
         Filter:
-        <button>IDR</button>
-        <button>JAX</button>
-        <button>EBI</button>
-        <button>Webknossos</button>
+        {#if showSourceColumn}
+          <button>IDR</button>
+          <button>JAX</button>
+          <button>EBI</button>
+          <button>Webknossos</button>
+        {/if}
+        filterDims: {filterDims}
+        <select on:change={filterChanged}>
+          <option value="0">nDim</option>
+          <option value="2">2D</option>
+          <option value="3">3D</option>
+          <option value="4">4D</option>
+          <option value="5">5D</option>
+        </select>
       </div>
-      <div><ColumnSort
+      <div>
+        Sort:
+        <ColumnSort
               col_label={"Url"}
               col_name={"url"}
               {handleSort}
@@ -254,32 +273,5 @@
     z-index: 20;
     padding: 10px;
   }
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    background-color: white;
-    position: relative;
-    z-index: 0;
-    -webkit-box-shadow: 7px 6px 20px -8px rgba(115, 115, 115, 1);
-    -moz-box-shadow: 7px 6px 20px -8px rgba(115, 115, 115, 1);
-    box-shadow: 7px 6px 20px -8px rgba(115, 115, 115, 1);
-  }
-  @media (prefers-color-scheme: dark) {
-    table {
-      background-color: #333;
-    }
-  }
 
-  td,
-  th {
-    border: lightgrey 1px solid;
-    padding: 0.5em;
-    text-align: center;
-  }
-  progress {
-    width: 100%;
-  }
-  .stats {
-    font-size: 48px;
-  }
 </style>

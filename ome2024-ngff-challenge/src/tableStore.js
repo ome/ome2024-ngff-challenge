@@ -58,6 +58,11 @@ class NgffTable {
         if (dim_names && dim_names.length == shape.length) {
           dim_names.forEach((dim, idx) => (row["size_" + dim] = shape[idx]));
         }
+        // count the number of dimensions with size > 1
+        row.dim_count = shape.reduce(
+          (prev, curr) => prev + (curr > 1 ? 1 : 0),
+          0,
+        );
       }
       return row;
     });
@@ -249,6 +254,10 @@ class NgffTable {
 
   subscribe(run) {
     return this.store.subscribe(run);
+  }
+
+  getRows() {
+    return get(this.store);
   }
 }
 

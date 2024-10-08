@@ -10,7 +10,7 @@
     getDefaultColors,
   } from "./util";
 
-  const MAX_LENGTH = 100;
+  const MAX_LENGTH = 200;
 
   // source is e.g. https://s3.embassy.ebi.ac.uk/idr/zarr/v0.4/6001240.zarr
   export let source;
@@ -93,6 +93,8 @@
     if (height > width) {
       scale = height / MAX_LENGTH;
     }
+    scale = Math.max(1, scale);
+
     cssWidth = width / scale;
     cssHeight = height / scale;
 
