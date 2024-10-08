@@ -220,8 +220,8 @@ if "license" not in column_names:
         "fbbiId",
     ]
 
-with Path(output_csv).open("w", newline="") as csvfile:
+with Path(output_csv).open("a", newline="") as csvfile:
     csvwriter = csv.writer(csvfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
-    csvwriter.writerow(column_names)
-    for row in column_data:
-        csvwriter.writerow(row)
+    # csvwriter.writerow(column_names)
+    # for row in column_data:
+    #     csvwriter.writerow(row)
