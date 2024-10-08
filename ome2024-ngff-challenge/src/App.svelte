@@ -1,4 +1,6 @@
 <script>
+  import VirtualList from 'svelte-tiny-virtual-list';
+
   import { ngffTable } from "./tableStore";
   import ThumbGallery from "./ThumbGallery.svelte";
   import Thumbnail from "./Thumbnail.svelte";
@@ -12,6 +14,7 @@
     lookupOrganism,
   } from "./util";
   import Nav from "./Nav.svelte";
+  import ZarrListItem from './ZarrListItem.svelte';
 
   // check for ?csv=url
   const params = new URLSearchParams(window.location.search);
@@ -103,7 +106,8 @@
     if (sortedBy === colname) {
       sortAscending = !sortAscending;
     } else {
-      sortAscending = true;
+      // start by sorting descending (biggest first)
+      sortAscending = false;
     }
     sortedBy = colname;
     ngffTable.sortTable(colname, sortAscending);
@@ -137,107 +141,78 @@
         <button>EBI</button>
         <button>Webknossos</button>
       </div>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Thumb</th>
-          <th
-            ><ColumnSort
+      <div><ColumnSort
               col_label={"Url"}
               col_name={"url"}
               {handleSort}
               {sortedBy}
               {sortAscending}
-            /></th
-          >
+            />
           {#if showSourceColumn}
-            <th
-              ><ColumnSort
+            <ColumnSort
                 col_label={"Source"}
                 col_name={"source"}
                 {handleSort}
                 {sortedBy}
                 {sortAscending}
-              /></th
-            >
+              />
           {/if}
-          {#if showOriginColumn}
-            <th>Data Origin</th>
-          {/if}
-          <th>Shape</th>
-          <th
-            ><ColumnSort
+          <ColumnSort
               col_label={"X"}
               col_name={"size_x"}
               {handleSort}
               {sortedBy}
               {sortAscending}
-            /></th
-          >
-          <th
-            ><ColumnSort
+            />
+          <ColumnSort
               col_label={"Y"}
               col_name={"size_y"}
               {handleSort}
               {sortedBy}
               {sortAscending}
-            /></th
-          >
-          <th
-            ><ColumnSort
+            />
+            <ColumnSort
               col_label={"Z"}
               col_name={"size_z"}
               {handleSort}
               {sortedBy}
               {sortAscending}
-            /></th
-          >
-          <th
-            ><ColumnSort
+            />
+            <ColumnSort
               col_label={"C"}
               col_name={"size_c"}
               {handleSort}
               {sortedBy}
               {sortAscending}
-            /></th
-          >
-          <th
-            ><ColumnSort
+            />
+            <ColumnSort
               col_label={"T"}
               col_name={"size_t"}
               {handleSort}
               {sortedBy}
               {sortAscending}
-            /></th
-          >
-          <th
-            ><ColumnSort
+            />
+            <ColumnSort
               col_label={"Data size"}
               col_name={"written"}
               {handleSort}
               {sortedBy}
               {sortAscending}
-            /></th
-          >
-          {#if showPlateColumns}
-            <th
-              ><ColumnSort
-                col_label={"Wells"}
-                col_name={"well_count"}
-                {handleSort}
-                {sortedBy}
-                {sortAscending}
-              /></th
-            >
-            <th>Images</th>
-          {/if}
-          <th>Organism</th>
-          <th>Imaging</th>
-        </tr>
-      </thead>
-      <tbody>
+            />
+
+            </div>
+</div>
+
+
+<VirtualList width="100%" height={600} itemCount={tableRows.length} itemSize={100}>
+	<div slot="item" let:index let:style {style} class="row">
+		Row: #{index}
+    <ZarrListItem rowData={tableRows[index]} />
+	</div>
+</VirtualList>
+
+
+<!--
         {#each tableRows as row (row.url)}
           <tr>
             <td> </td>
@@ -285,13 +260,17 @@
               {/if}
             </td>
           </tr>
-        {/each}
-      </tbody>
-    </table>
+        {/each} -->
+
   </main>
 </div>
 
 <style>
+  .row {
+    border: solid red 1px;
+    background-color: green;
+    padding: 10px;
+  }
   .app {
     margin: 0;
     padding: 0;

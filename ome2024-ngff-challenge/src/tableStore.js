@@ -132,37 +132,37 @@ class NgffTable {
     });
   }
 
-  async loadRocrateJson(zarrUrl) {
-    await fetch(`${zarrUrl}/ro-crate-metadata.json`)
-      .then((response) => {
-        console.log("loadMultiscales response", response.status);
-        if (response.status === 404) {
-          throw new Error(`${zarrUrl}/ro-crate-metadata.json not found`);
-        }
-        return response.json();
-      })
-      .then((jsonData) => {
-        // parse ro-crate json...
-        let biosample = jsonData["@graph"].find(
-          (item) => item["@type"] === "biosample",
-        );
-        let organism_id = biosample?.organism_classification?.["@id"];
-        let image_acquisition = jsonData["@graph"].find(
-          (item) => item["@type"] === "image_acquisition",
-        );
-        let fbbi_id = image_acquisition?.fbbi_id?.["@id"];
+  // async loadRocrateJson(zarrUrl) {
+  //   await fetch(`${zarrUrl}/ro-crate-metadata.json`)
+  //     .then((response) => {
+  //       console.log("loadMultiscales response", response.status);
+  //       if (response.status === 404) {
+  //         throw new Error(`${zarrUrl}/ro-crate-metadata.json not found`);
+  //       }
+  //       return response.json();
+  //     })
+  //     .then((jsonData) => {
+  //       // parse ro-crate json...
+  //       let biosample = jsonData["@graph"].find(
+  //         (item) => item["@type"] === "biosample",
+  //       );
+  //       let organism_id = biosample?.organism_classification?.["@id"];
+  //       let image_acquisition = jsonData["@graph"].find(
+  //         (item) => item["@type"] === "image_acquisition",
+  //       );
+  //       let fbbi_id = image_acquisition?.fbbi_id?.["@id"];
 
-        // I guess we could store more JSON data in the table, but let's keep columns to strings/IDs for now...
-        this.populateRow(zarrUrl, {
-          organism_id,
-          fbbi_id,
-          rocrate_loaded: true,
-        });
-      })
-      .catch((error) => {
-        console.log("Failed to load ro-crate-metadata.json", error);
-      });
-  }
+  //       // I guess we could store more JSON data in the table, but let's keep columns to strings/IDs for now...
+  //       this.populateRow(zarrUrl, {
+  //         organism_id,
+  //         fbbi_id,
+  //         rocrate_loaded: true,
+  //       });
+  //     })
+  //     .catch((error) => {
+  //       console.log("Failed to load ro-crate-metadata.json", error);
+  //     });
+  // }
 
   async loadRocrateJsonAllRows() {
     let rows = get(this.store);
@@ -176,9 +176,15 @@ class NgffTable {
     }
   }
 
-  compareRows(a, b) {
+  compareRows(a, b, isNumber = false) {
     let aVal = a[this.sortColumn];
     let bVal = b[this.sortColumn];
+
+    // try to make it fast by not checking for undefined etc
+    if (isNumber) {
+      return this.sortAscending ? aVal - bVal : -bVal - aVal;
+    }
+
     if (aVal === undefined) {
       aVal = "";
     }
@@ -188,7 +194,7 @@ class NgffTable {
 
     let comp = 0;
     // TODO: handle specific column names, e.g. shape
-    if (typeof aVal === "number") {
+    if (isNumber) {
       comp = aVal - bVal;
     } else {
       comp = aVal.localeCompare(bVal);
@@ -199,10 +205,30 @@ class NgffTable {
   sortTable(colName, ascending = true) {
     this.sortColumn = colName;
     this.sortAscending = ascending;
+    let isNumber = this.isColumnNumeric(colName);
+    console.log(
+      "sortTable",
+      colName,
+      "ascending",
+      ascending,
+      "isNumber",
+      isNumber,
+    );
     this.store.update((table) => {
-      table.sort((a, b) => this.compareRows(a, b));
+      table.sort((a, b) => this.compareRows(a, b, isNumber));
       return table;
     });
+  }
+
+  isColumnNumeric(colName) {
+    // return true if first non-empty value is a number
+    let rows = get(this.store);
+    for (let row of rows) {
+      let val = row[colName];
+      if (val !== undefined && val !== "") {
+        return !isNaN(val);
+      }
+    }
   }
 
   emptyTable() {
