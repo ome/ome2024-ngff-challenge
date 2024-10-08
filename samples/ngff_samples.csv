@@ -9,3 +9,7 @@ JAX,https://raw.githubusercontent.com/TheJacksonLaboratory/jax-ngff-challenge-20
 JAX,https://raw.githubusercontent.com/TheJacksonLaboratory/jax-ngff-challenge-2024/refs/heads/main/KOMP_histopathology.csv
 
 Webknossos,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/webknossos_samples.csv
+
+Crick,https://radosgw.public.os.wwu.de/n4bi-wp1/challenge/crick.csv
+
+NFDI4BIOIMAGE,https://radosgw.public.os.wwu.de/n4bi-wp1/challenge/n4bi.csv
