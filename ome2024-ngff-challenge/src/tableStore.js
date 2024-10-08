@@ -180,9 +180,20 @@ class NgffTable {
     let aVal = a[this.sortColumn];
     let bVal = b[this.sortColumn];
 
-    // try to make it fast by not checking for undefined etc
+    // Handle number...
     if (isNumber) {
-      return this.sortAscending ? aVal - bVal : -bVal - aVal;
+      if (aVal === undefined) {
+        aVal = 0;
+      }
+      if (bVal === undefined) {
+        bVal = 0;
+      }
+      if (aVal < bVal) {
+        return this.sortAscending ? -1 : 1;
+      } else if (aVal > bVal) {
+        return this.sortAscending ? 1 : -1;
+      }
+      return 0;
     }
 
     if (aVal === undefined) {

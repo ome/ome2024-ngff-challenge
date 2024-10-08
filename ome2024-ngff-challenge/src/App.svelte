@@ -112,6 +112,11 @@
     sortedBy = colname;
     ngffTable.sortTable(colname, sortAscending);
   }
+
+  function getItemKey(index) {
+    return tableRows[index].url;
+  }
+
 </script>
 
 <div class="app">
@@ -204,63 +209,12 @@
 </div>
 
 
-<VirtualList width="100%" height={600} itemCount={tableRows.length} itemSize={100}>
+<VirtualList width="100%" height={600} itemCount={tableRows.length} itemSize={150} getKey={getItemKey}>
 	<div slot="item" let:index let:style {style} class="row">
-		Row: #{index}
+		Row: #{index} URL: {tableRows[index].url}
     <ZarrListItem rowData={tableRows[index]} />
 	</div>
 </VirtualList>
-
-
-<!--
-        {#each tableRows as row (row.url)}
-          <tr>
-            <td> </td>
-            <td>
-              {#if row.csv_row_count && row.csv}
-                <a href="{window.location.origin}?csv={row.csv}" target="_blank"
-                  >{row.csv.split("/").pop()} ({row.csv_row_count})</a
-                >
-              {:else}
-                <a
-                  href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={row.url}"
-                  target="_blank">{linkText(row.url)}</a
-                >
-              {/if}
-            </td>
-            {#if showSourceColumn}
-              <td>{row.source || ""}</td>
-            {/if}
-            {#if showOriginColumn}
-              <td>
-                {#if row.origin}<a href={row.origin} target="_blank"
-                    >...{row.origin.slice(-10)}</a
-                  >{/if}
-              </td>
-            {/if}
-            <td>{row.shape || ""}</td>
-            <td>{row.size_x || ""}</td>
-            <td>{row.size_y || ""}</td>
-            <td>{row.size_z || ""}</td>
-            <td>{row.size_c || ""}</td>
-            <td>{row.size_t || ""}</td>
-            <td>{filesizeformat(row.written)}</td>
-            {#if showPlateColumns}
-              <td>{row.well_count || ""}</td>
-              <td>{row.well_count ? row.well_count * row.field_count : ""}</td>
-            {/if}
-            <td title={row.organismId || ""}>
-              {#if row.organismId}
-                {organismLookup[row.organismId] || loadOrganism(row.organismId)}
-              {/if}
-            </td>
-            <td title={row.fbbiId || ""}>
-              {#if row.fbbiId}
-                {organismLookup[row.fbbiId] || loadImagingModality(row.fbbiId)}
-              {/if}
-            </td>
-          </tr>
-        {/each} -->
 
   </main>
 </div>
@@ -269,6 +223,7 @@
   .row {
     background-color: black;
     padding: 10px;
+    color: white;
   }
   .app {
     margin: 0;
