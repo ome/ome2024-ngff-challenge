@@ -2,7 +2,8 @@ import { writable, get } from "svelte/store";
 import { range } from "./util.js";
 const BATCH_SIZE = 5;
 
-async function loadMultiscales(url) {
+export async function loadMultiscales(url) {
+  // return the json data that includes multiscales
   let zarrData = await fetch(`${url}/zarr.json`)
     .then((response) => {
       console.log("loadMultiscales response", response.status);
@@ -21,7 +22,7 @@ async function loadMultiscales(url) {
     return [undefined, url];
   }
   if (attributes.multiscales) {
-    return [attributes.multiscales, url];
+    return [attributes, url];
   } else if (attributes.plate) {
     let well = attributes.plate.wells[0];
     // assume the first image in the well is under "/0"

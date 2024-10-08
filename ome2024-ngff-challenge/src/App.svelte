@@ -211,8 +211,7 @@
 
 <VirtualList width="100%" height={600} itemCount={tableRows.length} itemSize={150} getKey={getItemKey}>
 	<div slot="item" let:index let:style {style} class="row">
-		Row: #{index} URL: {tableRows[index].url}
-    <ZarrListItem rowData={tableRows[index]} />
+    <ZarrListItem listIndex={index} rowData={tableRows[index]} />
 	</div>
 </VirtualList>
 
