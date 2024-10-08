@@ -267,8 +267,7 @@
 
 <style>
   .row {
-    border: solid red 1px;
-    background-color: green;
+    background-color: black;
     padding: 10px;
   }
   .app {
