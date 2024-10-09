@@ -9,3 +9,7 @@ JAX,https://raw.githubusercontent.com/will-moore/jax-ngff-challenge-2024/333ff2a
 Webknossos,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/webknossos_samples.csv
 
 University of Muenster / NFDI4Bioimage,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/uni_muenster_samples.csv
+
+Crick,https://radosgw.public.os.wwu.de/n4bi-wp1/challenge/crick.csv
+
+NFDI4BIOIMAGE,https://radosgw.public.os.wwu.de/n4bi-wp1/challenge/n4bi.csv
