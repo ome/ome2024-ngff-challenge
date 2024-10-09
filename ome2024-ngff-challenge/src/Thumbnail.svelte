@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import * as zarr from "zarrita";
   import { slice } from "@zarrita/indexing";
-  import { loadMultiscales} from "./tableStore";
   import {
     renderTo8bitArray,
     getMinMaxValues,
@@ -15,8 +14,7 @@
 
   // source is e.g. https://s3.embassy.ebi.ac.uk/idr/zarr/v0.4/6001240.zarr
   export let source;
-  // if attrs is not provided, we load it from the source
-  export let attrs = undefined;
+  export let attrs;
   // if the lowest resolution is above this size (squared), we don't try to load thumbnails
   export let max_size = 512;
 
@@ -45,9 +43,8 @@
     }
 
     let dims = shape.length;
-    let ch = arr.chunks;
 
-    let channel_count = shape[chDim];
+    let channel_count = shape[chDim] || 1;
     let visibilities;
     let colors;
     if (attrs?.omero?.channels) {
@@ -107,13 +104,7 @@
     }, 100);
   }
 
-  onMount(async () => {
-    if (attrs == undefined) {
-      let img = await loadMultiscales(source);
-      attrs = img[0];
-      // update source to point to the IMAGE within the plate/bioformats2raw layout
-      source = img[1];
-    }
+  onMount(() => {
     loadThumbnail();
   });
 </script>

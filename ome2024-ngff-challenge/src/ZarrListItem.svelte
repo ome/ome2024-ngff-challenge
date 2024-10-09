@@ -9,11 +9,25 @@
   export let rowData;
   export let listIndex;
 
+  let imgAttrs;
+  let imgUrl;
+  let plateAttrs;
+
+  onMount(async () => {
+    console.log("onMount", rowData.url);
+
+    let img = await loadMultiscales(rowData.url);
+    imgAttrs = img[0];
+    imgUrl = img[1];
+    plateAttrs = img[2]; // optional
+  });
 </script>
 
 <div class="zarr-list-item">
   <div style:float={listIndex % 2 == 0 ? "right" : "left"}>
-    <Thumbnail source={rowData.url} max_size={2000} />
+    {#if imgAttrs}
+      <Thumbnail source={imgUrl} attrs={imgAttrs} max_size={2000} />
+    {/if}
   </div>
   <table style:float={listIndex % 2 == 0 ? "right" : "left"}>
     {#each ["t", "c", "z", "y", "x"] as dim}

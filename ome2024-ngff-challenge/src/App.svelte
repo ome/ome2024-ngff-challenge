@@ -14,7 +14,7 @@
   } from "./util";
   import Nav from "./Nav.svelte";
   import ZarrListItem from "./ZarrListItem.svelte";
-  import Thumbnail from "./Thumbnail.svelte";
+  import ThumbLoader from "./ThumbLoader.svelte";
 
   // check for ?csv=url
   const params = new URLSearchParams(window.location.search);
@@ -162,7 +162,7 @@
           {#each Object.keys(zarrSources).sort() as source}
             <label class="source">
               <img title={Object.values(zarrSources[source])[0].url} class="sourceLogo" alt="Source logo" src="{getSourceIcon(source)}" />
-              <Thumbnail source={Object.values(zarrSources[source])[0].url} max_size={2000} />
+              <ThumbLoader source={Object.values(zarrSources[source])[0].url} />
               <input
                 on:change={filterSource}
                 type="radio"
