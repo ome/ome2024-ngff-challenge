@@ -2,8 +2,6 @@
   import VirtualList from 'svelte-tiny-virtual-list';
 
   import { ngffTable } from "./tableStore";
-  import ThumbGallery from "./ThumbGallery.svelte";
-  import Thumbnail from "./Thumbnail.svelte";
   import ColumnSort from "./ColumnSort.svelte";
 
   import {
@@ -45,17 +43,6 @@
   // This will recursively load other csv files if they are linked in the first one
   if (csvUrl) {
     loadCsv(csvUrl, ngffTable);
-  }
-
-  function linkText(url) {
-    let truncated = url.replace(
-      "https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/",
-      ""
-    );
-    if (truncated.length > 50) {
-      truncated = truncated.slice(0, 20) + "..." + truncated.slice(-20);
-    }
-    return truncated;
   }
 
   // This is called by the <table> if we are missing organisms from the lookup dict.
@@ -113,21 +100,18 @@
   }
 
   function filterRows(rows) {
-    console.log("filterRows() filterDims", filterDims);
     if (filterDims !== "0") {
       rows = rows.filter(row => {
-        console.log("filter row", row.dim_count, filterDims, row.dim_count == filterDims);
         return row.dim_count == filterDims});
     }
     if (sourceFilter !== "") {
       rows = rows.filter(row => {
-        console.log("filter row", row.source, sourceFilter, row.source == sourceFilter);
         return row.source == sourceFilter});
     }
     return rows;
   }
 
-  function filterSouce(event) {
+  function filterSource(event) {
     sourceFilter = event.target.value;
     tableRows = filterRows(ngffTable.getRows());
   }
@@ -159,7 +143,7 @@
       <div>
         Filter:
         {#if showSourceColumn}
-        <select on:change={filterSouce}>
+        <select on:change={filterSource}>
           <option value="">-</option>
           <option value="IDR">IDR</option>
           <option value="JAX">JAX</option>

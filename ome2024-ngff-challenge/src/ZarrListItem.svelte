@@ -3,6 +3,8 @@
   import { filesizeformat } from "./util";
   import { loadMultiscales } from "./tableStore";
   import Thumbnail from "./Thumbnail.svelte";
+  import omeLogo from '../public/ome-logomark.svg';
+  import vizarrLogo from '../public/vizarr_logo.png';
 
   export let rowData;
   export let listIndex;
@@ -40,13 +42,13 @@
       title="Validator: {rowData.url}"
       href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={rowData.url}"
       target="_blank"
-      ><img alt="OME logo" class="link_logo" src="/ome-logomark.svg" />
+      ><img alt="OME logo" class="link_logo" src={omeLogo} />
     </a>
     <a
       title="Vizarr: {rowData.url}"
       href="https://hms-dbmi.github.io/vizarr/?source={rowData.url}"
       target="_blank"
-      ><img alt="Vizarr logo" class="link_logo" src="/vizarr_logo.png" />
+      ><img alt="Vizarr logo" class="link_logo" src={vizarrLogo} />
     </a>
   </div>
 </div>
