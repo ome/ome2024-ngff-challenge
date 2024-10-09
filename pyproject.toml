@@ -47,7 +47,7 @@ sphinx-autodoc-typehints = { version = "*", optional = true }
 ipython = "^8.22.2"
 pytest = "^7.4.3"
 pytest-mock = "^3.14.0"
-
+moto = {extras = ["s3", "proxy"], version = "^5.0.13"}
 
 [tool.poetry.extras]
 test = ["pytest", "pytest-cov"]
