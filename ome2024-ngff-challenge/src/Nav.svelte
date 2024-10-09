@@ -12,14 +12,18 @@
 
 <style>
   nav {
-    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
     display: flex;
     flex-direction: row;
     margin: 0;
     padding: 5px 15px;
     background-color: #202428;
-    z-index: 10;
+    z-index: 20;
     align-items: center;
+    box-sizing: border-box;
+    flex: auto 0 0;
   }
 
   h2 {

@@ -1,9 +1,9 @@
 import Papa from "papaparse";
 
 export const SAMPLES_HOME =
-  "https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/ngff_samples.csv";
+  "https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/ngff_samples.csv";
 
-export function loadCsv(csvUrl, ngffTable, parentRow = {}, childCount) {
+export function loadCsv(csvUrl, ngffTable, parentRow = {}) {
   csvUrl = csvUrl + "?_=" + Date.now(); // prevent caching
   Papa.parse(csvUrl, {
     header: false,
@@ -41,21 +41,7 @@ export function loadCsv(csvUrl, ngffTable, parentRow = {}, childCount) {
       });
       zarrUrlRows = Object.values(zarrRowsByUrl);
 
-      // limit number of Zarrs to load
-      if (childCount) {
-        let childRowCount = zarrUrlRows.length;
-        let totalWritten = zarrUrlRows.reduce((acc, row) => {
-          return acc + parseInt(row["written"]) || 0;
-        }, 0);
-        // add the original row count to the remaining row(s)
-        zarrUrlRows = zarrUrlRows.slice(0, childCount).map((row) => {
-          return {
-            ...row,
-            csv_row_count: childRowCount,
-            written: totalWritten,
-          };
-        });
-      }
+      // add rows to the table - parsing strings to numbers etc...
       ngffTable.addRows(zarrUrlRows);
 
       // recursively load child CSVs
@@ -65,7 +51,7 @@ export function loadCsv(csvUrl, ngffTable, parentRow = {}, childCount) {
         childCsvRow["url"] = undefined;
         childCsvRow["csv"] = csvUrl;
         // Only load a single child CSV
-        loadCsv(csvUrl, ngffTable, childCsvRow, 1);
+        loadCsv(csvUrl, ngffTable, childCsvRow);
       });
     },
   });

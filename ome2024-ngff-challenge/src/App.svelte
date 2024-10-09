@@ -1,13 +1,20 @@
 <script>
+  import VirtualList from 'svelte-tiny-virtual-list';
+
   import { ngffTable } from "./tableStore";
   import ThumbGallery from "./ThumbGallery.svelte";
   import Thumbnail from "./Thumbnail.svelte";
-  import Pixel from "./Pixel.svelte";
   import ColumnSort from "./ColumnSort.svelte";
 
-  import { SAMPLES_HOME, filesizeformat, loadCsv, lookupImagingModality, lookupOrganism } from "./util";
+  import {
+    SAMPLES_HOME,
+    filesizeformat,
+    loadCsv,
+    lookupImagingModality,
+    lookupOrganism,
+  } from "./util";
   import Nav from "./Nav.svelte";
-
+  import ZarrListItem from './ZarrListItem.svelte';
 
   // check for ?csv=url
   const params = new URLSearchParams(window.location.search);
@@ -23,17 +30,15 @@
   let showSourceColumn = false;
   let organismLookup = {};
   let imagingModalityLookup = {};
+  let filterDims = "0";
 
   // The ngffTable is loaded initially - for gallery at top of page...
   // Also updated when a gallery item is clicked to show the table of images
   ngffTable.subscribe((rows) => {
-    tableRows = rows;
+    tableRows = filterRows(rows);
   });
 
   $: showSourceColumn = tableRows.some((row) => row.source);
-  $: showOriginColumn = tableRows.some((row) => row.origin);
-  $: showPlateColumns = tableRows.some((row) => row.well_count);
-  $: showLoadRoCrateButton = !tableRows.some((row) => row.rocrate_loaded);
 
   // kick off loading the CSV to populate ngffTable...
   // This will recursively load other csv files if they are linked in the first one
@@ -50,10 +55,6 @@
       truncated = truncated.slice(0, 20) + "..." + truncated.slice(-20);
     }
     return truncated;
-  }
-
-  function handleLoadRocrate() {
-    ngffTable.loadRocrateJsonAllRows();
   }
 
   // This is called by the <table> if we are missing organisms from the lookup dict.
@@ -84,7 +85,10 @@
     // put a placeholder to avoid multiple requests while we wait for the lookup
     imagingModalityLookup[fbbiId] = fbbiId;
     lookupImagingModality(fbbiId).then((imagingModality) => {
-      imagingModalityLookup = { ...imagingModalityLookup, [fbbiId]: imagingModality };
+      imagingModalityLookup = {
+        ...imagingModalityLookup,
+        [fbbiId]: imagingModality,
+      };
     });
     return fbbiId;
   }
@@ -92,184 +96,182 @@
   let sortedBy = "";
   let sortAscending = true;
   function handleSort(colname) {
-    console.log("handleSort", colname, 'sortedBy', sortedBy);
+    console.log("handleSort", colname, "sortedBy", sortedBy);
     if (sortedBy === colname) {
       sortAscending = !sortAscending;
     } else {
-      sortAscending = true;
+      // start by sorting descending (biggest first)
+      sortAscending = false;
     }
     sortedBy = colname;
     ngffTable.sortTable(colname, sortAscending);
   }
+
+  function getItemKey(index) {
+    return tableRows[index].url;
+  }
+
+  function filterRows(rows) {
+    console.log("filterRows() filterDims", filterDims);
+    if (filterDims !== "0") {
+      rows = rows.filter(row => {
+        console.log("filter row", row.dim_count, filterDims, row.dim_count == filterDims);
+        return row.dim_count == filterDims});
+    }
+    return rows;
+  }
+
+  function filterChanged(event) {
+    filterDims = event.target.value;
+    tableRows = filterRows(ngffTable.getRows());
+  }
+
 </script>
 
-<Pixel/><Pixel/><Pixel/><Pixel/><Pixel/>
-<Pixel/><Pixel/><Pixel/><Pixel/><Pixel/>
+<div class="app">
+  <Nav />
 
-<Nav/>
+  <main>
+    <h1 class="title">OME 2024 NGFF Challenge</h1>
 
-<main>
-  <h1 class="title">OME 2024 NGFF Challenge</h1>
-
-  <ThumbGallery {csvUrl} />
-
-  <div class="summary">
-    <table>
-      <tr>
-        <td>Zarr Samples (URLs)</td>
-        <td>Images</td>
-        <td>Bytes written</td>
-        <td>Organisms</td>
-      </tr>
-      <tr class="stats">
-        <td>{tableRows.length}</td>
-        <td
-          >{tableRows.reduce(
-            (acc, row) =>
-              acc + (row.well_count ? row.well_count * row.field_count : 1),
-            0
-          )}</td
-        >
-        <td
-          >{filesizeformat(
-            tableRows.reduce((acc, row) => {
-              return acc + parseInt(row["written"]) || 0;
-            }, 0)
-          )}</td
-        >
-        <td>
-          {#if showLoadRoCrateButton}
-            <button class="loadrocrate" on:click={handleLoadRocrate}>Load Ro-Crate metadata</button>
-          {:else}
-            {Object.keys(organismLookup).length}
-          {/if}
-        </td>
-      </tr>
-    </table>
-
-    <progress value={tableRows.filter(row => row.loaded).length} max={tableRows.length}></progress>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Thumb</th>
-        <th><ColumnSort col_label={"Url"} col_name={"url"} {handleSort} {sortedBy} {sortAscending}/></th>
+    <div class="summary">
+      <p>
+        {tableRows.length} Zarrs,
+        {filesizeformat(
+          tableRows.reduce((acc, row) => {
+            return acc + parseInt(row["written"]) || 0;
+          }, 0)
+        )},
+        <span title={Object.values(organismLookup).join(",")}>
+          {Object.keys(organismLookup).length} organisms
+        </span>
+      </p>
+      <div>
+        Filter:
         {#if showSourceColumn}
-          <th><ColumnSort col_label={"Source"} col_name={"source"} {handleSort} {sortedBy} {sortAscending}/></th>
+          <button>IDR</button>
+          <button>JAX</button>
+          <button>EBI</button>
+          <button>Webknossos</button>
         {/if}
-        {#if showOriginColumn}
-          <th>Data Origin</th>
-        {/if}
-        <th>Shape</th>
-        <th><ColumnSort col_label={"Data size"} col_name={"written"} {handleSort} {sortedBy} {sortAscending}/></th>
-        {#if showPlateColumns}
-          <th><ColumnSort col_label={"Wells"} col_name={"well_count"} {handleSort} {sortedBy} {sortAscending}/></th>
-          <th>Images</th>
-        {/if}
-        <th>Organism</th>
-        <th>Imaging</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each tableRows as row (row.url)}
-        <tr>
-          <td>
-            {#if row.image_attrs}
-              <Thumbnail attrs={row.image_attrs} source={row.image_url}></Thumbnail>
-            {/if}
-          </td>
-          <td
-            >
-            {#if row.csv_row_count && row.csv}
-              <a
-                href="{window.location.origin}?csv={row.csv}"
-                target="_blank"
-                >{row.csv.split("/").pop()} ({row.csv_row_count})</a
-              >
-            {:else}
-              <a
-                href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={row.url}"
-                target="_blank">{linkText(row.url)}</a
-              >
-            {/if}
-            </td
-          >
+        filterDims: {filterDims}
+        <select on:change={filterChanged}>
+          <option value="0">nDim</option>
+          <option value="2">2D</option>
+          <option value="3">3D</option>
+          <option value="4">4D</option>
+          <option value="5">5D</option>
+        </select>
+      </div>
+      <div>
+        Sort:
+        <ColumnSort
+              col_label={"Url"}
+              col_name={"url"}
+              {handleSort}
+              {sortedBy}
+              {sortAscending}
+            />
           {#if showSourceColumn}
-            <td>{row.source || ""}</td>
+            <ColumnSort
+                col_label={"Source"}
+                col_name={"source"}
+                {handleSort}
+                {sortedBy}
+                {sortAscending}
+              />
           {/if}
-          {#if showOriginColumn}
-            <td>
-              {#if row.origin}<a href={row.origin} target="_blank">...{row.origin.slice(-10)}</a>{/if}
-            </td>
-          {/if}
-          <td>{row.load_failed ? "x" : row.shape || ""}</td>
-          <td>{filesizeformat(row.written)}</td>
-          {#if showPlateColumns}
-            <td>{row.well_count || ""}</td>
-            <td>{row.well_count ? row.well_count * row.field_count : ""}</td>
-          {/if}
-          <td title="{row.organism_id || ''}">
-            {#if row.organism_id}
-              {organismLookup[row.organism_id] || loadOrganism(row.organism_id)}
-            {/if}
-          </td>
-          <td title="{row.fbbi_id || ''}">
-            {#if row.fbbi_id}
-              {organismLookup[row.fbbi_id] || loadImagingModality(row.fbbi_id)}
-            {/if}
-          </td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
-</main>
+          <ColumnSort
+              col_label={"X"}
+              col_name={"size_x"}
+              {handleSort}
+              {sortedBy}
+              {sortAscending}
+            />
+          <ColumnSort
+              col_label={"Y"}
+              col_name={"size_y"}
+              {handleSort}
+              {sortedBy}
+              {sortAscending}
+            />
+            <ColumnSort
+              col_label={"Z"}
+              col_name={"size_z"}
+              {handleSort}
+              {sortedBy}
+              {sortAscending}
+            />
+            <ColumnSort
+              col_label={"C"}
+              col_name={"size_c"}
+              {handleSort}
+              {sortedBy}
+              {sortAscending}
+            />
+            <ColumnSort
+              col_label={"T"}
+              col_name={"size_t"}
+              {handleSort}
+              {sortedBy}
+              {sortAscending}
+            />
+            <ColumnSort
+              col_label={"Data size"}
+              col_name={"written"}
+              {handleSort}
+              {sortedBy}
+              {sortAscending}
+            />
+
+            </div>
+</div>
+
+
+<VirtualList width="100%" height={600} itemCount={tableRows.length} itemSize={150} getKey={getItemKey}>
+	<div slot="item" let:index let:style {style} class="row">
+    <ZarrListItem listIndex={index} rowData={tableRows[index]} />
+	</div>
+</VirtualList>
+
+  </main>
+</div>
 
 <style>
+  .row {
+    background-color: black;
+    padding: 10px;
+    color: white;
+  }
+  .app {
+    margin: 0;
+    padding: 0;
+    background-color: black;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  main {
+    background-color: black;
+    flex: auto 1 1;
+    overflow: scroll;
+  }
 
   .title {
+    color: white;
     z-index: 10;
     position: relative;
     margin-bottom: 10px;
   }
   .summary {
     margin-bottom: 2em;
-  }
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    background-color: white;
-    position: relative;
-    z-index: 10;
-    -webkit-box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
-    -moz-box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
-    box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
-  }
-  @media (prefers-color-scheme: dark) {
-    table {
-      background-color: #333;
-    }
+    color: white;
+    position: sticky;
+    top: 0;
+    background-color: black;
+    z-index: 20;
+    padding: 10px;
   }
 
-  td, th {
-    border: lightgrey 1px solid;
-    padding: 0.5em;
-    text-align: center;
-  }
-  progress {
-    width: 100%;
-  }
-  .stats {
-    font-size: 48px;
-  }
-
-  .loadrocrate {
-    font-size: 12px;
-    background-color:aliceblue;
-    border-radius: 5px;
-    border-color: coral;
-    vertical-align: middle;
-    margin-bottom: 7px;
-    color: #222;
-  }
 </style>

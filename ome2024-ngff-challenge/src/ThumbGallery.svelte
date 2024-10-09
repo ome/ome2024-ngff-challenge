@@ -97,10 +97,6 @@
   {/each}
 </div>
 
-<p>
-  Loading samples from <a href={csvUrl}>{csvUrl}</a>
-</p>
-
 {#if csvUrl !== SAMPLES_HOME}
   <p transition:scale={{ duration: 500, delay: 0, opacity: 0.5, start: 0.5 }}>
     <a
