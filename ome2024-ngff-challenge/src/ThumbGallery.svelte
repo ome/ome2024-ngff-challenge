@@ -17,6 +17,11 @@
     Webknossos: "https://scalableminds.com",
     JAX: "http://jax.org",
     "BioImage Archive": "https://www.ebi.ac.uk",
+    Crick: "https://www.crick.ac.uk/",
+    // Several sources from NFDI4Bioimage
+    "University of Muenster / NFDI4Bioimage": "https://nfdi4bioimage.de/",
+    Göttingen: "https://nfdi4bioimage.de/",
+    Jülich: "https://nfdi4bioimage.de/",
   };
 
   let unsubscribe = ngffTable.subscribe((rows) => {
