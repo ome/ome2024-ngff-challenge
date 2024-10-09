@@ -162,7 +162,6 @@
           {#each Object.keys(zarrSources).sort() as source}
             <label class="source">
               <img title={Object.values(zarrSources[source])[0].url} class="sourceLogo" alt="Source logo" src="{getSourceIcon(source)}" />
-              <ThumbLoader source={Object.values(zarrSources[source])[0].url} />
               <input
                 on:change={filterSource}
                 type="radio"
@@ -289,12 +288,14 @@
     border: solid #333 1px;
     float: left;
     position: relative;
+    padding: 3px;
+    border-radius: 5px;
+    cursor: pointer;
   }
   .sourceLogo {
     width: 24px;
     height: 24px;
     margin: 2px;
-    position: absolute;
     background-color: #fff;
     padding: 2px;
     border-radius: 3px;
@@ -304,6 +305,7 @@
   input[type="radio"] {
     visibility: hidden;
     width: 0;
+    margin: 0;
   }
   .row {
     background-color: black;
