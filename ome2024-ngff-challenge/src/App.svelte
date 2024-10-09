@@ -173,14 +173,14 @@
             </label>
           {/each}
           {#if sourceFilter !== ""}
-            <label>
+            <label class="source">
               <input
                 on:change={filterSource}
                 type="radio"
                 name="source"
                 value=""
               />
-              All
+              &lt; All Sources
             </label>
           {/if}
         </div>
@@ -198,22 +198,6 @@
       </div>
       <div>
         Sort:
-        <ColumnSort
-          col_label={"Url"}
-          col_name={"url"}
-          {handleSort}
-          {sortedBy}
-          {sortAscending}
-        />
-        {#if showSourceColumn}
-          <ColumnSort
-            col_label={"Source"}
-            col_name={"source"}
-            {handleSort}
-            {sortedBy}
-            {sortAscending}
-          />
-        {/if}
         <ColumnSort
           col_label={"X"}
           col_name={"size_x"}
