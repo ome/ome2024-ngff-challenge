@@ -31,6 +31,7 @@
   let organismLookup = {};
   let imagingModalityLookup = {};
   let filterDims = "0";
+  let sourceFilter = "";
 
   // The ngffTable is loaded initially - for gallery at top of page...
   // Also updated when a gallery item is clicked to show the table of images
@@ -118,10 +119,19 @@
         console.log("filter row", row.dim_count, filterDims, row.dim_count == filterDims);
         return row.dim_count == filterDims});
     }
+    if (sourceFilter !== "") {
+      rows = rows.filter(row => {
+        console.log("filter row", row.source, sourceFilter, row.source == sourceFilter);
+        return row.source == sourceFilter});
+    }
     return rows;
   }
 
-  function filterChanged(event) {
+  function filterSouce(event) {
+    sourceFilter = event.target.value;
+    tableRows = filterRows(ngffTable.getRows());
+  }
+  function filterDimensions(event) {
     filterDims = event.target.value;
     tableRows = filterRows(ngffTable.getRows());
   }
@@ -149,13 +159,16 @@
       <div>
         Filter:
         {#if showSourceColumn}
-          <button>IDR</button>
-          <button>JAX</button>
-          <button>EBI</button>
-          <button>Webknossos</button>
+        <select on:change={filterSouce}>
+          <option value="">-</option>
+          <option value="IDR">IDR</option>
+          <option value="JAX">JAX</option>
+          <option value="BioImage Archive">BioImage Archive</option>
+          <option value="Webknossos">Webknossos</option>
+        </select>
         {/if}
         filterDims: {filterDims}
-        <select on:change={filterChanged}>
+        <select on:change={filterDimensions}>
           <option value="0">nDim</option>
           <option value="2">2D</option>
           <option value="3">3D</option>
