@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import * as zarr from "zarrita";
   import { slice } from "@zarrita/indexing";
+  import { loadMultiscales} from "./tableStore";
   import {
     renderTo8bitArray,
     getMinMaxValues,
@@ -10,11 +11,12 @@
     getDefaultColors,
   } from "./util";
 
-  const MAX_LENGTH = 200;
+  const MAX_LENGTH = 100;
 
   // source is e.g. https://s3.embassy.ebi.ac.uk/idr/zarr/v0.4/6001240.zarr
   export let source;
-  export let attrs;
+  // if attrs is not provided, we load it from the source
+  export let attrs = undefined;
   // if the lowest resolution is above this size (squared), we don't try to load thumbnails
   export let max_size = 512;
 
@@ -105,7 +107,13 @@
     }, 100);
   }
 
-  onMount(() => {
+  onMount(async () => {
+    if (attrs == undefined) {
+      let img = await loadMultiscales(source);
+      attrs = img[0];
+      // update source to point to the IMAGE within the plate/bioformats2raw layout
+      source = img[1];
+    }
     loadThumbnail();
   });
 </script>

@@ -3,38 +3,24 @@
   import { filesizeformat } from "./util";
   import { loadMultiscales } from "./tableStore";
   import Thumbnail from "./Thumbnail.svelte";
-  import omeLogo from '../public/ome-logomark.svg';
-  import vizarrLogo from '../public/vizarr_logo.png';
+  import omeLogo from '/ome-logomark.svg';
+  import vizarrLogo from '/vizarr_logo.png';
 
   export let rowData;
   export let listIndex;
 
-  let imgAttrs;
-  let imgUrl;
-  let plateAttrs;
-
-  onMount(async () => {
-    console.log("onMount", rowData.url);
-
-    let img = await loadMultiscales(rowData.url);
-    imgAttrs = img[0];
-    imgUrl = img[1];
-    plateAttrs = img[2]; // optional
-  });
 </script>
 
 <div class="zarr-list-item">
   <div style:float={listIndex % 2 == 0 ? "right" : "left"}>
-    {#if imgAttrs}
-      <Thumbnail source={imgUrl} attrs={imgAttrs} max_size={2000} />
-    {/if}
+    <Thumbnail source={rowData.url} max_size={2000} />
   </div>
   <table style:float={listIndex % 2 == 0 ? "right" : "left"}>
-    <tr><td>T</td><td>{rowData.size_t}</td></tr>
-    <tr><td>C</td><td>{rowData.size_c}</td></tr>
-    <tr><td>Z</td><td>{rowData.size_z}</td></tr>
-    <tr><td>X</td><td>{rowData.size_x}</td></tr>
-    <tr><td>Y</td><td>{rowData.size_y}</td></tr>
+    {#each ["t", "c", "z", "y", "x"] as dim}
+      {#if rowData[`size_${dim}`] !== undefined}
+        <tr><td>{dim.toUpperCase()}</td><td>{rowData[`size_${dim}`]}</td></tr>
+      {/if}
+    {/each}
     <tr><td>Size</td><td>{filesizeformat(rowData.written)}</td></tr>
   </table>
   <div style:float={listIndex % 2 == 0 ? "right" : "left"}>

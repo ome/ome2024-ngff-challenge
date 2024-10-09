@@ -1,7 +1,33 @@
 import Papa from "papaparse";
 
+import idrLogo from "/idr-mark.svg";
+
 export const SAMPLES_HOME =
   "https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/ngff_samples.csv";
+
+// Map of source to favicon domain
+let faviconDomains = {
+  IDR: "https://idr.openmicroscopy.org",
+  Webknossos: "https://scalableminds.com",
+  JAX: "http://jax.org",
+  "BioImage Archive": "https://www.ebi.ac.uk",
+  Crick: "https://www.crick.ac.uk/",
+  // Several sources from NFDI4Bioimage
+  "University of Muenster / NFDI4Bioimage": "https://nfdi4bioimage.de/",
+  Göttingen: "https://nfdi4bioimage.de/",
+  Jülich: "https://nfdi4bioimage.de/",
+};
+
+export function getSourceIcon(source) {
+  if (source === "IDR") {
+    return idrLogo;
+  }
+  let domain = faviconDomains[source];
+  if (!domain) {
+    return null;
+  }
+  return `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${domain}&size=24`;
+}
 
 export function loadCsv(csvUrl, ngffTable, parentRow = {}) {
   csvUrl = csvUrl + "?_=" + Date.now(); // prevent caching

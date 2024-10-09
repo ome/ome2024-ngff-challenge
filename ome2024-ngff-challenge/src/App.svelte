@@ -1,10 +1,11 @@
 <script>
-  import VirtualList from 'svelte-tiny-virtual-list';
+  import VirtualList from "svelte-tiny-virtual-list";
 
   import { ngffTable } from "./tableStore";
   import ColumnSort from "./ColumnSort.svelte";
 
   import {
+    getSourceIcon,
     SAMPLES_HOME,
     filesizeformat,
     loadCsv,
@@ -12,7 +13,8 @@
     lookupOrganism,
   } from "./util";
   import Nav from "./Nav.svelte";
-  import ZarrListItem from './ZarrListItem.svelte';
+  import ZarrListItem from "./ZarrListItem.svelte";
+  import Thumbnail from "./Thumbnail.svelte";
 
   // check for ?csv=url
   const params = new URLSearchParams(window.location.search);
@@ -25,16 +27,36 @@
   }
 
   let tableRows = [];
+  // e.g. {"IDR": {"idr0004.csv": {"count": 100}}, "JAX": {}...
+  let zarrSources = {};
+  let totalZarrs = 0;
+  let totalBytes = 0;
   let showSourceColumn = false;
   let organismLookup = {};
   let imagingModalityLookup = {};
   let filterDims = "0";
   let sourceFilter = "";
 
-  // The ngffTable is loaded initially - for gallery at top of page...
-  // Also updated when a gallery item is clicked to show the table of images
+  // The ngffTable is built as CSV files are loaded
+  // it is NOT filtered
   ngffTable.subscribe((rows) => {
     tableRows = filterRows(rows);
+    // NB: don't use filtered rows for sources
+    zarrSources = rows.reduce((prev, row) => {
+      let source = row.source;
+      if (!prev[source]) {
+        prev[source] = {};
+      }
+      if (!prev[source][row.csv]) {
+        prev[source][row.csv] = {"count": 0, "url": row.url}
+      }
+      prev[source][row.csv].count += 1;
+      return prev;
+    }, {});
+    totalZarrs = rows.length;
+    totalBytes = rows.reduce((acc, row) => {
+      return acc + parseInt(row["written"]) || 0;
+    }, 0);
   });
 
   $: showSourceColumn = tableRows.some((row) => row.source);
@@ -101,12 +123,14 @@
 
   function filterRows(rows) {
     if (filterDims !== "0") {
-      rows = rows.filter(row => {
-        return row.dim_count == filterDims});
+      rows = rows.filter((row) => {
+        return row.dim_count == filterDims;
+      });
     }
     if (sourceFilter !== "") {
-      rows = rows.filter(row => {
-        return row.source == sourceFilter});
+      rows = rows.filter((row) => {
+        return row.source == sourceFilter;
+      });
     }
     return rows;
   }
@@ -119,7 +143,6 @@
     filterDims = event.target.value;
     tableRows = filterRows(ngffTable.getRows());
   }
-
 </script>
 
 <div class="app">
@@ -129,31 +152,45 @@
     <h1 class="title">OME 2024 NGFF Challenge</h1>
 
     <div class="summary">
-      <p>
-        {tableRows.length} Zarrs,
-        {filesizeformat(
-          tableRows.reduce((acc, row) => {
-            return acc + parseInt(row["written"]) || 0;
-          }, 0)
-        )},
-        <span title={Object.values(organismLookup).join(",")}>
-          {Object.keys(organismLookup).length} organisms
-        </span>
-      </p>
+      <h2>
+        {totalZarrs} Zarr Images,
+        {filesizeformat(totalBytes)}, from {Object.keys(zarrSources).length} sources:
+      </h2>
+
+      {#if showSourceColumn}
+        <div class="sources">
+          {#each Object.keys(zarrSources).sort() as source}
+            <label class="source">
+              <img title={Object.values(zarrSources[source])[0].url} class="sourceLogo" alt="Source logo" src="{getSourceIcon(source)}" />
+              <Thumbnail source={Object.values(zarrSources[source])[0].url} max_size={2000} />
+              <input
+                on:change={filterSource}
+                type="radio"
+                name="source"
+                value={source}
+              />
+              {source}
+              ({Object.values(zarrSources[source]).reduce((prev, collection) => {console.log("COL", collection, prev + collection.count); return prev + collection.count}, 0)} images)
+            </label>
+          {/each}
+          {#if sourceFilter !== ""}
+            <label>
+              <input
+                on:change={filterSource}
+                type="radio"
+                name="source"
+                value=""
+              />
+              All
+            </label>
+          {/if}
+        </div>
+      {/if}
+
       <div>
         Filter:
-        {#if showSourceColumn}
-        <select on:change={filterSource}>
-          <option value="">-</option>
-          <option value="IDR">IDR</option>
-          <option value="JAX">JAX</option>
-          <option value="BioImage Archive">BioImage Archive</option>
-          <option value="Webknossos">Webknossos</option>
-        </select>
-        {/if}
-        filterDims: {filterDims}
         <select on:change={filterDimensions}>
-          <option value="0">nDim</option>
+          <option value="0">All Dimensions</option>
           <option value="2">2D</option>
           <option value="3">3D</option>
           <option value="4">4D</option>
@@ -163,78 +200,111 @@
       <div>
         Sort:
         <ColumnSort
-              col_label={"Url"}
-              col_name={"url"}
-              {handleSort}
-              {sortedBy}
-              {sortAscending}
-            />
-          {#if showSourceColumn}
-            <ColumnSort
-                col_label={"Source"}
-                col_name={"source"}
-                {handleSort}
-                {sortedBy}
-                {sortAscending}
-              />
-          {/if}
+          col_label={"Url"}
+          col_name={"url"}
+          {handleSort}
+          {sortedBy}
+          {sortAscending}
+        />
+        {#if showSourceColumn}
           <ColumnSort
-              col_label={"X"}
-              col_name={"size_x"}
-              {handleSort}
-              {sortedBy}
-              {sortAscending}
-            />
-          <ColumnSort
-              col_label={"Y"}
-              col_name={"size_y"}
-              {handleSort}
-              {sortedBy}
-              {sortAscending}
-            />
-            <ColumnSort
-              col_label={"Z"}
-              col_name={"size_z"}
-              {handleSort}
-              {sortedBy}
-              {sortAscending}
-            />
-            <ColumnSort
-              col_label={"C"}
-              col_name={"size_c"}
-              {handleSort}
-              {sortedBy}
-              {sortAscending}
-            />
-            <ColumnSort
-              col_label={"T"}
-              col_name={"size_t"}
-              {handleSort}
-              {sortedBy}
-              {sortAscending}
-            />
-            <ColumnSort
-              col_label={"Data size"}
-              col_name={"written"}
-              {handleSort}
-              {sortedBy}
-              {sortAscending}
-            />
+            col_label={"Source"}
+            col_name={"source"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+        {/if}
+        <ColumnSort
+          col_label={"X"}
+          col_name={"size_x"}
+          {handleSort}
+          {sortedBy}
+          {sortAscending}
+        />
+        <ColumnSort
+          col_label={"Y"}
+          col_name={"size_y"}
+          {handleSort}
+          {sortedBy}
+          {sortAscending}
+        />
+        <ColumnSort
+          col_label={"Z"}
+          col_name={"size_z"}
+          {handleSort}
+          {sortedBy}
+          {sortAscending}
+        />
+        <ColumnSort
+          col_label={"C"}
+          col_name={"size_c"}
+          {handleSort}
+          {sortedBy}
+          {sortAscending}
+        />
+        <ColumnSort
+          col_label={"T"}
+          col_name={"size_t"}
+          {handleSort}
+          {sortedBy}
+          {sortAscending}
+        />
+        <ColumnSort
+          col_label={"Data size"}
+          col_name={"written"}
+          {handleSort}
+          {sortedBy}
+          {sortAscending}
+        />
+      </div>
+    </div>
 
-            </div>
-</div>
+    {#if tableRows.length != ngffTable.getRows().length}
+      <h3>Showing {tableRows.length} zarrs</h3>
+    {/if}
 
-
-<VirtualList width="100%" height={600} itemCount={tableRows.length} itemSize={150} getKey={getItemKey}>
-	<div slot="item" let:index let:style {style} class="row">
-    <ZarrListItem listIndex={index} rowData={tableRows[index]} />
-	</div>
-</VirtualList>
-
+    <VirtualList
+      width="100%"
+      height={600}
+      itemCount={tableRows.length}
+      itemSize={150}
+      getKey={getItemKey}
+    >
+      <div slot="item" let:index let:style {style} class="row">
+        <ZarrListItem listIndex={index} rowData={tableRows[index]} />
+      </div>
+    </VirtualList>
   </main>
 </div>
 
 <style>
+
+  .sources {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: 5px;
+  }
+  .source {
+    border: solid #333 1px;
+    float: left;
+    position: relative;
+  }
+  .sourceLogo {
+    width: 24px;
+    height: 24px;
+    margin: 2px;
+    position: absolute;
+    background-color: #fff;
+    padding: 2px;
+    border-radius: 3px;
+    top: 6px;
+    left: 6px;
+  }
+  input[type="radio"] {
+    visibility: hidden;
+    width: 0;
+  }
   .row {
     background-color: black;
     padding: 10px;
@@ -253,6 +323,7 @@
     background-color: black;
     flex: auto 1 1;
     overflow: scroll;
+    color: white;
   }
 
   .title {
@@ -270,5 +341,4 @@
     z-index: 20;
     padding: 10px;
   }
-
 </style>
