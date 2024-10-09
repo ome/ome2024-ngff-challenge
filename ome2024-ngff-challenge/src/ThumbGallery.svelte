@@ -4,6 +4,7 @@
   import { ngffTable } from "./tableStore";
   import Thumbnail from "./Thumbnail.svelte";
   import { SAMPLES_HOME, loadCsv } from "./util";
+  import idrLogo from "/idr-mark.svg";
 
   export let csvUrl;
 
@@ -48,7 +49,7 @@
 
   function getSourceIcon(source) {
     if (source === "IDR") {
-      return "/idr-mark.svg";
+      return idrLogo;
     }
     let domain = faviconDomains[source];
     if (!domain) {
