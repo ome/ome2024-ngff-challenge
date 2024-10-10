@@ -16,6 +16,7 @@ let faviconDomains = {
   "University of Muenster / NFDI4Bioimage": "https://nfdi4bioimage.de/",
   Göttingen: "https://nfdi4bioimage.de/",
   Jülich: "https://nfdi4bioimage.de/",
+  NFDI4BIOIMAGE: "https://nfdi4bioimage.de/",
 };
 
 export function getSourceIcon(source) {
@@ -30,7 +31,7 @@ export function getSourceIcon(source) {
 }
 
 export function loadCsv(csvUrl, ngffTable, parentRow = {}) {
-  csvUrl = csvUrl + "?_=" + Date.now(); // prevent caching
+  // csvUrl = csvUrl + "?_=" + Date.now(); // prevent caching
   Papa.parse(csvUrl, {
     header: false,
     download: true,
@@ -67,14 +68,18 @@ export function loadCsv(csvUrl, ngffTable, parentRow = {}) {
       });
       zarrUrlRows = Object.values(zarrRowsByUrl);
 
+      // recursively load child CSVs
+      let childCsvRows = dataRows.filter((row) => row["url"]?.includes(".csv"));
+
+      // register the csv in our hierarchy
+      ngffTable.addCsv(csvUrl, childCsvRows, zarrUrlRows.length);
+
       // add rows to the table - parsing strings to numbers etc...
       ngffTable.addRows(zarrUrlRows);
 
-      // recursively load child CSVs
-      let childCsvRows = dataRows.filter((row) => row["url"]?.includes(".csv"));
       childCsvRows.forEach((childCsvRow) => {
         let csvUrl = childCsvRow["url"];
-        childCsvRow["url"] = undefined;
+        // childCsvRow["url"] = undefined;
         childCsvRow["csv"] = csvUrl;
         // Only load a single child CSV
         loadCsv(csvUrl, ngffTable, childCsvRow);

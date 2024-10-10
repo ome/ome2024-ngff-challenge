@@ -22,13 +22,12 @@
   try {
     new URL(csvUrl);
   } catch (error) {
-    console.error("Invalid csv URL", csvUrl);
     csvUrl = SAMPLES_HOME;
   }
 
   let tableRows = [];
   // e.g. {"IDR": {"idr0004.csv": {"count": 100}}, "JAX": {}...
-  let zarrSources = {};
+  let zarrSources = [];
   let totalZarrs = 0;
   let totalBytes = 0;
   let showSourceColumn = false;
@@ -42,17 +41,7 @@
   ngffTable.subscribe((rows) => {
     tableRows = filterRows(rows);
     // NB: don't use filtered rows for sources
-    zarrSources = rows.reduce((prev, row) => {
-      let source = row.source;
-      if (!prev[source]) {
-        prev[source] = {};
-      }
-      if (!prev[source][row.csv]) {
-        prev[source][row.csv] = {"count": 0, "url": row.url}
-      }
-      prev[source][row.csv].count += 1;
-      return prev;
-    }, {});
+    zarrSources = ngffTable.getCsvSourceList();
     totalZarrs = rows.length;
     totalBytes = rows.reduce((acc, row) => {
       return acc + parseInt(row["written"]) || 0;
@@ -70,7 +59,6 @@
   // This is called by the <table> if we are missing organisms from the lookup dict.
   // Updating organismLookup should trigger all table rows to be re-rendered
   function loadOrganism(organismId) {
-    console.log("loadOrganism", organismId);
     if (!organismId) {
       return "";
     }
@@ -106,7 +94,6 @@
   let sortedBy = "";
   let sortAscending = true;
   function handleSort(colname) {
-    console.log("handleSort", colname, "sortedBy", sortedBy);
     if (sortedBy === colname) {
       sortAscending = !sortAscending;
     } else {
@@ -128,8 +115,10 @@
       });
     }
     if (sourceFilter !== "") {
+      let childSrcs = ngffTable.getCsvSourceList(sourceFilter);
+      let allSources = [sourceFilter, ...childSrcs.map((src) => src.source)];
       rows = rows.filter((row) => {
-        return row.source == sourceFilter;
+        return allSources.includes(row.source);
       });
     }
     return rows;
@@ -149,27 +138,27 @@
   <Nav />
 
   <main>
-    <h1 class="title">OME 2024 NGFF Challenge</h1>
+    <!-- <h1 class="title">OME 2024 NGFF Challenge</h1> -->
 
     <div class="summary">
       <h2>
         {totalZarrs} Zarr Images,
-        {filesizeformat(totalBytes)}, from {Object.keys(zarrSources).length} sources:
+        {filesizeformat(totalBytes)}, from {zarrSources.length} sources:
       </h2>
 
-      {#if showSourceColumn}
         <div class="sources">
-          {#each Object.keys(zarrSources).sort() as source}
+          {#each zarrSources as source}
             <label class="source">
-              <img title={Object.values(zarrSources[source])[0].url} class="sourceLogo" alt="Source logo" src="{getSourceIcon(source)}" />
+              <img title={source.url} class="sourceLogo" alt="Source logo" src="{getSourceIcon(source.source)}" />
               <input
                 on:change={filterSource}
                 type="radio"
                 name="source"
-                value={source}
+                value={source.source}
               />
-              {source}
-              ({Object.values(zarrSources[source]).reduce((prev, collection) => {console.log("COL", collection, prev + collection.count); return prev + collection.count}, 0)} images)
+              {source.source}
+              <br>
+              <span title="{source.child_csv.length} collections">({source.total_count} images)</span>
             </label>
           {/each}
           {#if sourceFilter !== ""}
@@ -184,7 +173,6 @@
             </label>
           {/if}
         </div>
-      {/if}
 
       <div>
         Filter:
@@ -247,6 +235,7 @@
       <h3>Showing {tableRows.length} zarrs</h3>
     {/if}
 
+    <div class="imageListContainer">
     <VirtualList
       width="100%"
       height={600}
@@ -258,14 +247,20 @@
         <ZarrListItem listIndex={index} rowData={tableRows[index]} />
       </div>
     </VirtualList>
+    </div>
   </main>
 </div>
 
 <style>
 
+  .imageListContainer {
+    height: 610px;
+    border: solid #333 2px;
+    max-width: 700px;
+  }
   .sources {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 5px;
   }
   .source {
@@ -310,6 +305,7 @@
     flex: auto 1 1;
     overflow: scroll;
     color: white;
+    width: 100%;
   }
 
   .title {
@@ -321,7 +317,6 @@
   .summary {
     margin-bottom: 2em;
     color: white;
-    position: sticky;
     top: 0;
     background-color: black;
     z-index: 20;

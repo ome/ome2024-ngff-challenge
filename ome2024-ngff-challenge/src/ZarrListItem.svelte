@@ -14,8 +14,6 @@
   let plateAttrs;
 
   onMount(async () => {
-    console.log("onMount", rowData.url);
-
     let img = await loadMultiscales(rowData.url);
     imgAttrs = img[0];
     imgUrl = img[1];

@@ -6,14 +6,12 @@ export async function loadMultiscales(url) {
   // return the json data that includes multiscales
   let zarrData = await fetch(`${url}/zarr.json`)
     .then((response) => {
-      console.log("loadMultiscales response", response.status);
       if (response.status === 404) {
         throw new Error(`${url}/zarr.json not found`);
       }
       return response.json();
     })
     .catch((error) => {
-      console.log(`----> Failed to load ${url}/zarr.json`, error);
       return [undefined, url];
     });
 
@@ -38,6 +36,90 @@ export async function loadMultiscales(url) {
 class NgffTable {
   constructor() {
     this.store = writable([]);
+
+    // [{source: "uni1",
+    //  url: "http://...csv",
+    //  image_count: 10,
+    //  "child_csv": [{source: "uni2", url: "http://...csv"}]}
+    // ]
+    this.csvFiles = [];
+  }
+
+  getCsvSourceList(sourceName) {
+    let child;
+    if (!sourceName) {
+      child = this.csvFiles[0];
+    } else {
+      for (let csv of this.csvFiles) {
+        if (csv.source === sourceName) {
+          child = csv;
+          break;
+        }
+        for (let childCsv of csv.child_csv) {
+          if (childCsv.source === sourceName) {
+            child = childCsv;
+            break;
+          }
+          for (let grandchildCsv of childCsv.child_csv) {
+            if (grandchildCsv.source === sourceName) {
+              child = grandchildCsv;
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (!child) {
+      return [];
+    }
+    // lets summarise the image_count for each source
+    let children = child.child_csv.map((src) => {
+      let count = src.image_count || 0;
+      for (let grandchild of src.child_csv) {
+        // not recursive but OK for now
+        count += grandchild.image_count || 0;
+      }
+      return { ...src, total_count: count };
+    });
+    return children;
+  }
+
+  addCsv(csvUrl, childCsvRows, zarrUrlRowCount) {
+    // childCsvRows is [{source: "uni2", url: "http://...csv"}]
+    // make shallow copy of childCsvRows
+    childCsvRows = childCsvRows.map((row) => ({ ...row, child_csv: [] }));
+    // find the child_csv with the same url
+    let child;
+    for (let csv of this.csvFiles) {
+      if (csv.url === csvUrl) {
+        child = csv;
+        break;
+      }
+      for (let childCsv of csv.child_csv) {
+        if (childCsv.url === csvUrl) {
+          child = childCsv;
+          break;
+        }
+        for (let grandchildCsv of childCsv.child_csv) {
+          if (grandchildCsv.url === csvUrl) {
+            child = grandchildCsv;
+            break;
+          }
+        }
+      }
+    }
+    if (child) {
+      // add to the existing child
+      child.image_count = zarrUrlRowCount;
+      child.child_csv = childCsvRows;
+    } else {
+      child = {
+        url: csvUrl,
+        image_count: zarrUrlRowCount,
+        child_csv: childCsvRows,
+      };
+      this.csvFiles.push(child);
+    }
   }
 
   addRows(rows) {
@@ -66,7 +148,6 @@ class NgffTable {
       }
       return row;
     });
-    console.log("addRows", rows);
 
     this.store.update((table) => {
       table.push(...rows);
@@ -79,7 +160,6 @@ class NgffTable {
       table = table.map((row) => {
         if (row.url === zarrUrl) {
           row = { ...row, ...rowValues };
-          console.log("populateRow", rowValues, row);
         }
         return row;
       });
@@ -223,14 +303,6 @@ class NgffTable {
     this.sortColumn = colName;
     this.sortAscending = ascending;
     let isNumber = this.isColumnNumeric(colName);
-    console.log(
-      "sortTable",
-      colName,
-      "ascending",
-      ascending,
-      "isNumber",
-      isNumber,
-    );
     this.store.update((table) => {
       table.sort((a, b) => this.compareRows(a, b, isNumber));
       return table;
