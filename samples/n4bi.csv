@@ -1,0 +1,7 @@
+source,url
+
+Jülich,https://radosgw.public.os.wwu.de/n4bi-fzj/ome2024-ngff-challenge/fzj.csv
+
+Göttingen, https://radosgw.public.os.wwu.de/n4bi-wp1/challenge/flamingo.csv
+
+University of Muenster, https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/uni_muenster_samples.csv
