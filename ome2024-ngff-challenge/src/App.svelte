@@ -35,6 +35,7 @@
   let imagingModalityLookup = {};
   let filterDims = "0";
   let sourceFilter = "";
+  let collectionFilter = "";
 
   // The ngffTable is built as CSV files are loaded
   // it is NOT filtered
@@ -114,7 +115,11 @@
         return row.dim_count == filterDims;
       });
     }
-    if (sourceFilter !== "") {
+    if (collectionFilter !== "") {
+      rows = rows.filter((row) => {
+        return row.csv == collectionFilter;
+      });
+    } else if (sourceFilter !== "") {
       let childSrcs = ngffTable.getCsvSourceList(sourceFilter);
       let allSources = [sourceFilter, ...childSrcs.map((src) => src.source)];
       rows = rows.filter((row) => {
@@ -126,11 +131,21 @@
 
   function filterSource(event) {
     sourceFilter = event.target.value;
+    collectionFilter = "";
     tableRows = filterRows(ngffTable.getRows());
   }
   function filterDimensions(event) {
     filterDims = event.target.value;
     tableRows = filterRows(ngffTable.getRows());
+  }
+
+  function filterCollection(event) {
+    collectionFilter = event.target.value;
+    tableRows = filterRows(ngffTable.getRows());
+  }
+
+  function formatCsv(url) {
+    return url.split("/").pop().replace(".csv", "").replace("_samples", "");
   }
 </script>
 
@@ -146,10 +161,16 @@
         {filesizeformat(totalBytes)}, from {zarrSources.length} sources:
       </h2>
 
-        <div class="sources">
-          {#each zarrSources as source}
-            <label class="source">
-              <img title={source.url} class="sourceLogo" alt="Source logo" src="{getSourceIcon(source.source)}" />
+      <div class="sources">
+        {#each zarrSources as source}
+          <div class="source">
+            <label>
+              <img
+                title={source.url}
+                class="sourceLogo"
+                alt="Source logo"
+                src={getSourceIcon(source.source)}
+              />
               <input
                 on:change={filterSource}
                 type="radio"
@@ -157,22 +178,41 @@
                 value={source.source}
               />
               {source.source}
-              <br>
-              <span title="{source.child_csv.length} collections">({source.total_count} images)</span>
+              <br />
+              <span title="{source.child_csv.length} collections"
+                >({source.total_count} images)</span
+              >
             </label>
+          </div>
+        {/each}
+        {#if sourceFilter !== ""}
+          {#each ngffTable.getCsvSourceList(sourceFilter) as childSource}
+            <div class="source">
+              <label>
+                <input
+                  on:change={filterCollection}
+                  type="radio"
+                  name="collection"
+                  value={childSource.url}
+                />
+                {childSource.source == sourceFilter
+                  ? formatCsv(childSource.url)
+                  : childSource.source} ({childSource.image_count})
+              </label>
+            </div>
           {/each}
-          {#if sourceFilter !== ""}
-            <label class="source">
-              <input
-                on:change={filterSource}
-                type="radio"
-                name="source"
-                value=""
-              />
-              &lt; All Sources
-            </label>
-          {/if}
-        </div>
+
+          <label class="source">
+            <input
+              on:change={filterSource}
+              type="radio"
+              name="source"
+              value=""
+            />
+            &lt; All Sources
+          </label>
+        {/if}
+      </div>
 
       <div>
         Filter:
@@ -236,23 +276,26 @@
     {/if}
 
     <div class="imageListContainer">
-    <VirtualList
-      width="100%"
-      height={600}
-      itemCount={tableRows.length}
-      itemSize={150}
-      getKey={getItemKey}
-    >
-      <div slot="item" let:index let:style {style} class="row">
-        <ZarrListItem listIndex={index} rowData={tableRows[index]} />
-      </div>
-    </VirtualList>
+      <VirtualList
+        width="100%"
+        height={600}
+        itemCount={tableRows.length}
+        itemSize={150}
+        getKey={getItemKey}
+      >
+        <div slot="item" let:index let:style {style} class="row">
+          <ZarrListItem listIndex={index} rowData={tableRows[index]} />
+        </div>
+      </VirtualList>
     </div>
   </main>
 </div>
 
 <style>
-
+  .source:has(input:checked), .collection:has(input:checked) {
+    border: solid #ccc 2px;
+    background-color: #333;
+  }
   .imageListContainer {
     height: 610px;
     border: solid #333 2px;
@@ -269,6 +312,12 @@
     position: relative;
     padding: 3px;
     border-radius: 5px;
+    cursor: pointer;
+  }
+  .source label {
+    display: block;
+    position: relative;
+    padding: 5px;
     cursor: pointer;
   }
   .sourceLogo {

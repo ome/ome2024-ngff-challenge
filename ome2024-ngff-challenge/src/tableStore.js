@@ -148,6 +148,7 @@ class NgffTable {
       }
       return row;
     });
+    console.log("Adding rows", rows);
 
     this.store.update((table) => {
       table.push(...rows);
