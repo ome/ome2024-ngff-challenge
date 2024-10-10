@@ -15,6 +15,7 @@
   import Nav from "./Nav.svelte";
   import ZarrListItem from "./ZarrListItem.svelte";
   import ThumbLoader from "./ThumbLoader.svelte";
+  import SourcePanel from "./SourcePanel.svelte";
 
   // check for ?csv=url
   const params = new URLSearchParams(window.location.search);
@@ -163,27 +164,7 @@
 
       <div class="sources">
         {#each zarrSources as source}
-          <div class="source">
-            <label>
-              <img
-                title={source.url}
-                class="sourceLogo"
-                alt="Source logo"
-                src={getSourceIcon(source.source)}
-              />
-              <input
-                on:change={filterSource}
-                type="radio"
-                name="source"
-                value={source.source}
-              />
-              {source.source}
-              <br />
-              <span title="{source.child_csv.length} collections"
-                >({source.total_count} images)</span
-              >
-            </label>
-          </div>
+          <SourcePanel {source} handleFilter={filterSource} />
         {/each}
         {#if sourceFilter !== ""}
           {#each ngffTable.getCsvSourceList(sourceFilter) as childSource}
@@ -291,6 +272,18 @@
 </div>
 
 <style>
+  select {
+    display: block;
+    width: 150px;
+    padding: 2px;
+    font-size: 1rem;
+    line-height: 1.5;
+    appearance: none;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+  }
+
   .source:has(input:checked) {
     border: solid #ccc 2px;
     background-color: #333;
@@ -321,16 +314,6 @@
     position: relative;
     padding: 5px;
     cursor: pointer;
-  }
-  .sourceLogo {
-    width: 24px;
-    height: 24px;
-    margin: 2px;
-    background-color: #fff;
-    padding: 2px;
-    border-radius: 3px;
-    top: 6px;
-    left: 6px;
   }
   input[type="radio"] {
     visibility: hidden;

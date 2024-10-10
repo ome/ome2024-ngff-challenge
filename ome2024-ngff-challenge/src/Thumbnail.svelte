@@ -32,7 +32,7 @@
     // const store = await openArray({ store: source + "/" + path, mode: "r" });
 
     const store = new zarr.FetchStore(source + "/" + path);
-    const arr = await zarr.open(store, { kind: "array" });
+    const arr = await zarr.open.v3(store, { kind: "array" });
 
     let chDim = axes.indexOf("c");
 

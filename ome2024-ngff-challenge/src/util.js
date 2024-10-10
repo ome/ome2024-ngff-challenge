@@ -1,6 +1,7 @@
 import Papa from "papaparse";
 
 import idrLogo from "/idr-mark.svg";
+import nfdi4bioimage from "/nfdi4bioimage.png";
 
 export const SAMPLES_HOME =
   "https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/ngff_samples.csv";
@@ -26,6 +27,9 @@ export function getSourceIcon(source) {
   let domain = faviconDomains[source];
   if (!domain) {
     return null;
+  }
+  if (domain === "https://nfdi4bioimage.de/") {
+    return nfdi4bioimage;
   }
   return `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${domain}&size=24`;
 }
