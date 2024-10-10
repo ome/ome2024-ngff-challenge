@@ -202,15 +202,17 @@
             </div>
           {/each}
 
-          <label class="source">
-            <input
-              on:change={filterSource}
-              type="radio"
-              name="source"
-              value=""
-            />
-            &lt; All Sources
-          </label>
+          <div class="source clear">
+            <label>
+              <input
+                on:change={filterSource}
+                type="radio"
+                name="source"
+                value=""
+              />
+              X Clear Source Filter
+            </label>
+          </div>
         {/if}
       </div>
 
@@ -271,11 +273,8 @@
       </div>
     </div>
 
-    {#if tableRows.length != ngffTable.getRows().length}
-      <h3>Showing {tableRows.length} zarrs</h3>
-    {/if}
-
     <div class="imageListContainer">
+      <h3 style="margin-left: 15px">Showing {tableRows.length} zarrs</h3>
       <VirtualList
         width="100%"
         height={600}
@@ -292,18 +291,21 @@
 </div>
 
 <style>
-  .source:has(input:checked), .collection:has(input:checked) {
+  .source:has(input:checked) {
     border: solid #ccc 2px;
     background-color: #333;
   }
+  .clear {
+    background-color: #333;
+  }
   .imageListContainer {
-    height: 610px;
     border: solid #333 2px;
     max-width: 700px;
+    margin: auto;
   }
   .sources {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 5px;
   }
   .source {
