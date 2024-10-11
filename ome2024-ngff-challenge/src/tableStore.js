@@ -1,4 +1,5 @@
 import { writable, get } from "svelte/store";
+import { organismStore } from "./ontologyStore";
 import { range } from "./util.js";
 const BATCH_SIZE = 5;
 
@@ -154,6 +155,10 @@ class NgffTable {
       table.push(...rows);
       return table;
     });
+
+    let organismIds = rows.map((row) => row.organismId);
+    console.log("organismIds", organismIds);
+    organismStore.addTerms(organismIds);
   }
 
   populateRow(zarrUrl, rowValues) {

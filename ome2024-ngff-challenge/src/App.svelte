@@ -2,19 +2,16 @@
   import VirtualList from "svelte-tiny-virtual-list";
 
   import { ngffTable } from "./tableStore";
+  import { organismStore } from "./ontologyStore";
   import ColumnSort from "./ColumnSort.svelte";
 
   import {
-    getSourceIcon,
     SAMPLES_HOME,
     filesizeformat,
     loadCsv,
-    lookupImagingModality,
-    lookupOrganism,
   } from "./util";
   import Nav from "./Nav.svelte";
   import ZarrListItem from "./ZarrListItem.svelte";
-  import ThumbLoader from "./ThumbLoader.svelte";
   import SourcePanel from "./SourcePanel.svelte";
 
   // check for ?csv=url
@@ -32,11 +29,12 @@
   let totalZarrs = 0;
   let totalBytes = 0;
   let showSourceColumn = false;
-  let organismLookup = {};
+  let organismIdsByName = {};
   let imagingModalityLookup = {};
   let filterDims = "0";
   let sourceFilter = "";
   let collectionFilter = "";
+  let organismFilter = "";
 
   // The ngffTable is built as CSV files are loaded
   // it is NOT filtered
@@ -50,47 +48,21 @@
     }, 0);
   });
 
+  organismStore.subscribe(orgOntology => {
+    // iterate over orgOntology key, values
+    let temp = {};
+    for (const [orgId, name] of Object.entries(orgOntology)) {
+      temp[name] = orgId;
+    }
+    organismIdsByName = temp;
+  });
+
   $: showSourceColumn = tableRows.some((row) => row.source);
 
   // kick off loading the CSV to populate ngffTable...
   // This will recursively load other csv files if they are linked in the first one
   if (csvUrl) {
     loadCsv(csvUrl, ngffTable);
-  }
-
-  // This is called by the <table> if we are missing organisms from the lookup dict.
-  // Updating organismLookup should trigger all table rows to be re-rendered
-  function loadOrganism(organismId) {
-    if (!organismId) {
-      return "";
-    }
-    if (organismLookup[organismId]) {
-      return organismLookup[organismId];
-    }
-    // put a placeholder to avoid multiple requests while we wait for the lookup
-    organismLookup[organismId] = organismId;
-    lookupOrganism(organismId).then((organism) => {
-      organismLookup = { ...organismLookup, [organismId]: organism };
-    });
-    return organismId;
-  }
-
-  function loadImagingModality(fbbiId) {
-    if (!fbbiId) {
-      return "";
-    }
-    if (imagingModalityLookup[fbbiId]) {
-      return imagingModalityLookup[fbbiId];
-    }
-    // put a placeholder to avoid multiple requests while we wait for the lookup
-    imagingModalityLookup[fbbiId] = fbbiId;
-    lookupImagingModality(fbbiId).then((imagingModality) => {
-      imagingModalityLookup = {
-        ...imagingModalityLookup,
-        [fbbiId]: imagingModality,
-      };
-    });
-    return fbbiId;
   }
 
   let sortedBy = "";
@@ -127,6 +99,11 @@
         return allSources.includes(row.source);
       });
     }
+    if (organismFilter !== "") {
+      rows = rows.filter((row) => {
+        return row.organismId == organismFilter;
+      });
+    }
     return rows;
   }
 
@@ -142,6 +119,11 @@
 
   function filterCollection(event) {
     collectionFilter = event.target.value;
+    tableRows = filterRows(ngffTable.getRows());
+  }
+
+  function filterOrganism(event) {
+    organismFilter = event.target.value;
     tableRows = filterRows(ngffTable.getRows());
   }
 
@@ -191,20 +173,27 @@
                 name="source"
                 value=""
               />
-              X Clear Source Filter
+              &#10060 Clear Source Filter
             </label>
           </div>
         {/if}
       </div>
 
-      <div>
-        Filter:
+      <div class="filters">
+        <div>Filter:</div>
         <select on:change={filterDimensions}>
           <option value="0">All Dimensions</option>
           <option value="2">2D</option>
           <option value="3">3D</option>
           <option value="4">4D</option>
           <option value="5">5D</option>
+        </select>
+
+        <select on:change={filterOrganism}>
+          <option value="">{organismFilter == "" ? "Organism" : "All Organisms"}</option>
+          {#each Object.keys(organismIdsByName).sort() as name}
+            <option value={organismIdsByName[name]}>{name}</option>
+          {/each}
         </select>
       </div>
       <div>
@@ -333,6 +322,12 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+  }
+  .filters {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin: 5px 0;
   }
   main {
     background-color: black;
