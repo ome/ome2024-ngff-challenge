@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 from pathlib import Path
 
 import requests
@@ -9,6 +10,16 @@ import requests
 # Usage: python load_zarr_stats.py <csv_file>
 
 # E.g. $ for idr in 04 10 11 12 15 26 33 35 36 54; do python load_zarr_stats.py idr00$(echo $idr)_samples.csv; done
+
+
+def load_json(url):
+    try:
+        return requests.get(url).json()
+        # alternative if the content has \n etc, NB: removes ALL whitespace
+        # strdata = rsp.content.replace(b"\n", b"").replace(b" ", b"")
+        # return json.loads(strdata.decode("utf-8"))
+    except (requests.exceptions.RequestException, json.decoder.JSONDecodeError):
+        return {}
 
 
 def format_bytes_human_readable(num_bytes):
@@ -27,7 +38,7 @@ def get_array_values(zarr_url, multiscales):
     dict_data = None
     for ds in multiscales[0]["datasets"]:
         array_url = zarr_url + "/" + ds["path"]
-        array_json = requests.get(array_url + "/zarr.json").json()
+        array_json = load_json(array_url + "/zarr.json")
         if dict_data is None:
             dict_data = get_chunk_and_shard_shapes(array_json)
             dict_data["written"] = 0
@@ -77,10 +88,7 @@ def get_chunk_and_shard_shapes(zarray):
 
 
 def load_rocrate(zarr_url):
-    try:
-        rocrate_json = requests.get(zarr_url + "/ro-crate-metadata.json").json()
-    except requests.exceptions.RequestException:
-        return {}
+    rocrate_json = load_json(zarr_url + "/ro-crate-metadata.json")
 
     # Try to find various fields in the Ro-Crate metadata
     rc_graph = rocrate_json.get("@graph", {})
@@ -114,7 +122,8 @@ def load_rocrate(zarr_url):
 # ...so we resort to using plain requests for now...
 # load zarr.json for each row...
 def load_zarr(zarr_url, average_count=5):
-    response = requests.get(zarr_url + "/zarr.json").json()
+    response = load_json(zarr_url + "/zarr.json")
+    # response = rsp.json()
     rocrate_data = load_rocrate(zarr_url)
     ome_json = response.get("attributes", {}).get("ome", {})
     multiscales = ome_json.get("multiscales")
@@ -127,9 +136,7 @@ def load_zarr(zarr_url, average_count=5):
         written_values = []
         for well in plate["wells"][:average_count]:
             field_path = f"{well['path']}/0"
-            plate_img_json = requests.get(
-                zarr_url + "/" + field_path + "/zarr.json"
-            ).json()
+            plate_img_json = load_json(zarr_url + "/" + field_path + "/zarr.json")
             plate_ome_json = plate_img_json.get("attributes", {}).get("ome", {})
             plate_img = plate_ome_json.get("multiscales")
             stats = get_array_values(zarr_url + "/" + field_path, plate_img)
@@ -143,7 +150,7 @@ def load_zarr(zarr_url, average_count=5):
         stats["written"] = avg_written * image_count
     elif bf2raw:
         # let's just get the first image...
-        bf_img_json = requests.get(zarr_url + "/0/zarr.json").json()
+        bf_img_json = load_json(zarr_url + "/0/zarr.json")
         bf_img_ms = bf_img_json.get("attributes", {}).get("ome", {}).get("multiscales")
         stats = get_array_values(zarr_url + "/0", bf_img_ms)
     # combine the stats with the rocrate data...
