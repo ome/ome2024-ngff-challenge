@@ -1,9 +1,18 @@
 import { writable, get } from "svelte/store";
-import { lookupOrganism } from "./util";
+import { getJson } from "./util";
 
 class Organism {
   constructor() {
     this.store = writable({});
+  }
+
+  async lookupOntologyTerm(taxonId) {
+    // taxonId e.g. NCBI:txid9606
+    let id = taxonId.replace("NCBI:txid", "");
+    const orgJson = await getJson(
+      `https://rest.ensembl.org/taxonomy/id/${id}?content-type=application/json`,
+    );
+    return orgJson.name || taxonId;
   }
 
   addTerms(oganismIds) {
@@ -22,7 +31,7 @@ class Organism {
         // To avoid "limit of 15 requests per second" spread over a
         // couple of seconds...
         setTimeout(() => {
-          lookupOrganism(organismId).then((name) => {
+          this.lookupOntologyTerm(organismId).then((name) => {
             this.addEntry(organismId, name);
           });
         }, Math.random() * 5000);
@@ -42,4 +51,23 @@ class Organism {
   }
 }
 
+class ImagingModality extends Organism {
+  constructor() {
+    super();
+  }
+
+  async lookupOntologyTerm(fbbiId) {
+    // fbbiId e.g. obo:FBbi_00000246
+    // http://purl.obolibrary.org/obo/FBbi_00000246
+    // https://www.ebi.ac.uk/ols4/api/ontologies/fbbi/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FFBbi_00000246
+    const fbbi_id = fbbiId.replace("obo:", "");
+    const methodJson = await getJson(
+      `https://www.ebi.ac.uk/ols4/api/ontologies/fbbi/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F${fbbi_id}`,
+    );
+    return methodJson.label || fbbiId;
+  }
+}
+
 export const organismStore = new Organism();
+
+export const imagingModalityStore = new ImagingModality();

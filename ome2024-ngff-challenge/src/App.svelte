@@ -2,7 +2,7 @@
   import VirtualList from "svelte-tiny-virtual-list";
 
   import { ngffTable } from "./tableStore";
-  import { organismStore } from "./ontologyStore";
+  import { organismStore, imagingModalityStore } from "./ontologyStore";
   import ColumnSort from "./ColumnSort.svelte";
 
   import {
@@ -30,11 +30,12 @@
   let totalBytes = 0;
   let showSourceColumn = false;
   let organismIdsByName = {};
-  let imagingModalityLookup = {};
+  let imagingModalityIdsByName = {};
   let filterDims = "0";
   let sourceFilter = "";
   let collectionFilter = "";
   let organismFilter = "";
+  let imagingModalityFilter = "";
 
   // The ngffTable is built as CSV files are loaded
   // it is NOT filtered
@@ -55,6 +56,15 @@
       temp[name] = orgId;
     }
     organismIdsByName = temp;
+  });
+
+  imagingModalityStore.subscribe(orgOntology => {
+    // iterate over orgOntology key, values
+    let temp = {};
+    for (const [orgId, name] of Object.entries(orgOntology)) {
+      temp[name] = orgId;
+    }
+    imagingModalityIdsByName = temp;
   });
 
   $: showSourceColumn = tableRows.some((row) => row.source);
@@ -82,6 +92,7 @@
     return tableRows[index].url;
   }
 
+  // Main filtering function
   function filterRows(rows) {
     if (filterDims !== "0") {
       rows = rows.filter((row) => {
@@ -104,6 +115,11 @@
         return row.organismId == organismFilter;
       });
     }
+    if (imagingModalityFilter != "") {
+      rows = rows.filter((row) => {
+        return row.fbbiId == imagingModalityFilter;
+      });
+    }
     return rows;
   }
 
@@ -124,6 +140,11 @@
 
   function filterOrganism(event) {
     organismFilter = event.target.value;
+    tableRows = filterRows(ngffTable.getRows());
+  }
+
+  function filterImagingModality(event) {
+    imagingModalityFilter = event.target.value;
     tableRows = filterRows(ngffTable.getRows());
   }
 
@@ -195,6 +216,14 @@
             <option value={organismIdsByName[name]}>{name}</option>
           {/each}
         </select>
+
+        <select on:change={filterImagingModality}>
+          <option value="">{organismFilter == "" ? "Imaging Modality" : "All Modalities"}</option>
+          {#each Object.keys(imagingModalityIdsByName).sort() as name}
+            <option value={imagingModalityIdsByName[name]}>{name}</option>
+          {/each}
+        </select>
+
       </div>
       <div>
         Sort:
