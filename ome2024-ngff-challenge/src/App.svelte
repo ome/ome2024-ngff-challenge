@@ -31,7 +31,7 @@
   let showSourceColumn = false;
   let organismIdsByName = {};
   let imagingModalityIdsByName = {};
-  let filterDims = "0";
+  let dimensionFilter = "0";
   let sourceFilter = "";
   let collectionFilter = "";
   let organismFilter = "";
@@ -95,9 +95,9 @@
 
   // Main filtering function
   function filterRows(rows) {
-    if (filterDims !== "0") {
+    if (dimensionFilter !== "0") {
       rows = rows.filter((row) => {
-        return row.dim_count == filterDims;
+        return row.dim_count == dimensionFilter;
       });
     }
     if (collectionFilter !== "") {
@@ -135,7 +135,7 @@
     tableRows = filterRows(ngffTable.getRows());
   }
   function filterDimensions(event) {
-    filterDims = event.target.value;
+    dimensionFilter = event.target.value;
     tableRows = filterRows(ngffTable.getRows());
   }
 
@@ -172,13 +172,11 @@
     <!-- <h1 class="title">OME 2024 NGFF Challenge</h1> -->
 
     <div class="summary">
-      <div class="filterRow">
-        <h2>
-          {totalZarrs} Zarr Images,
-          {filesizeformat(totalBytes)}, from {zarrSources.length} sources:
-        </h2>
-        <input on:input={filterText} placeholder="Filter by Name or Description" name="textFilter"/>
-      </div>
+
+      <h2>
+        {totalZarrs} Zarr Images,
+        {filesizeformat(totalBytes)}, from {zarrSources.length} sources:
+      </h2>
 
       <div class="sources">
         {#each zarrSources as source}
@@ -215,30 +213,33 @@
         {/if}
       </div>
 
-      <div class="filters">
-        <div>Filter:</div>
-        <select on:change={filterDimensions}>
-          <option value="0">All Dimensions</option>
-          <option value="2">2D</option>
-          <option value="3">3D</option>
-          <option value="4">4D</option>
-          <option value="5">5D</option>
-        </select>
+      <div class="filterRow">
+        <input on:input={filterText} placeholder="Filter by Name or Description" name="textFilter"/>
+        <div class="filters">
+          <div style="white-space: nowrap;">Filter by:</div>
+          <select on:change={filterDimensions}>
+            <option value="0">{dimensionFilter !== "0" ? "All Dimensions" : "Dimension Count"}</option>
+            <option value="2">2D</option>
+            <option value="3">3D</option>
+            <option value="4">4D</option>
+            <option value="5">5D</option>
+          </select>
 
-        <select on:change={filterOrganism}>
-          <option value="">{organismFilter == "" ? "Organism" : "All Organisms"}</option>
-          {#each Object.keys(organismIdsByName).sort() as name}
-            <option value={organismIdsByName[name]}>{name}</option>
-          {/each}
-        </select>
+          <select on:change={filterOrganism}>
+            <option value="">{organismFilter == "" ? "Organism" : "All Organisms"}</option>
+            {#each Object.keys(organismIdsByName).sort() as name}
+              <option value={organismIdsByName[name]}>{name}</option>
+            {/each}
+          </select>
 
-        <select on:change={filterImagingModality}>
-          <option value="">{organismFilter == "" ? "Imaging Modality" : "All Modalities"}</option>
-          {#each Object.keys(imagingModalityIdsByName).sort() as name}
-            <option value={imagingModalityIdsByName[name]}>{name}</option>
-          {/each}
-        </select>
+          <select on:change={filterImagingModality}>
+            <option value="">{organismFilter == "" ? "Imaging Modality" : "All Modalities"}</option>
+            {#each Object.keys(imagingModalityIdsByName).sort() as name}
+              <option value={imagingModalityIdsByName[name]}>{name}</option>
+            {/each}
+          </select>
 
+        </div>
       </div>
       <div>
         Sort:
@@ -312,30 +313,31 @@
     align-items: center;
     gap: 100px;
   }
-  .filterRow h2 {
-    flex: auto 0 0;
-  }
-
-  @media (max-width: 1023.9px) {
-    .filterRow {
-      flex-direction: column;
-      gap: 0;
-    }
-  }
 
   .filterRow input {
     height: 32px;
-    flex: auto 1 1;
     width: 300px;
+    flex: auto 1 1;
     border: solid grey 1px;
     border-radius: 16px;
     padding: 10px;
     font-size: 20px;
     background-color: #bbb;
   }
+
+  @media (max-width: 800px) {
+    .filterRow {
+      flex-direction: column;
+      gap: 0;
+    }
+    .filterRow input {
+      width: 100%;
+    }
+  }
   select {
     display: block;
     width: 150px;
+    height: 30px;
     padding: 2px;
     font-size: 1rem;
     line-height: 1.5;
