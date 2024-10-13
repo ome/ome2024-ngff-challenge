@@ -8,6 +8,7 @@
 
   export let rowData;
   export let listIndex;
+  export let textFilter;
 
   let imgAttrs;
   let imgUrl;
@@ -19,15 +20,28 @@
     imgUrl = img[1];
     plateAttrs = img[2]; // optional
   });
+
+  // function formatDescription() {
+  //   if (textFilter != "") {
+  //     if (rowData.description && rowData.description.includes(textFilter)) {
+  //       let desc = rowData.description.replaceAll(textFilter, `<mark>${textFilter}</mark>`);
+  //       console.log("DEscription", desc);
+  //       return desc;
+  //     }
+  //   }
+  //   return "";
+  // }
+
+  $: description = (textFilter != "" && rowData.description?.includes(textFilter)) ? rowData.description : "";
 </script>
 
 <div class="zarr-list-item">
-  <div style:float={listIndex % 2 == 0 ? "right" : "left"}>
+  <div>
     {#if imgAttrs}
       <Thumbnail source={imgUrl} attrs={imgAttrs} max_size={2000} />
     {/if}
   </div>
-  <table style:float={listIndex % 2 == 0 ? "right" : "left"}>
+  <table>
     {#each ["t", "c", "z", "y", "x"] as dim}
       {#if rowData[`size_${dim}`] !== undefined}
         <tr><td>{dim.toUpperCase()}</td><td>{rowData[`size_${dim}`]}</td></tr>
@@ -35,7 +49,9 @@
     {/each}
     <tr><td>Size</td><td>{filesizeformat(rowData.written)}</td></tr>
   </table>
-  <div style:float={listIndex % 2 == 0 ? "right" : "left"}>
+  <div>
+    <div>{@html rowData.name ? rowData.name.replaceAll(textFilter, `<mark>${textFilter}</mark>`) : ""}</div>
+    <div>{@html description.replaceAll(textFilter, `<mark>${textFilter}</mark>`)}</div>
     <a
       title="Validator: {rowData.url}"
       href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={rowData.url}"
@@ -55,9 +71,12 @@
   .zarr-list-item {
     padding: 10px;
     color: lightgray;
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+    gap: 10px;
   }
   table {
-    float: left;
     margin-left: 10px;
   }
   td {

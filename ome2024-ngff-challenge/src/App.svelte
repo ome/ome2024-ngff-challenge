@@ -155,7 +155,6 @@
   }
 
   function filterText(event) {
-    console.log("filterText", event.target.value);
     textFilter = event.target.value;
     tableRows = filterRows(ngffTable.getRows());
   }
@@ -298,7 +297,7 @@
         getKey={getItemKey}
       >
         <div slot="item" let:index let:style {style} class="row">
-          <ZarrListItem listIndex={index} rowData={tableRows[index]} />
+          <ZarrListItem listIndex={index} rowData={tableRows[index]} {textFilter} />
         </div>
       </VirtualList>
     </div>
