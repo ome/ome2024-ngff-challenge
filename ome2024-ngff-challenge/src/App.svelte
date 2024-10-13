@@ -36,6 +36,7 @@
   let collectionFilter = "";
   let organismFilter = "";
   let imagingModalityFilter = "";
+  let textFilter = "";
 
   // The ngffTable is built as CSV files are loaded
   // it is NOT filtered
@@ -120,6 +121,11 @@
         return row.fbbiId == imagingModalityFilter;
       });
     }
+    if (textFilter != "") {
+      rows = rows.filter((row) => {
+        return row.description?.includes(textFilter) || row.name?.includes(textFilter);
+      });
+    }
     return rows;
   }
 
@@ -148,6 +154,12 @@
     tableRows = filterRows(ngffTable.getRows());
   }
 
+  function filterText(event) {
+    console.log("filterText", event.target.value);
+    textFilter = event.target.value;
+    tableRows = filterRows(ngffTable.getRows());
+  }
+
   function formatCsv(url) {
     return url.split("/").pop().replace(".csv", "").replace("_samples", "");
   }
@@ -160,10 +172,13 @@
     <!-- <h1 class="title">OME 2024 NGFF Challenge</h1> -->
 
     <div class="summary">
-      <h2>
-        {totalZarrs} Zarr Images,
-        {filesizeformat(totalBytes)}, from {zarrSources.length} sources:
-      </h2>
+      <div class="filterRow">
+        <h2>
+          {totalZarrs} Zarr Images,
+          {filesizeformat(totalBytes)}, from {zarrSources.length} sources:
+        </h2>
+        <input on:input={filterText} placeholder="Filter by Name or Description" name="textFilter"/>
+      </div>
 
       <div class="sources">
         {#each zarrSources as source}
@@ -290,6 +305,34 @@
 </div>
 
 <style>
+
+  .filterRow {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 100px;
+  }
+  .filterRow h2 {
+    flex: auto 0 0;
+  }
+
+  @media (max-width: 1023.9px) {
+    .filterRow {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+
+  .filterRow input {
+    height: 32px;
+    flex: auto 1 1;
+    width: 300px;
+    border: solid grey 1px;
+    border-radius: 16px;
+    padding: 10px;
+    font-size: 20px;
+    background-color: #bbb;
+  }
   select {
     display: block;
     width: 150px;
@@ -297,7 +340,7 @@
     font-size: 1rem;
     line-height: 1.5;
     appearance: none;
-    background-color: white;
+    background-color: #bbb;
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
   }

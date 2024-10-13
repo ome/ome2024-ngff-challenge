@@ -16,7 +16,7 @@
 
 <style>
   button {
-    background-color: wheat;
+    background-color: #bbb;
     border:none;
     text-wrap: none;
     white-space: nowrap;
