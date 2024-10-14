@@ -1,9 +1,8 @@
 <script>
-  import VirtualList from "svelte-tiny-virtual-list";
-
   import { ngffTable } from "./tableStore";
   import { organismStore, imagingModalityStore } from "./ontologyStore";
   import ColumnSort from "./ColumnSort.svelte";
+  import ImageList from "./ImageList.svelte";
 
   import {
     SAMPLES_HOME,
@@ -11,7 +10,6 @@
     loadCsv,
   } from "./util";
   import Nav from "./Nav.svelte";
-  import ZarrListItem from "./ZarrListItem.svelte";
   import SourcePanel from "./SourcePanel.svelte";
 
   // check for ?csv=url
@@ -87,10 +85,6 @@
     }
     sortedBy = colname;
     ngffTable.sortTable(colname, sortAscending);
-  }
-
-  function getItemKey(index) {
-    return tableRows[index].url;
   }
 
   // Main filtering function
@@ -288,20 +282,7 @@
       </div>
     </div>
 
-    <div class="imageListContainer">
-      <h3 style="margin-left: 15px">Showing {tableRows.length} zarrs</h3>
-      <VirtualList
-        width="100%"
-        height={600}
-        itemCount={tableRows.length}
-        itemSize={220}
-        getKey={getItemKey}
-      >
-        <div slot="item" let:index let:style {style} class="row">
-          <ZarrListItem rowData={tableRows[index]} {textFilter} />
-        </div>
-      </VirtualList>
-    </div>
+    <ImageList {tableRows} {textFilter}/>
   </main>
 </div>
 
@@ -354,11 +335,6 @@
   .clear {
     background-color: #333;
   }
-  .imageListContainer {
-    border: solid #333 2px;
-    max-width: 900px;
-    margin: auto;
-  }
   .sources {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -383,11 +359,6 @@
     width: 0;
     margin: 0;
   }
-  .row {
-    background-color: black;
-    padding: 10px;
-    color: white;
-  }
   .app {
     margin: 0;
     padding: 0;
@@ -409,14 +380,10 @@
     overflow: scroll;
     color: white;
     width: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
-  .title {
-    color: white;
-    z-index: 10;
-    position: relative;
-    margin-bottom: 10px;
-  }
   .summary {
     margin-bottom: 2em;
     color: white;
@@ -424,5 +391,6 @@
     background-color: black;
     z-index: 20;
     padding: 10px;
+    flex: auto 0 0;
   }
 </style>
