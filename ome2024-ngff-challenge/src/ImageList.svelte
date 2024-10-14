@@ -49,7 +49,7 @@
 
 <style>
   .imageListContainer {
-    border: solid #333 2px;
+    border-top: solid #333 1px;
     width: 100%;
     margin: auto;
     flex: auto 1 1;
