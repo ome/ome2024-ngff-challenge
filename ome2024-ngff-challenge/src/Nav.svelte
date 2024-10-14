@@ -1,5 +1,10 @@
+
+<script>
+  import omelogo from "/ome-main-nav.svg"
+</script>
+
 <nav>
-  <img style="height: 30px" alt="OME Logo" src="/ome-main-nav.svg"/>
+  <img style="height: 30px" alt="OME Logo" src="{omelogo}"/>
   <h2>2024 NGFF Challenge</h2>
 
   <ul>
