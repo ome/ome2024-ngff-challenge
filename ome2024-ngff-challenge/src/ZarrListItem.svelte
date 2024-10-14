@@ -56,11 +56,11 @@
     <div>{@html rowData.name ? rowData.name.replaceAll(textFilter, `<mark>${textFilter}</mark>`) : ""}</div>
     <div>{@html description.replaceAll(textFilter, `<mark>${textFilter}</mark>`)}</div>
     {#if rowData.origin }
-      <div>Original data: <a
+      <div><a
         title="Link to original data: {rowData.origin}"
         href={rowData.origin}
         target="_blank"
-        >...{rowData.origin.slice(-30)}
+        >Original data
       </a></div>
     {/if}
     <a
