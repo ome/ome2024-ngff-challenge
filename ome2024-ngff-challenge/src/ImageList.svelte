@@ -5,19 +5,43 @@
   export let tableRows;
   export let textFilter;
 
+  let containerHeight = 600;
+
   function getItemKey(index) {
     return tableRows[index].url;
   }
+
+	$: innerHeight = 0;
+
+  let pageScrollY = 0;
+  let prevScrollOffset = 0;
+
+  function afterScroll(event) {
+    // When the virtual list scrolls down or up...
+    let deltaScroll = event.detail.offset - prevScrollOffset;
+
+    // We also scroll the whole page down to show the list container...
+    if (pageScrollY < 300 && deltaScroll > 0) {
+      pageScrollY += deltaScroll;
+    } else if (deltaScroll < 0 && pageScrollY > 0) {
+      pageScrollY += deltaScroll;
+    }
+
+    prevScrollOffset = event.detail.offset;
+  }
 </script>
 
-<div class="imageListContainer">
-  <h3 style="margin-left: 15px">Showing {tableRows.length} zarrs</h3>
+
+<svelte:window bind:innerHeight bind:scrollY={pageScrollY} />
+
+<div style:height="{innerHeight}px" class="imageListContainer">
   <VirtualList
     width="100%"
-    height={600}
+    height={innerHeight}
     itemCount={tableRows.length}
     itemSize={220}
     getKey={getItemKey}
+    on:afterScroll={afterScroll}
   >
     <div slot="item" let:index let:style {style} class="row">
       <ZarrListItem rowData={tableRows[index]} {textFilter} />
@@ -31,6 +55,7 @@
     width: 100%;
     margin: auto;
     flex: auto 1 1;
+    overflow: hidden;
   }
 
   .row {

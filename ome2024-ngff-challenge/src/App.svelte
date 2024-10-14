@@ -282,6 +282,7 @@
       </div>
     </div>
 
+    <h3 style="margin-left: 15px">Showing {tableRows.length} zarrs</h3>
     <ImageList {tableRows} {textFilter}/>
   </main>
 </div>
@@ -366,7 +367,6 @@
     inset: 0;
     display: flex;
     flex-direction: column;
-    height: 100%;
   }
   .filters {
     display: flex;
@@ -385,7 +385,6 @@
   }
 
   .summary {
-    margin-bottom: 2em;
     color: white;
     top: 0;
     background-color: black;
