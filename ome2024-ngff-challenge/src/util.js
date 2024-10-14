@@ -96,6 +96,10 @@ export async function getJson(url) {
   return await fetch(url).then((rsp) => rsp.json());
 }
 
+export function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
 export async function lookupOrganism(taxonId) {
   // taxonId e.g. NCBI:txid9606
   let id = taxonId.replace("NCBI:txid", "");

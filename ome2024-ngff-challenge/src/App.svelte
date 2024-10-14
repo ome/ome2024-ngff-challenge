@@ -235,6 +235,13 @@
         </div>
         <div>
           Sort:
+          <!-- <ColumnSort
+            col_label={"Rating"}
+            col_name={"rating"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          /> -->
           <ColumnSort
             col_label={"X"}
             col_name={"size_x"}

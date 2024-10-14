@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store";
 import { organismStore, imagingModalityStore } from "./ontologyStore";
-import { range } from "./util.js";
+import { range, getRandomInt } from "./util.js";
 const BATCH_SIZE = 5;
 
 export async function loadMultiscales(url) {
@@ -35,8 +35,11 @@ export async function loadMultiscales(url) {
 }
 
 class NgffTable {
-  constructor() {
+  constructor(sortBy = "rating", sortAscending = false) {
     this.store = writable([]);
+
+    this.sortColumn = sortBy;
+    this.sortAscending = sortAscending;
 
     // [{source: "uni1",
     //  url: "http://...csv",
@@ -147,12 +150,21 @@ class NgffTable {
           0,
         );
       }
+      row.rating = Math.random() * 4;
       return row;
     });
+
+    // Add a higher rating for a couple of samples within this collection
+    if (rows.length > 1) {
+      rows[getRandomInt(rows.length)].rating = 10 + Math.random() * 5;
+      rows[getRandomInt(rows.length)].rating = 5 + Math.random() * 5;
+    }
+
     console.log("Adding rows", rows);
 
     this.store.update((table) => {
       table.push(...rows);
+      table.sort((a, b) => this.compareRows(a, b, true));
       return table;
     });
 
