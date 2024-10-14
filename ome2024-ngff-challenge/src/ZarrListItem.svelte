@@ -26,7 +26,7 @@
 <div class="zarr-list-item">
   <div>
     {#if imgAttrs}
-      <Thumbnail source={imgUrl} attrs={imgAttrs} max_size={2000} />
+      <Thumbnail source={imgUrl} attrs={imgAttrs} max_size={2000} {thumbDatasetIndex}/>
     {/if}
   </div>
   <table>

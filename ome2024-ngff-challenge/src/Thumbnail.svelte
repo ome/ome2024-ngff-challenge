@@ -15,6 +15,7 @@
   // source is e.g. https://s3.embassy.ebi.ac.uk/idr/zarr/v0.4/6001240.zarr
   export let source;
   export let attrs;
+  export let thumbDatasetIndex = undefined;
   // if the lowest resolution is above this size (squared), we don't try to load thumbnails
   export let max_size = 512;
 
@@ -28,8 +29,12 @@
     let paths = attrs.multiscales[0].datasets.map((d) => d.path);
     let axes = attrs.multiscales[0].axes.map((a) => a.name);
 
+    // By default, we use the smallest thumbnail path (last dataset)
     let path = paths.at(-1);
-    // const store = await openArray({ store: source + "/" + path, mode: "r" });
+    if (thumbDatasetIndex != undefined && thumbDatasetIndex < paths.length) {
+      // but if we have a valid dataset index, use that...
+      path = paths[thumbDatasetIndex];
+    }
 
     const store = new zarr.FetchStore(source + "/" + path);
     const arr = await zarr.open.v3(store, { kind: "array" });
