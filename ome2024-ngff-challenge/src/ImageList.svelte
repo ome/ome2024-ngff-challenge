@@ -22,7 +22,7 @@
 
     // We also scroll the whole page down to show the list container...
     if (pageScrollY < 300 && deltaScroll > 0) {
-      pageScrollY += deltaScroll;
+      // pageScrollY += deltaScroll;
     } else if (deltaScroll < 0 && pageScrollY > 0) {
       pageScrollY += deltaScroll;
     }

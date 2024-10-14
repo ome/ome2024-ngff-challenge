@@ -176,22 +176,6 @@
           <SourcePanel {source} handleFilter={filterSource} />
         {/each}
         {#if sourceFilter !== ""}
-          {#each ngffTable.getCsvSourceList(sourceFilter) as childSource}
-            <div class="source">
-              <label title="Filter by Collection: {childSource.url}">
-                <input
-                  on:change={filterCollection}
-                  type="radio"
-                  name="collection"
-                  value={childSource.url}
-                />
-                {childSource.source == sourceFilter
-                  ? formatCsv(childSource.url)
-                  : childSource.source} ({childSource.image_count})
-              </label>
-            </div>
-          {/each}
-
           <div class="source clear">
             <label>
               <input
@@ -205,11 +189,27 @@
           </div>
         {/if}
       </div>
+    </div>
 
-      <div class="filterRow">
+    <!-- start left side-bar (moves to top for mobile) -->
+    <div class="sidebarContainer">
+      <div class="sidebar">
         <input on:input={filterText} placeholder="Filter by Name or Description" name="textFilter"/>
         <div class="filters">
           <div style="white-space: nowrap;">Filter by:</div>
+          {#if sourceFilter !== ""}
+            <select name="collection" on:change={filterCollection}>
+              <option value="">Collection</option>
+              {#each ngffTable.getCsvSourceList(sourceFilter) as childSource}
+                <option value={childSource.url}>
+                  {childSource.source == sourceFilter
+                    ? formatCsv(childSource.url)
+                    : childSource.source} ({childSource.image_count})
+                </option>
+              {/each}
+            </select>
+          {/if}
+
           <select on:change={filterDimensions}>
             <option value="0">{dimensionFilter !== "0" ? "All Dimensions" : "Dimension Count"}</option>
             <option value="2">2D</option>
@@ -231,89 +231,93 @@
               <option value={imagingModalityIdsByName[name]}>{name}</option>
             {/each}
           </select>
-
-
+          <div class="clear"></div>
+        </div>
+        <div>
+          Sort:
+          <ColumnSort
+            col_label={"X"}
+            col_name={"size_x"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"Y"}
+            col_name={"size_y"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"Z"}
+            col_name={"size_z"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"C"}
+            col_name={"size_c"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"T"}
+            col_name={"size_t"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"Data size"}
+            col_name={"written"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
         </div>
       </div>
-      <div>
-        Sort:
-        <ColumnSort
-          col_label={"X"}
-          col_name={"size_x"}
-          {handleSort}
-          {sortedBy}
-          {sortAscending}
-        />
-        <ColumnSort
-          col_label={"Y"}
-          col_name={"size_y"}
-          {handleSort}
-          {sortedBy}
-          {sortAscending}
-        />
-        <ColumnSort
-          col_label={"Z"}
-          col_name={"size_z"}
-          {handleSort}
-          {sortedBy}
-          {sortAscending}
-        />
-        <ColumnSort
-          col_label={"C"}
-          col_name={"size_c"}
-          {handleSort}
-          {sortedBy}
-          {sortAscending}
-        />
-        <ColumnSort
-          col_label={"T"}
-          col_name={"size_t"}
-          {handleSort}
-          {sortedBy}
-          {sortAscending}
-        />
-        <ColumnSort
-          col_label={"Data size"}
-          col_name={"written"}
-          {handleSort}
-          {sortedBy}
-          {sortAscending}
-        />
-      </div>
-    </div>
 
-    <h3 style="margin-left: 15px">Showing {tableRows.length} zarrs</h3>
-    <ImageList {tableRows} {textFilter}/>
+      <div class="results">
+        <h3 style="margin-left: 15px">Showing {tableRows.length} zarrs</h3>
+        <ImageList {tableRows} {textFilter}/>
+      </div>
   </main>
 </div>
 
 <style>
-
-  .filterRow {
+  .clear {
+    clear: left;
+  }
+  .sidebarContainer {
     display: flex;
     flex-direction: row;
-    align-items: center;
-    gap: 100px;
   }
 
-  .filterRow input {
-    height: 32px;
-    width: 300px;
+  .sidebar {
+    flex: 250px 0 0;
+    padding: 10px;
+  }
+  .results {
+    flex: auto 1 1;
+  }
+
+  input[name='textFilter'] {
+    height: 24px;
+    width: 100%;
     flex: auto 1 1;
     border: solid grey 1px;
     border-radius: 16px;
     padding: 10px;
-    font-size: 20px;
+    font-size: 14px;
     background-color: #bbb;
   }
 
   @media (max-width: 800px) {
-    .filterRow {
+    .sidebarContainer {
       flex-direction: column;
-      gap: 0;
-    }
-    .filterRow input {
-      width: 100%;
     }
   }
   select {
@@ -327,6 +331,8 @@
     background-color: #bbb;
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
+    margin: 3px;
+    float: left;
   }
 
   .source:has(input:checked) {
@@ -338,7 +344,7 @@
   }
   .sources {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
     gap: 5px;
   }
   .source {
@@ -369,8 +375,8 @@
     flex-direction: column;
   }
   .filters {
-    display: flex;
-    flex-direction: row;
+    /* display: flex;
+    flex-direction: row; */
     gap: 10px;
     margin: 5px 0;
   }
@@ -391,5 +397,11 @@
     z-index: 20;
     padding: 10px;
     flex: auto 0 0;
+  }
+  .summary h2 {
+    margin: 5px 0 10px 0;
+  }
+  .results h3 {
+    margin: 10px;
   }
 </style>

@@ -24,6 +24,7 @@
     padding-right: 20px;
     padding-left: 5px;
     outline: none;
+    margin: 3px;
   }
   button:focus-visible {
    outline: 4px solid gold;
