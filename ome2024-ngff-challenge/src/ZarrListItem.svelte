@@ -7,7 +7,6 @@
   import vizarrLogo from '/vizarr_logo.png';
 
   export let rowData;
-  export let listIndex;
   export let textFilter;
 
   let imgAttrs;
@@ -20,17 +19,6 @@
     imgUrl = img[1];
     plateAttrs = img[2]; // optional
   });
-
-  // function formatDescription() {
-  //   if (textFilter != "") {
-  //     if (rowData.description && rowData.description.includes(textFilter)) {
-  //       let desc = rowData.description.replaceAll(textFilter, `<mark>${textFilter}</mark>`);
-  //       console.log("DEscription", desc);
-  //       return desc;
-  //     }
-  //   }
-  //   return "";
-  // }
 
   $: description = (textFilter != "" && rowData.description?.includes(textFilter)) ? rowData.description : "";
 </script>
@@ -52,17 +40,19 @@
   <div>
     <div>{@html rowData.name ? rowData.name.replaceAll(textFilter, `<mark>${textFilter}</mark>`) : ""}</div>
     <div>{@html description.replaceAll(textFilter, `<mark>${textFilter}</mark>`)}</div>
+    {#if rowData.origin }
+      <div>Original data: <a
+        title="Link to original data: {rowData.origin}"
+        href={rowData.origin}
+        target="_blank"
+        >...{rowData.origin.slice(-30)}
+      </a></div>
+    {/if}
     <a
       title="Validator: {rowData.url}"
       href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={rowData.url}"
       target="_blank"
       ><img alt="OME logo" class="link_logo" src={omeLogo} />
-    </a>
-    <a
-      title="Vizarr: {rowData.url}"
-      href="https://hms-dbmi.github.io/vizarr/?source={rowData.url}"
-      target="_blank"
-      ><img alt="Vizarr logo" class="link_logo" src={vizarrLogo} />
     </a>
   </div>
 </div>

@@ -233,10 +233,11 @@
 
           <select on:change={filterImagingModality}>
             <option value="">{organismFilter == "" ? "Imaging Modality" : "All Modalities"}</option>
-            {#each Object.keys(imagingModalityIdsByName).sort() as name}
+            {#each Object.keys(imagingModalityIdsByName).sort() as name (name)}
               <option value={imagingModalityIdsByName[name]}>{name}</option>
             {/each}
           </select>
+
 
         </div>
       </div>
@@ -297,7 +298,7 @@
         getKey={getItemKey}
       >
         <div slot="item" let:index let:style {style} class="row">
-          <ZarrListItem listIndex={index} rowData={tableRows[index]} {textFilter} />
+          <ZarrListItem rowData={tableRows[index]} {textFilter} />
         </div>
       </VirtualList>
     </div>
