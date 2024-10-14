@@ -39,7 +39,7 @@
 </script>
 
 <div class="zarr-list-item">
-  <div>
+  <div class="thumbWrapper">
     {#if imgAttrs}
       <Thumbnail source={imgUrl} attrs={imgAttrs} max_size={2000} {thumbDatasetIndex} {thumbAspectRatio}/>
     {/if}
@@ -50,7 +50,7 @@
         <tr><td>{dim.toUpperCase()}</td><td>{rowData[`size_${dim}`]}</td></tr>
       {/if}
     {/each}
-    <tr><td>Size</td><td>{filesizeformat(rowData.written)}</td></tr>
+    <tr><td>Size</td><td style="white-space: nowrap">{filesizeformat(rowData.written)}</td></tr>
   </table>
   <div>
     <div>{@html rowData.name ? rowData.name.replaceAll(textFilter, `<mark>${textFilter}</mark>`) : ""}</div>
@@ -73,6 +73,10 @@
 </div>
 
 <style>
+  .thumbWrapper {
+    width: 120px;
+    height: 120px;
+  }
   .zarr-list-item {
     padding: 10px;
     color: lightgray;

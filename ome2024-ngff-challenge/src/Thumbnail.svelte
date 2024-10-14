@@ -10,7 +10,7 @@
     getDefaultColors,
   } from "./util";
 
-  const MAX_LENGTH = 200;
+  const MAX_LENGTH = 120;
 
   // source is e.g. https://s3.embassy.ebi.ac.uk/idr/zarr/v0.4/6001240.zarr
   export let source;
@@ -21,9 +21,9 @@
   export let max_size = 512;
 
   let canvas;
-  let cssWidth = 200;
-  let cssHeight = 200;
-  let width = 200;
+  let cssWidth = 120;
+  let cssHeight = 120;
+  let width = 120;
   let height = width / thumbAspectRatio;
   let showSpinner = true;
 

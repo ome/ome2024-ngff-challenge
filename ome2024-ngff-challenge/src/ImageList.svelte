@@ -5,8 +5,6 @@
   export let tableRows;
   export let textFilter;
 
-  let containerHeight = 600;
-
   function getItemKey(index) {
     return tableRows[index].url;
   }
@@ -39,7 +37,7 @@
     width="100%"
     height={innerHeight}
     itemCount={tableRows.length}
-    itemSize={220}
+    itemSize={160}
     getKey={getItemKey}
     on:afterScroll={afterScroll}
   >
