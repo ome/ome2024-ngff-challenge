@@ -13,11 +13,26 @@
   let imgUrl;
   let plateAttrs;
 
+  let thumbDatasetIndex;
+  let thumbAspectRatio = 1;
+  // If we have shape info
+  if (rowData.size_x && rowData.size_y) {
+    let longestSide = Math.max(rowData.size_x, rowData.size_y);
+    // We want max target size of e.g. 256 pixels
+    thumbDatasetIndex = 0;
+    while (longestSide > 256) {
+      thumbDatasetIndex += 1;
+      longestSide = longestSide / 2;
+    }
+    thumbAspectRatio = rowData.size_x / rowData.size_y;
+  }
+
   onMount(async () => {
     let img = await loadMultiscales(rowData.url);
     imgAttrs = img[0];
     imgUrl = img[1];
     plateAttrs = img[2]; // optional
+
   });
 
   $: description = (textFilter != "" && rowData.description?.includes(textFilter)) ? rowData.description : "";
@@ -26,7 +41,7 @@
 <div class="zarr-list-item">
   <div>
     {#if imgAttrs}
-      <Thumbnail source={imgUrl} attrs={imgAttrs} max_size={2000} {thumbDatasetIndex}/>
+      <Thumbnail source={imgUrl} attrs={imgAttrs} max_size={2000} {thumbDatasetIndex} {thumbAspectRatio}/>
     {/if}
   </div>
   <table>

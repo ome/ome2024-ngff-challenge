@@ -184,7 +184,7 @@
         {#if sourceFilter !== ""}
           {#each ngffTable.getCsvSourceList(sourceFilter) as childSource}
             <div class="source">
-              <label>
+              <label title="Filter by Collection: {childSource.url}">
                 <input
                   on:change={filterCollection}
                   type="radio"
@@ -294,7 +294,7 @@
         width="100%"
         height={600}
         itemCount={tableRows.length}
-        itemSize={150}
+        itemSize={220}
         getKey={getItemKey}
       >
         <div slot="item" let:index let:style {style} class="row">
@@ -356,7 +356,7 @@
   }
   .imageListContainer {
     border: solid #333 2px;
-    max-width: 700px;
+    max-width: 900px;
     margin: auto;
   }
   .sources {

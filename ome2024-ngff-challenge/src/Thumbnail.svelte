@@ -10,20 +10,22 @@
     getDefaultColors,
   } from "./util";
 
-  const MAX_LENGTH = 100;
+  const MAX_LENGTH = 200;
 
   // source is e.g. https://s3.embassy.ebi.ac.uk/idr/zarr/v0.4/6001240.zarr
   export let source;
   export let attrs;
   export let thumbDatasetIndex = undefined;
+  export let thumbAspectRatio = 1;
   // if the lowest resolution is above this size (squared), we don't try to load thumbnails
   export let max_size = 512;
 
   let canvas;
-  let cssWidth = 100;
-  let cssHeight = 100;
-  let width = 100;
-  let height = 100;
+  let cssWidth = 200;
+  let cssHeight = 200;
+  let width = 200;
+  let height = width / thumbAspectRatio;
+  let showSpinner = true;
 
   async function loadThumbnail() {
     let paths = attrs.multiscales[0].datasets.map((d) => d.path);
@@ -77,10 +79,10 @@
         }
         // z
         if (axes[index] == "z") {
-          return parseInt((dimSize / 2) + "");
+          return parseInt(dimSize / 2 + "");
         }
         if (axes[index] == "t") {
-          return parseInt((dimSize / 2) + "");
+          return parseInt(dimSize / 2 + "");
         }
         return 0;
       });
@@ -97,7 +99,6 @@
     if (height > width) {
       scale = height / MAX_LENGTH;
     }
-    scale = Math.max(1, scale);
 
     cssWidth = width / scale;
     cssHeight = height / scale;
@@ -105,6 +106,7 @@
     // wait for the canvas to be ready (after setting the dimensions)
     setTimeout(() => {
       const ctx = canvas.getContext("2d");
+      showSpinner = false;
       ctx.putImageData(new ImageData(rbgData, width, height), 0, 0);
     }, 100);
   }
@@ -114,9 +116,40 @@
   });
 </script>
 
+<!-- Need a wrapper to show spinner -->
+<div class="canvasWrapper" style="width: {cssWidth}px;" class:spinner={showSpinner}>
 <canvas
   style="width: {cssWidth}px; background-color: lightgrey"
   bind:this={canvas}
-  height={height}
-  width={width}
+  {height}
+  {width}
 />
+</div>
+
+<style>
+  .canvasWrapper {
+    position: relative;
+  }
+
+  @keyframes spinner {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .spinner:after {
+    content: "";
+    box-sizing: border-box;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    margin-top: -20px;
+    margin-left: -20px;
+    border-radius: 50%;
+    border: 5px solid rgba(180, 180, 180, 0.6);
+    border-top-color: rgba(0, 0, 0, 0.6);
+    animation: spinner 0.6s linear infinite;
+  }
+</style>
