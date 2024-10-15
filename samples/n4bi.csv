@@ -2,6 +2,6 @@ source,url
 
 Jülich,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/fzj.csv
 
-Göttingen, https://radosgw.public.os.wwu.de/n4bi-wp1/challenge/flamingo.csv
+Göttingen, https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/flamingo.csv
 
 University of Muenster, https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/uni_muenster_samples.csv

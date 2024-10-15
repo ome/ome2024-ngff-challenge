@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+
+# import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import requests
@@ -119,6 +121,21 @@ def load_rocrate(zarr_url):
     }
 
 
+def load_series(zarr_url):
+    # Load series from METADATA.ome.xml if available or /OME/zarr.json
+    series_url = zarr_url + "/OME/METADATA.ome.xml"
+    rsp = requests.get(series_url)
+    if (rsp.status_code // 100) != 2:
+        # load series from /OME/zarr.json
+        series_json = load_json(zarr_url + "/OME/zarr.json")
+        return series_json.get("attributes", {}).get("ome", {}).get("series", [])
+
+    # FIXME: not implemented yet!
+    # xml_string = rsp.text
+    # root = ET.fromstring(xml_string)
+    return ["0"]
+
+
 # ...so we resort to using plain requests for now...
 # load zarr.json for each row...
 def load_zarr(zarr_url, average_count=5):
@@ -150,9 +167,10 @@ def load_zarr(zarr_url, average_count=5):
         stats["written"] = avg_written * image_count
     elif bf2raw:
         # let's just get the first image...
-        bf_img_json = load_json(zarr_url + "/0/zarr.json")
+        series = load_series(zarr_url)
+        bf_img_json = load_json(zarr_url + f"/{series[0]}/zarr.json")
         bf_img_ms = bf_img_json.get("attributes", {}).get("ome", {}).get("multiscales")
-        stats = get_array_values(zarr_url + "/0", bf_img_ms)
+        stats = get_array_values(zarr_url + f"/{series[0]}", bf_img_ms)
     # combine the stats with the rocrate data...
     stats.update(rocrate_data)
     return stats
