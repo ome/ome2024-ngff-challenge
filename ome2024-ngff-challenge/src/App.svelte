@@ -288,7 +288,7 @@
       </div>
 
       <div class="results">
-        <h3 style="margin-left: 15px">Showing {tableRows.length} zarrs</h3>
+        <h3 style="margin-left: 15px">Showing {tableRows.length} images</h3>
         <ImageList {tableRows} {textFilter}/>
       </div>
   </main>

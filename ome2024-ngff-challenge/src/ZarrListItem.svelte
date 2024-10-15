@@ -3,7 +3,6 @@
   import { filesizeformat } from "./util";
   import { loadMultiscales } from "./tableStore";
   import Thumbnail from "./Thumbnail.svelte";
-  import omeLogo from '/ome-logomark.svg';
 
   export let rowData;
   export let textFilter;
@@ -24,6 +23,11 @@
       longestSide = longestSide / 2;
     }
     thumbAspectRatio = rowData.size_x / rowData.size_y;
+  }
+
+  function csvUrl(rowData) {
+    let currentUrl = window.location.origin + window.location.pathname;
+    return currentUrl + "?csv=" + rowData.csv;
   }
 
   onMount(async () => {
@@ -59,6 +63,12 @@
   <div>
     <div>{@html rowData.name ? rowData.name.replaceAll(textFilter, `<mark>${textFilter}</mark>`) : ""}</div>
     <div>{@html description.replaceAll(textFilter, `<mark>${textFilter}</mark>`)}</div>
+    {#if rowData.source }
+      <div>
+        Data from {rowData.source}:
+        <a href={csvUrl(rowData)} target="_blank">{rowData.csv?.split("/").pop()}</a>
+      </div>
+    {/if}
     {#if rowData.origin }
       <div><a
         title="Link to original data: {rowData.origin}"
@@ -68,10 +78,10 @@
       </a></div>
     {/if}
     <a
-      title="Validator: {rowData.url}"
+      title="Open in Validator: {rowData.url}"
       href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={rowData.url}"
       target="_blank"
-      ><img alt="OME logo" class="link_logo" src={omeLogo} />
+      >OME-Validator
     </a>
   </div>
 </div>
