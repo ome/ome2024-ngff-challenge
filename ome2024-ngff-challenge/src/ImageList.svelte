@@ -49,7 +49,7 @@
 
 <style>
   .imageListContainer {
-    border-top: solid #333 1px;
+    border-top: solid var(--border-color) 1px;
     width: 100%;
     margin: auto;
     flex: auto 1 1;
@@ -57,8 +57,6 @@
   }
 
   .row {
-    background-color: black;
     padding: 10px;
-    color: white;
   }
 </style>

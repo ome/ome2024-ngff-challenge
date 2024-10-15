@@ -194,16 +194,29 @@
     <!-- start left side-bar (moves to top for mobile) -->
     <div class="sidebarContainer">
       <div class="sidebar">
-        <input
-          on:input={filterText}
-          placeholder="Filter by Name or Description"
-          name="textFilter"
-        />
+        <div class="textInputWrapper">
+          <input
+            bind:value={textFilter}
+            on:input={filterText}
+            placeholder="Filter by Name or Description"
+            name="textFilter"
+          />
+          <button
+            title="Clear Filter"
+            style="visibility: {textFilter !== '' ? 'visible' : 'hidden'}"
+            on:click={filterText}
+            >&times;
+          </button>
+        </div>
         <div class="filters">
           <div style="white-space: nowrap;">Filter by:</div>
           {#if sourceFilter !== "" && ngffTable.getCsvSourceList(sourceFilter).length > 0}
             <div class="selectWrapper">
-              <select name="collection" bind:value={collectionFilter} on:change={filterCollection}>
+              <select
+                name="collection"
+                bind:value={collectionFilter}
+                on:change={filterCollection}
+              >
                 <option value="">Collection</option>
                 {#each ngffTable.getCsvSourceList(sourceFilter) as childSource}
                   <option value={childSource.url}>
@@ -302,8 +315,8 @@
 
           <div class="clear"></div>
         </div>
-        <div>
-          Sort:
+        Sort by:
+        <div class="sortButtons">
           <!-- <ColumnSort
             col_label={"Rating"}
             col_name={"rating"}
@@ -382,14 +395,26 @@
   }
 
   input[name="textFilter"] {
-    height: 24px;
     width: 100%;
     flex: auto 1 1;
-    border: solid grey 1px;
+    border: solid var(--border-color) 1px;
     border-radius: 16px;
-    padding: 10px;
-    font-size: 14px;
-    background-color: #bbb;
+    padding: 8px 8px 6px 8px;
+    font-size: 1rem;
+    background-color: var(--light-background);
+    position: relative;
+    display: block;
+  }
+  /* Add a X over the input */
+  input[name="textFilter"]::before {
+    content: "Where is this going?";
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: block;
   }
 
   @media (max-width: 800px) {
@@ -404,10 +429,10 @@
     font-size: 1rem;
     line-height: 1.5;
     appearance: none;
-    background-color: #bbb;
-    border: 1px solid #dee2e6;
+    background-color: var(--light-background);
+    border: 1px solid var(--border-color);
     border-radius: 0.375rem;
-    margin: 3px;
+    margin: 3px 0;
     float: left;
     background-image: var(--form-select-bg-img);
     background-repeat: no-repeat;
@@ -428,20 +453,27 @@
     flex: 0 0 20px;
     cursor: pointer;
   }
-  .selectWrapper button {
+  .selectWrapper button, .textInputWrapper button {
     background: transparent;
     border: none;
     padding: 2px;
-    color: white;
     font-size: 24px;
+  }
+  .textInputWrapper {
+    position: relative;
+  }
+  .textInputWrapper button {
+    position: absolute;
+    right: 7px;
+    top: -1px;
   }
 
   .source:has(input:checked) {
-    border: solid #ccc 2px;
-    background-color: #333;
+    border: solid #ccc 1px;
+    background-color: var(--selected-background);
   }
   .clear {
-    background-color: #333;
+    /* background-color: #333; */
   }
   .sources {
     display: grid;
@@ -449,7 +481,7 @@
     gap: 5px;
   }
   .source {
-    border: solid #333 1px;
+    border: solid var(--border-color) 1px;
     float: left;
     position: relative;
     padding: 3px;
@@ -470,31 +502,24 @@
   .app {
     margin: 0;
     padding: 0;
-    background-color: black;
     inset: 0;
     display: flex;
     flex-direction: column;
   }
   .filters {
-    /* display: flex;
-    flex-direction: row; */
     gap: 10px;
     margin: 5px 0;
   }
   main {
-    background-color: black;
     flex: auto 1 1;
     overflow: scroll;
-    color: white;
     width: 100%;
     display: flex;
     flex-direction: column;
   }
 
   .summary {
-    color: white;
     top: 0;
-    background-color: black;
     z-index: 20;
     padding: 10px;
     flex: auto 0 0;
@@ -504,5 +529,13 @@
   }
   .results h3 {
     margin: 10px;
+  }
+
+  .sortButtons {
+    display: flex;
+    flex-direction: row;
+    border: solid var(--border-color) 1px;
+    border-radius: 5px;
+    width: fit-content;
   }
 </style>

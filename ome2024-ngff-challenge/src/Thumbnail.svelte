@@ -123,12 +123,14 @@
   bind:this={canvas}
   {height}
   {width}
-/>
-</div>
+/></div>
 
 <style>
   .canvasWrapper {
     position: relative;
+  }
+  canvas {
+    box-shadow: 5px 4px 10px -5px #737373;
   }
 
   @keyframes spinner {

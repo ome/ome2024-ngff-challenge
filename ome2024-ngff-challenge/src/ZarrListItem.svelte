@@ -93,7 +93,6 @@
   }
   .zarr-list-item {
     padding: 10px;
-    color: lightgray;
     display: flex;
     flex-direction: row;
     align-items: start;

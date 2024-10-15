@@ -31,11 +31,11 @@
 
 <style>
   .source:has(input:checked) {
-    border: solid #ccc 2px;
-    background-color: #333;
+    border: solid #ccc 1px;
+    background-color: var(--selected-background);
   }
   .source {
-    border: solid #333 1px;
+    border: solid var(--border-color) 1px;
     float: left;
     position: relative;
     padding: 3px;
