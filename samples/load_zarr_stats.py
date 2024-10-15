@@ -185,6 +185,8 @@ output_csv = csv_name.replace(".csv", "_output.csv")
 
 column_names = []
 column_data = []
+
+unique_urls = set()
 # open a local csv file and iterate through rows...
 with Path(csv_name).open(newline="") as csvfile:
     csvreader = csv.reader(csvfile, delimiter=",")
@@ -205,8 +207,18 @@ with Path(csv_name).open(newline="") as csvfile:
         zarr_url = row[url_col]
         if zarr_url.endswith(".csv"):
             continue
+        if zarr_url in unique_urls:
+            # print(f"Skipping duplicate url: {zarr_url}")
+            continue
+        unique_urls.add(zarr_url)
         average_count = 5 if "written" not in column_names else 1
-        stats = load_zarr(zarr_url, average_count)
+        stats = {}
+        if (
+            "written" not in column_names
+            or "shape" not in column_names
+            or "license" not in column_names
+        ):
+            stats = load_zarr(zarr_url, average_count)
         # Add the extra column data here...
         if "written" not in column_names:
             row.append(stats.get("written", 0))
