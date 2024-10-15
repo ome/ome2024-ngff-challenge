@@ -1,4 +1,4 @@
-url,written,written_human_readable,shape,shards,chunks,dimension_names,license,name,description,organismId,fbbiId
-https://radosgw.public.os.wwu.de/n4bi-goe/Platynereis-H2B-TL.ome.zarr,2352780058,2.35 GB,"192,1024,1024","512,512,512","128,128,128","z,y,x",,,,,
-https://radosgw.public.os.wwu.de/n4bi-goe/Zebrafish-H2B-short-timelapse.ome.zarr,10417827625,10.42 GB,"322,2048,2048","512,512,512","128,128,128","z,y,x",,,,,
-https://radosgw.public.os.wwu.de/n4bi-goe/Zebrafish-XSPIM-multiview.ome.zarr,7168396046,7.17 GB,"342,2048,2048","512,512,512","128,128,128","z,y,x",,,,,
+url,written,written_human_readable,shape,shards,chunks,dimension_names,license,name,description,organismId,fbbiId,series0
+https://radosgw.public.os.wwu.de/n4bi-goe/Platynereis-H2B-TL.ome.zarr,2352780058,2.35 GB,"192,1024,1024","512,512,512","128,128,128","z,y,x",,,,,,setup0/timepoint0
+https://radosgw.public.os.wwu.de/n4bi-goe/Zebrafish-H2B-short-timelapse.ome.zarr,10417827625,10.42 GB,"322,2048,2048","512,512,512","128,128,128","z,y,x",,,,,,setup0/timepoint0
+https://radosgw.public.os.wwu.de/n4bi-goe/Zebrafish-XSPIM-multiview.ome.zarr,7168396046,7.17 GB,"342,2048,2048","512,512,512","128,128,128","z,y,x",,,,,,setup0/timepoint0

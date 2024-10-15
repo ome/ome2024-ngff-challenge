@@ -4,7 +4,6 @@
   import { loadMultiscales } from "./tableStore";
   import Thumbnail from "./Thumbnail.svelte";
   import omeLogo from '/ome-logomark.svg';
-  import vizarrLogo from '/vizarr_logo.png';
 
   export let rowData;
   export let textFilter;
@@ -28,7 +27,12 @@
   }
 
   onMount(async () => {
-    let img = await loadMultiscales(rowData.url);
+    let zarrUrl = rowData.url;
+    // If we know the path to first series, add it
+    if (rowData.series0 !== undefined) {
+      zarrUrl += "/" + rowData.series0;
+    }
+    let img = await loadMultiscales(zarrUrl);
     imgAttrs = img[0];
     imgUrl = img[1];
     plateAttrs = img[2]; // optional
