@@ -3,12 +3,9 @@
   import { organismStore, imagingModalityStore } from "./ontologyStore";
   import ColumnSort from "./ColumnSort.svelte";
   import ImageList from "./ImageList.svelte";
+  import form_select_bg_img from "/selectCaret.svg";
 
-  import {
-    SAMPLES_HOME,
-    filesizeformat,
-    loadCsv,
-  } from "./util";
+  import { SAMPLES_HOME, filesizeformat, loadCsv } from "./util";
   import Nav from "./Nav.svelte";
   import SourcePanel from "./SourcePanel.svelte";
 
@@ -29,12 +26,12 @@
   let showSourceColumn = false;
   let organismIdsByName = {};
   let imagingModalityIdsByName = {};
-  let dimensionFilter = "0";
-  let sourceFilter = "";
-  let collectionFilter = "";
-  let organismFilter = "";
-  let imagingModalityFilter = "";
-  let textFilter = "";
+  $: dimensionFilter = "";
+  $: sourceFilter = "";
+  $: collectionFilter = "";
+  $: organismFilter = "";
+  $: imagingModalityFilter = "";
+  $: textFilter = "";
 
   // The ngffTable is built as CSV files are loaded
   // it is NOT filtered
@@ -48,7 +45,7 @@
     }, 0);
   });
 
-  organismStore.subscribe(orgOntology => {
+  organismStore.subscribe((orgOntology) => {
     // iterate over orgOntology key, values
     let temp = {};
     for (const [orgId, name] of Object.entries(orgOntology)) {
@@ -57,7 +54,7 @@
     organismIdsByName = temp;
   });
 
-  imagingModalityStore.subscribe(orgOntology => {
+  imagingModalityStore.subscribe((orgOntology) => {
     // iterate over orgOntology key, values
     let temp = {};
     for (const [orgId, name] of Object.entries(orgOntology)) {
@@ -89,7 +86,7 @@
 
   // Main filtering function
   function filterRows(rows) {
-    if (dimensionFilter !== "0") {
+    if (dimensionFilter !== "") {
       rows = rows.filter((row) => {
         return row.dim_count == dimensionFilter;
       });
@@ -117,34 +114,38 @@
     }
     if (textFilter != "") {
       rows = rows.filter((row) => {
-        return row.description?.includes(textFilter) || row.name?.includes(textFilter);
+        return (
+          row.description?.includes(textFilter) ||
+          row.name?.includes(textFilter)
+        );
       });
     }
     return rows;
   }
 
   function filterSource(event) {
-    sourceFilter = event.target.value;
+    sourceFilter = event.target.value || "";
     collectionFilter = "";
+    console.log("filterSource", sourceFilter, collectionFilter);
     tableRows = filterRows(ngffTable.getRows());
   }
   function filterDimensions(event) {
-    dimensionFilter = event.target.value;
+    dimensionFilter = event.target.value || "";
     tableRows = filterRows(ngffTable.getRows());
   }
 
   function filterCollection(event) {
-    collectionFilter = event.target.value;
+    collectionFilter = event.target.value || "";
     tableRows = filterRows(ngffTable.getRows());
   }
 
   function filterOrganism(event) {
-    organismFilter = event.target.value;
+    organismFilter = event.target.value || "";
     tableRows = filterRows(ngffTable.getRows());
   }
 
   function filterImagingModality(event) {
-    imagingModalityFilter = event.target.value;
+    imagingModalityFilter = event.target.value || "";
     tableRows = filterRows(ngffTable.getRows());
   }
 
@@ -158,14 +159,13 @@
   }
 </script>
 
-<div class="app">
+<div class="app" style="--form-select-bg-img: url('{form_select_bg_img}')">
   <Nav />
 
   <main>
     <!-- <h1 class="title">OME 2024 NGFF Challenge</h1> -->
 
     <div class="summary">
-
       <h2>
         {totalZarrs} Zarr Images,
         {filesizeformat(totalBytes)}, from {zarrSources.length} sources:
@@ -194,43 +194,112 @@
     <!-- start left side-bar (moves to top for mobile) -->
     <div class="sidebarContainer">
       <div class="sidebar">
-        <input on:input={filterText} placeholder="Filter by Name or Description" name="textFilter"/>
+        <input
+          on:input={filterText}
+          placeholder="Filter by Name or Description"
+          name="textFilter"
+        />
         <div class="filters">
           <div style="white-space: nowrap;">Filter by:</div>
-          {#if sourceFilter !== ""}
-            <select name="collection" on:change={filterCollection}>
-              <option value="">Collection</option>
-              {#each ngffTable.getCsvSourceList(sourceFilter) as childSource}
-                <option value={childSource.url}>
-                  {childSource.source == sourceFilter
-                    ? formatCsv(childSource.url)
-                    : childSource.source} ({childSource.image_count})
-                </option>
-              {/each}
-            </select>
+          {#if sourceFilter !== "" && ngffTable.getCsvSourceList(sourceFilter).length > 0}
+            <div class="selectWrapper">
+              <select name="collection" bind:value={collectionFilter} on:change={filterCollection}>
+                <option value="">Collection</option>
+                {#each ngffTable.getCsvSourceList(sourceFilter) as childSource}
+                  <option value={childSource.url}>
+                    {childSource.source == sourceFilter
+                      ? formatCsv(childSource.url)
+                      : childSource.source} ({childSource.image_count})
+                  </option>
+                {/each}
+              </select>
+              <div>
+                <button
+                  title="Clear Filter"
+                  style="visibility: {collectionFilter !== ''
+                    ? 'visible'
+                    : 'hidden'}"
+                  on:click={filterCollection}
+                  >&times;
+                </button>
+              </div>
+            </div>
           {/if}
 
-          <select on:change={filterDimensions}>
-            <option value="0">{dimensionFilter !== "0" ? "All Dimensions" : "Dimension Count"}</option>
-            <option value="2">2D</option>
-            <option value="3">3D</option>
-            <option value="4">4D</option>
-            <option value="5">5D</option>
-          </select>
+          <div class="selectWrapper">
+            <select bind:value={dimensionFilter} on:change={filterDimensions}>
+              <option value=""
+                >{dimensionFilter !== ""
+                  ? "All Dimensions"
+                  : "Dimension Count"}</option
+              >
+              <hr />
+              <option value="2">2D</option>
+              <option value="3">3D</option>
+              <option value="4">4D</option>
+              <option value="5">5D</option>
+            </select>
+            <div>
+              <button
+                title="Clear Filter"
+                style="visibility: {dimensionFilter !== ''
+                  ? 'visible'
+                  : 'hidden'}"
+                on:click={filterDimensions}
+                >&times;
+              </button>
+            </div>
+          </div>
 
-          <select on:change={filterOrganism}>
-            <option value="">{organismFilter == "" ? "Organism" : "All Organisms"}</option>
-            {#each Object.keys(organismIdsByName).sort() as name}
-              <option value={organismIdsByName[name]}>{name}</option>
-            {/each}
-          </select>
+          <div class="selectWrapper">
+            <select bind:value={organismFilter} on:change={filterOrganism}>
+              <option value=""
+                >{organismFilter == "" ? "Organism" : "All Organisms"}</option
+              >
+              <hr />
+              {#each Object.keys(organismIdsByName).sort() as name}
+                <option value={organismIdsByName[name]}>{name}</option>
+              {/each}
+            </select>
+            <div>
+              <button
+                title="Clear Filter"
+                style="visibility: {organismFilter !== ''
+                  ? 'visible'
+                  : 'hidden'}"
+                on:click={filterOrganism}
+                >&times;
+              </button>
+            </div>
+          </div>
 
-          <select on:change={filterImagingModality}>
-            <option value="">{organismFilter == "" ? "Imaging Modality" : "All Modalities"}</option>
-            {#each Object.keys(imagingModalityIdsByName).sort() as name (name)}
-              <option value={imagingModalityIdsByName[name]}>{name}</option>
-            {/each}
-          </select>
+          <div class="selectWrapper">
+            <select
+              bind:value={imagingModalityFilter}
+              on:change={filterImagingModality}
+            >
+              <option value=""
+                >{imagingModalityFilter == ""
+                  ? "Imaging Modality"
+                  : "All Modalities"}</option
+              >
+              <hr />
+              {#each Object.keys(imagingModalityIdsByName).sort() as name (name)}
+                <option value={imagingModalityIdsByName[name]}>{name}</option>
+              {/each}
+            </select>
+            <div>
+              <button
+                title="Clear Filter"
+                style="visibility: {imagingModalityFilter !== ''
+                  ? 'visible'
+                  : 'hidden'}"
+                on:click={filterImagingModality}
+                >&times;
+              </button>
+            </div>
+          </div>
+
           <div class="clear"></div>
         </div>
         <div>
@@ -289,8 +358,9 @@
 
       <div class="results">
         <h3 style="margin-left: 15px">Showing {tableRows.length} images</h3>
-        <ImageList {tableRows} {textFilter}/>
+        <ImageList {tableRows} {textFilter} />
       </div>
+    </div>
   </main>
 </div>
 
@@ -311,7 +381,7 @@
     flex: auto 1 1;
   }
 
-  input[name='textFilter'] {
+  input[name="textFilter"] {
     height: 24px;
     width: 100%;
     flex: auto 1 1;
@@ -329,9 +399,8 @@
   }
   select {
     display: block;
-    width: 150px;
-    height: 30px;
-    padding: 2px;
+    width: 100%;
+    padding: 0.3rem 2.25rem 0.3rem 0.75rem;
     font-size: 1rem;
     line-height: 1.5;
     appearance: none;
@@ -340,6 +409,31 @@
     border-radius: 0.375rem;
     margin: 3px;
     float: left;
+    background-image: var(--form-select-bg-img);
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+  }
+
+  .selectWrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+  }
+  .selectWrapper > select {
+    flex: auto 1 1;
+  }
+  .selectWrapper > div {
+    flex: 0 0 20px;
+    cursor: pointer;
+  }
+  .selectWrapper button {
+    background: transparent;
+    border: none;
+    padding: 2px;
+    color: white;
+    font-size: 24px;
   }
 
   .source:has(input:checked) {
