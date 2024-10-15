@@ -8,6 +8,6 @@ JAX,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarch
 
 Webknossos,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/webknossos_samples.csv
 
-Crick,https://radosgw.public.os.wwu.de/n4bi-wp1/challenge/crick.csv
+Crick,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/crick.csv
 
 NFDI4BIOIMAGE,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/n4bi.csv
