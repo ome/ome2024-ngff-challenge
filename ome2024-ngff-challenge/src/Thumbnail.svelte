@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import * as zarr from "zarrita";
   import { slice } from "@zarrita/indexing";
   import {
@@ -26,6 +26,8 @@
   let width = 120;
   let height = width / thumbAspectRatio;
   let showSpinner = true;
+
+  const controller = new AbortController();
 
   async function loadThumbnail() {
     let paths = attrs.multiscales[0].datasets.map((d) => d.path);
@@ -86,7 +88,7 @@
         }
         return 0;
       });
-      return zarr.get(arr, slices);
+      return zarr.get(arr, slices, { opts: { signal: controller.signal } });
     });
 
     let ndChunks = await Promise.all(promises);
@@ -113,6 +115,10 @@
 
   onMount(() => {
     loadThumbnail();
+  });
+
+  onDestroy(() => {
+    controller.abort();
   });
 </script>
 

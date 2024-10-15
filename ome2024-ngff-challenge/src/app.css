@@ -53,6 +53,7 @@ body {
   color: #333;
   position: absolute;
   inset: 0;
+  --background-color: white;
   --border-color: lightgrey;
   --light-background: #eee;
   --selected-background: #eee;

@@ -3,9 +3,9 @@ import { organismStore, imagingModalityStore } from "./ontologyStore";
 import { range, getRandomInt } from "./util.js";
 const BATCH_SIZE = 5;
 
-export async function loadMultiscales(url) {
+export async function loadMultiscales(url, signal) {
   // return the json data that includes multiscales
-  let zarrData = await fetch(`${url}/zarr.json`)
+  let zarrData = await fetch(`${url}/zarr.json`, { signal })
     .then((response) => {
       if (response.status === 404) {
         throw new Error(`${url}/zarr.json not found`);

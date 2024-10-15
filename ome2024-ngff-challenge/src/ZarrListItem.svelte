@@ -3,6 +3,7 @@
   import { filesizeformat } from "./util";
   import { loadMultiscales } from "./tableStore";
   import Thumbnail from "./Thumbnail.svelte";
+  import { onDestroy } from "svelte";
 
   export let rowData;
   export let textFilter;
@@ -13,6 +14,7 @@
 
   let thumbDatasetIndex;
   let thumbAspectRatio = 1;
+  const controller = new AbortController();
   // If we have shape info
   if (rowData.size_x && rowData.size_y) {
     let longestSide = Math.max(rowData.size_x, rowData.size_y);
@@ -36,11 +38,15 @@
     if (rowData.series0 !== undefined) {
       zarrUrl += "/" + rowData.series0;
     }
-    let img = await loadMultiscales(zarrUrl);
+    let img = await loadMultiscales(zarrUrl, controller.signal);
     imgAttrs = img[0];
     imgUrl = img[1];
     plateAttrs = img[2]; // optional
+  });
 
+  onDestroy(() => {
+    // Doesn't seem to abort fetching of chunks
+    controller.abort();
   });
 
   $: description = (textFilter != "" && rowData.description?.includes(textFilter)) ? rowData.description : "";
@@ -97,6 +103,7 @@
     flex-direction: row;
     align-items: start;
     gap: 10px;
+    background-color: var(--background-color);
   }
   table {
     margin-left: 10px;
@@ -105,13 +112,5 @@
     padding: 1px;
     font-size: 80%;
     line-height: normal;
-  }
-  .link_logo {
-    width: 24px;
-    height: 24px;
-    visibility: hidden;
-  }
-  .zarr-list-item:hover .link_logo {
-    visibility: visible;
   }
 </style>
