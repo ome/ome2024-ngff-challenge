@@ -129,6 +129,13 @@ class NgffTable {
   addRows(rows) {
     // Each row is a dict {"url": "http...zarr"}
     rows = rows.map((row) => {
+      // Validating csv files don't contain whitespaces
+      // Object.entries(row).forEach(([key, value]) => {
+      //   if (value?.startsWith && (value.startsWith(" ") || value?.endsWith(" ")) || (key && key.startsWith(" ") || key.endsWith(" "))) {
+      //     console.log("whitespace", row.url, key, value);
+      //   }
+      // });
+
       if (row.written) {
         row.written = parseFloat(row.written);
       }
