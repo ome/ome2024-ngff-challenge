@@ -168,7 +168,7 @@
     <div class="summary">
       <h2>
         {totalZarrs} Zarr Images,
-        {filesizeformat(totalBytes)}, from {zarrSources.length} sources:
+        {filesizeformat(totalBytes)}{#if zarrSources.length > 0}, from {zarrSources.length} sources{/if}:
       </h2>
 
       <div class="sources">
