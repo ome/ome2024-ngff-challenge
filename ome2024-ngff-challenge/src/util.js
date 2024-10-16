@@ -164,8 +164,9 @@ export function renderTo8bitArray(ndChunks, minMaxValues, colors) {
   }
 
   // let rgb = [255, 255, 255];
+  let start = performance.now();
 
-  const rgba = new Uint8ClampedArray(4 * height * width).fill(0);
+  let rgba = new Uint8ClampedArray(4 * height * width).fill(0);
   let offset = 0;
   for (let y = 0; y < pixels; y++) {
     for (let p = 0; p < ndChunks.length; p++) {
@@ -185,7 +186,44 @@ export function renderTo8bitArray(ndChunks, minMaxValues, colors) {
     rgba[offset * 4 + 3] = 255; // alpha
     offset += 1;
   }
+  // if iterating pixels is fast, check histogram and boost contrast if needed
+  if (performance.now() - start < 5) {
+    let hist = getHistogram(rgba, 5);
+    if (hist[4] < 1) {
+      // If few pixels in top bin, boost contrast
+      rgba = boostContrast(rgba, 2);
+    }
+  }
   return rgba;
+}
+
+function boostContrast(rgba, factor) {
+  // Increase contrast by factor
+  for (let pixel = 0; pixel < rgba.length / 4; pixel++) {
+    for (let i = 0; i < 3; i++) {
+      let v = rgba[pixel * 4 + i];
+      v = Math.min(255, v * factor);
+      rgba[pixel * 4 + i] = v;
+    }
+  }
+  return rgba;
+}
+
+function getHistogram(uint8array, bins = 5) {
+  // Create histogram from uint8array
+  let hist = new Array(bins).fill(0);
+  const binSize = 256 / bins;
+  let pixelCount = uint8array.length / 4;
+  for (let i = 0; i < pixelCount; i++) {
+    let maxV = uint8array[i * 4];
+    maxV = Math.max(uint8array[i * 4 + 1], maxV);
+    maxV = Math.max(uint8array[i * 4 + 2], maxV);
+    let bin = Math.floor(maxV / binSize);
+    hist[bin] += 1;
+  }
+  // Normalize
+  hist = hist.map((v) => (100 * v) / pixelCount);
+  return hist;
 }
 
 export function getMinMaxValues(chunk2d) {

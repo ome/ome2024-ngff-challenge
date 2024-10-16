@@ -21,7 +21,6 @@
   function afterScroll(event) {
     let margin = 20;
     let scrollLimit = listContainer.offsetTop - margin;
-    console.log("offsetTop", scrollLimit, pageScrollY);
     // When the virtual list scrolls back...
     let deltaScroll = event.detail.offset - prevScrollOffset;
     // We also scroll the whole page to show the list container...

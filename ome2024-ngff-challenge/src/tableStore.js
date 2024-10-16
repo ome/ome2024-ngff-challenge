@@ -176,11 +176,9 @@ class NgffTable {
     });
 
     let organismIds = rows.map((row) => row.organismId);
-    console.log("organismIds", organismIds);
     organismStore.addTerms(organismIds);
 
     let fbbiIds = rows.map((row) => row.fbbiId);
-    console.log("fbbiIds", fbbiIds);
     imagingModalityStore.addTerms(fbbiIds);
   }
 
