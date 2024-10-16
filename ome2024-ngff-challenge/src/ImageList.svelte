@@ -4,6 +4,7 @@
 
   export let tableRows;
   export let textFilter;
+  export let sortedBy = undefined;
 
   function getItemKey(index) {
     return tableRows[index].url;
@@ -46,7 +47,7 @@
     on:afterScroll={afterScroll}
   >
     <div slot="item" let:index let:style {style} class="row">
-      <ZarrListItem rowData={tableRows[index]} {textFilter} />
+      <ZarrListItem rowData={tableRows[index]} {textFilter} {sortedBy} />
     </div>
   </VirtualList>
 </div>

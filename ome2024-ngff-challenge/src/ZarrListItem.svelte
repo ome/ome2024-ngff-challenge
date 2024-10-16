@@ -7,6 +7,7 @@
 
   export let rowData;
   export let textFilter;
+  export let sortedBy = undefined;
 
   let imgAttrs;
   let imgUrl;
@@ -64,7 +65,13 @@
         <tr><td>{dim.toUpperCase()}</td><td>{rowData[`size_${dim}`]}</td></tr>
       {/if}
     {/each}
-    <tr><td>Size</td><td style="white-space: nowrap">{filesizeformat(rowData.written)}</td></tr>
+    {#if sortedBy == "chunk_pixels" }
+      <tr><td>Chunks</td><td>{rowData.chunks}</td></tr>
+    {:else if sortedBy == "shard_pixels" }
+      <tr><td>Shards</td><td>{rowData.shards}</td></tr>
+    {:else}
+      <tr><td>Size</td><td style="white-space: nowrap">{filesizeformat(rowData.written)}</td></tr>
+    {/if}
   </table>
   <div>
     <div>{@html rowData.name ? rowData.name.replaceAll(textFilter, `<mark>${textFilter}</mark>`) : ""}</div>

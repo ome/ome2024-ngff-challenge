@@ -157,6 +157,14 @@ class NgffTable {
           0,
         );
       }
+      if (row.chunks) {
+        let chunks = row.chunks.split(",").map((dim) => parseInt(dim));
+        row.chunk_pixels = chunks.reduce((prev, curr) => prev * curr, 1);
+      }
+      if (row.shards) {
+        let shards = row.shards.split(",").map((dim) => parseInt(dim));
+        row.shard_pixels = shards.reduce((prev, curr) => prev * curr, 1);
+      }
       row.rating = Math.random() * 4;
       return row;
     });

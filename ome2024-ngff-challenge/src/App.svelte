@@ -359,6 +359,22 @@
             {sortedBy}
             {sortAscending}
           />
+        </div>
+        <div class="sortButtons">
+          <ColumnSort
+            col_label={"Chunks"}
+            col_name={"chunk_pixels"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"Shards"}
+            col_name={"shard_pixels"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
           <ColumnSort
             col_label={"Data size"}
             col_name={"written"}
@@ -371,7 +387,7 @@
 
       <div class="results">
         <h3 style="margin-left: 15px">Showing {tableRows.length} images</h3>
-        <ImageList {tableRows} {textFilter} />
+        <ImageList {tableRows} {textFilter} {sortedBy} />
       </div>
     </div>
   </main>
@@ -537,5 +553,6 @@
     border: solid var(--border-color) 1px;
     border-radius: 5px;
     width: fit-content;
+    margin: 5px 0;
   }
 </style>
