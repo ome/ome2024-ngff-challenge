@@ -71,8 +71,7 @@
     <div>{@html description.replaceAll(textFilter, `<mark>${textFilter}</mark>`)}</div>
     {#if rowData.source }
       <div>
-        Data from {rowData.source}:
-        <a href={csvUrl(rowData)} target="_blank">{rowData.csv?.split("/").pop()}</a>
+        Data from {rowData.source}{#if rowData.csv}: <a href={csvUrl(rowData)} target="_blank">{rowData.csv?.split("/").pop()}</a>{/if}
       </div>
     {/if}
     {#if rowData.origin }
