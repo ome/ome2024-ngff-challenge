@@ -21,10 +21,15 @@
   export let max_size = 512;
 
   let canvas;
-  let cssWidth = 120;
-  let cssHeight = 120;
   let width = 120;
-  let height = width / thumbAspectRatio;
+  let height = 120;
+  if (thumbAspectRatio > 1) {
+    height = width / thumbAspectRatio;
+  } else if (thumbAspectRatio < 1) {
+    width = height * thumbAspectRatio;
+  }
+  let cssWidth = width;
+  let cssHeight = height;
   let showSpinner = true;
 
   const controller = new AbortController();
@@ -123,9 +128,9 @@
 </script>
 
 <!-- Need a wrapper to show spinner -->
-<div class="canvasWrapper" style="width: {cssWidth}px;" class:spinner={showSpinner}>
+<div class="canvasWrapper" style="width: {cssWidth}px; height:{cssHeight}px;" class:spinner={showSpinner}>
 <canvas
-  style="width: {cssWidth}px; background-color: lightgrey"
+  style="width: {cssWidth}px; height:{cssHeight}px; background-color: lightgrey"
   bind:this={canvas}
   {height}
   {width}
