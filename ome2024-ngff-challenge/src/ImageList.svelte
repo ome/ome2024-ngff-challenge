@@ -9,20 +9,24 @@
     return tableRows[index].url;
   }
 
+  let listContainer;
 	$: innerHeight = 0;
 
   let pageScrollY = 0;
   let prevScrollOffset = 0;
 
+  // To avoid having to scroll all the way back to the start before
+  // you can access the controls above the list, we scroll the page
+  // a bit... But only to show the first 20px above the list...
   function afterScroll(event) {
-    // When the virtual list scrolls down or up...
+    let margin = 20;
+    let scrollLimit = listContainer.offsetTop - margin;
+    console.log("offsetTop", scrollLimit, pageScrollY);
+    // When the virtual list scrolls back...
     let deltaScroll = event.detail.offset - prevScrollOffset;
-
-    // We also scroll the whole page down to show the list container...
-    if (pageScrollY < 300 && deltaScroll > 0) {
-      // pageScrollY += deltaScroll;
-    } else if (deltaScroll < 0 && pageScrollY > 0) {
-      pageScrollY += deltaScroll;
+    // We also scroll the whole page to show the list container...
+    if (deltaScroll < 0 && pageScrollY > scrollLimit) {
+      pageScrollY -= 1;
     }
 
     prevScrollOffset = event.detail.offset;
@@ -32,7 +36,8 @@
 
 <svelte:window bind:innerHeight bind:scrollY={pageScrollY} />
 
-<div style:height="{innerHeight}px" class="imageListContainer">
+<!-- We make the scrollable viewport fill the full height of the page -->
+<div bind:this={listContainer} style:height="{innerHeight}px" class="imageListContainer">
   <VirtualList
     width="100%"
     height={innerHeight}
