@@ -1,13 +1,14 @@
 <script>
   import { ngffTable } from "./tableStore";
-  import ThumbGallery from "./ThumbGallery.svelte";
-  import Thumbnail from "./Thumbnail.svelte";
-  import Pixel from "./Pixel.svelte";
+  import { organismStore, imagingModalityStore } from "./ontologyStore";
   import ColumnSort from "./ColumnSort.svelte";
+  import ImageList from "./ImageList.svelte";
+  import PreviewPopup from "./PreviewPopup.svelte";
+  import form_select_bg_img from "/selectCaret.svg";
 
-  import { SAMPLES_HOME, filesizeformat, loadCsv, lookupImagingModality, lookupOrganism } from "./util";
+  import { SAMPLES_HOME, filesizeformat, loadCsv } from "./util";
   import Nav from "./Nav.svelte";
-
+  import SourcePanel from "./SourcePanel.svelte";
 
   // check for ?csv=url
   const params = new URLSearchParams(window.location.search);
@@ -15,25 +16,55 @@
   try {
     new URL(csvUrl);
   } catch (error) {
-    console.error("Invalid csv URL", csvUrl);
     csvUrl = SAMPLES_HOME;
   }
 
   let tableRows = [];
+  // e.g. {"IDR": {"idr0004.csv": {"count": 100}}, "JAX": {}...
+  let zarrSources = [];
+  let totalZarrs = 0;
+  let totalBytes = 0;
   let showSourceColumn = false;
-  let organismLookup = {};
-  let imagingModalityLookup = {};
+  let organismIdsByName = {};
+  let imagingModalityIdsByName = {};
+  $: dimensionFilter = "";
+  $: sourceFilter = "";
+  $: collectionFilter = "";
+  $: organismFilter = "";
+  $: imagingModalityFilter = "";
+  $: textFilter = "";
 
-  // The ngffTable is loaded initially - for gallery at top of page...
-  // Also updated when a gallery item is clicked to show the table of images
+  // The ngffTable is built as CSV files are loaded
+  // it is NOT filtered
   ngffTable.subscribe((rows) => {
-    tableRows = rows;
+    tableRows = filterRows(rows);
+    // NB: don't use filtered rows for sources
+    zarrSources = ngffTable.getCsvSourceList();
+    totalZarrs = rows.length;
+    totalBytes = rows.reduce((acc, row) => {
+      return acc + parseInt(row["written"]) || 0;
+    }, 0);
+  });
+
+  organismStore.subscribe((orgOntology) => {
+    // iterate over orgOntology key, values
+    let temp = {};
+    for (const [orgId, name] of Object.entries(orgOntology)) {
+      temp[name] = orgId;
+    }
+    organismIdsByName = temp;
+  });
+
+  imagingModalityStore.subscribe((orgOntology) => {
+    // iterate over orgOntology key, values
+    let temp = {};
+    for (const [orgId, name] of Object.entries(orgOntology)) {
+      temp[name] = orgId;
+    }
+    imagingModalityIdsByName = temp;
   });
 
   $: showSourceColumn = tableRows.some((row) => row.source);
-  $: showOriginColumn = tableRows.some((row) => row.origin);
-  $: showPlateColumns = tableRows.some((row) => row.well_count);
-  $: showLoadRoCrateButton = !tableRows.some((row) => row.rocrate_loaded);
 
   // kick off loading the CSV to populate ngffTable...
   // This will recursively load other csv files if they are linked in the first one
@@ -41,235 +72,489 @@
     loadCsv(csvUrl, ngffTable);
   }
 
-  function linkText(url) {
-    let truncated = url.replace(
-      "https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/",
-      ""
-    );
-    if (truncated.length > 50) {
-      truncated = truncated.slice(0, 20) + "..." + truncated.slice(-20);
-    }
-    return truncated;
-  }
-
-  function handleLoadRocrate() {
-    ngffTable.loadRocrateJsonAllRows();
-  }
-
-  // This is called by the <table> if we are missing organisms from the lookup dict.
-  // Updating organismLookup should trigger all table rows to be re-rendered
-  function loadOrganism(organismId) {
-    console.log("loadOrganism", organismId);
-    if (!organismId) {
-      return "";
-    }
-    if (organismLookup[organismId]) {
-      return organismLookup[organismId];
-    }
-    // put a placeholder to avoid multiple requests while we wait for the lookup
-    organismLookup[organismId] = organismId;
-    lookupOrganism(organismId).then((organism) => {
-      organismLookup = { ...organismLookup, [organismId]: organism };
-    });
-    return organismId;
-  }
-
-  function loadImagingModality(fbbiId) {
-    if (!fbbiId) {
-      return "";
-    }
-    if (imagingModalityLookup[fbbiId]) {
-      return imagingModalityLookup[fbbiId];
-    }
-    // put a placeholder to avoid multiple requests while we wait for the lookup
-    imagingModalityLookup[fbbiId] = fbbiId;
-    lookupImagingModality(fbbiId).then((imagingModality) => {
-      imagingModalityLookup = { ...imagingModalityLookup, [fbbiId]: imagingModality };
-    });
-    return fbbiId;
-  }
-
   let sortedBy = "";
   let sortAscending = true;
   function handleSort(colname) {
-    console.log("handleSort", colname, 'sortedBy', sortedBy);
     if (sortedBy === colname) {
       sortAscending = !sortAscending;
     } else {
-      sortAscending = true;
+      // start by sorting descending (biggest first)
+      sortAscending = false;
     }
     sortedBy = colname;
     ngffTable.sortTable(colname, sortAscending);
   }
+
+  // Main filtering function
+  function filterRows(rows) {
+    if (dimensionFilter !== "") {
+      rows = rows.filter((row) => {
+        return row.dim_count == dimensionFilter;
+      });
+    }
+    if (collectionFilter !== "") {
+      rows = rows.filter((row) => {
+        return row.csv == collectionFilter;
+      });
+    } else if (sourceFilter !== "") {
+      let childSrcs = ngffTable.getCsvSourceList(sourceFilter);
+      let allSources = [sourceFilter, ...childSrcs.map((src) => src.source)];
+      rows = rows.filter((row) => {
+        return allSources.includes(row.source);
+      });
+    }
+    if (organismFilter !== "") {
+      rows = rows.filter((row) => {
+        return row.organismId == organismFilter;
+      });
+    }
+    if (imagingModalityFilter != "") {
+      rows = rows.filter((row) => {
+        return row.fbbiId == imagingModalityFilter;
+      });
+    }
+    if (textFilter != "") {
+      rows = rows.filter((row) => {
+        return (
+          row.description?.includes(textFilter) ||
+          row.name?.includes(textFilter)
+        );
+      });
+    }
+    return rows;
+  }
+
+  function filterSource(event) {
+    sourceFilter = event.target.value || "";
+    collectionFilter = "";
+    console.log("filterSource", sourceFilter, collectionFilter);
+    tableRows = filterRows(ngffTable.getRows());
+  }
+  function filterDimensions(event) {
+    dimensionFilter = event.target.value || "";
+    tableRows = filterRows(ngffTable.getRows());
+  }
+
+  function filterCollection(event) {
+    collectionFilter = event.target.value || "";
+    tableRows = filterRows(ngffTable.getRows());
+  }
+
+  function filterOrganism(event) {
+    organismFilter = event.target.value || "";
+    tableRows = filterRows(ngffTable.getRows());
+  }
+
+  function filterImagingModality(event) {
+    imagingModalityFilter = event.target.value || "";
+    tableRows = filterRows(ngffTable.getRows());
+  }
+
+  function filterText(event) {
+    textFilter = event.target.value;
+    tableRows = filterRows(ngffTable.getRows());
+  }
+
+  function formatCsv(url) {
+    return url.split("/").pop().replace(".csv", "").replace("_samples", "");
+  }
 </script>
 
-<Pixel/><Pixel/><Pixel/><Pixel/><Pixel/>
-<Pixel/><Pixel/><Pixel/><Pixel/><Pixel/>
+<div class="app" style="--form-select-bg-img: url('{form_select_bg_img}')">
+  <Nav />
+  <PreviewPopup />
 
-<Nav/>
+  <main>
+    <!-- <h1 class="title">OME 2024 NGFF Challenge</h1> -->
 
-<main>
-  <h1 class="title">OME 2024 NGFF Challenge</h1>
+    <div class="summary">
+      <h2>
+        {totalZarrs} Zarr Images,
+        {filesizeformat(totalBytes)}{#if zarrSources.length > 0}, from {zarrSources.length} sources{/if}:
+      </h2>
 
-  <ThumbGallery {csvUrl} />
+      <div class="sources">
+        {#each zarrSources as source}
+          <SourcePanel {source} handleFilter={filterSource} />
+        {/each}
+        {#if sourceFilter !== ""}
+          <div class="source clear">
+            <label>
+              <input
+                on:change={filterSource}
+                type="radio"
+                name="source"
+                value=""
+              />
+              &#10060 Clear Source Filter
+            </label>
+          </div>
+        {/if}
+      </div>
+    </div>
 
-  <div class="summary">
-    <table>
-      <tr>
-        <td>Zarr Samples (URLs)</td>
-        <td>Images</td>
-        <td>Bytes written</td>
-        <td>Organisms</td>
-      </tr>
-      <tr class="stats">
-        <td>{tableRows.length}</td>
-        <td
-          >{tableRows.reduce(
-            (acc, row) =>
-              acc + (row.well_count ? row.well_count * row.field_count : 1),
-            0
-          )}</td
-        >
-        <td
-          >{filesizeformat(
-            tableRows.reduce((acc, row) => {
-              return acc + parseInt(row["written"]) || 0;
-            }, 0)
-          )}</td
-        >
-        <td>
-          {#if showLoadRoCrateButton}
-            <button class="loadrocrate" on:click={handleLoadRocrate}>Load Ro-Crate metadata</button>
-          {:else}
-            {Object.keys(organismLookup).length}
+    <!-- start left side-bar (moves to top for mobile) -->
+    <div class="sidebarContainer">
+      <div class="sidebar">
+        <div class="textInputWrapper">
+          <input
+            bind:value={textFilter}
+            on:input={filterText}
+            placeholder="Filter by Name or Description"
+            name="textFilter"
+          />
+          <button
+            title="Clear Filter"
+            style="visibility: {textFilter !== '' ? 'visible' : 'hidden'}"
+            on:click={filterText}
+            >&times;
+          </button>
+        </div>
+        <div class="filters">
+          <div style="white-space: nowrap;">Filter by:</div>
+          {#if sourceFilter !== "" && ngffTable.getCsvSourceList(sourceFilter).length > 0}
+            <div class="selectWrapper">
+              <select
+                name="collection"
+                bind:value={collectionFilter}
+                on:change={filterCollection}
+              >
+                <option value="">Collection</option>
+                {#each ngffTable.getCsvSourceList(sourceFilter) as childSource}
+                  <option value={childSource.url}>
+                    {childSource.source == sourceFilter
+                      ? formatCsv(childSource.url)
+                      : childSource.source} ({childSource.image_count})
+                  </option>
+                {/each}
+              </select>
+              <div>
+                <button
+                  title="Clear Filter"
+                  style="visibility: {collectionFilter !== ''
+                    ? 'visible'
+                    : 'hidden'}"
+                  on:click={filterCollection}
+                  >&times;
+                </button>
+              </div>
+            </div>
           {/if}
-        </td>
-      </tr>
-    </table>
 
-    <progress value={tableRows.filter(row => row.loaded).length} max={tableRows.length}></progress>
-  </div>
+          <div class="selectWrapper">
+            <select bind:value={dimensionFilter} on:change={filterDimensions}>
+              <option value=""
+                >{dimensionFilter !== ""
+                  ? "All Dimensions"
+                  : "Dimension Count"}</option
+              >
+              <hr />
+              <option value="2">2D</option>
+              <option value="3">3D</option>
+              <option value="4">4D</option>
+              <option value="5">5D</option>
+            </select>
+            <div>
+              <button
+                title="Clear Filter"
+                style="visibility: {dimensionFilter !== ''
+                  ? 'visible'
+                  : 'hidden'}"
+                on:click={filterDimensions}
+                >&times;
+              </button>
+            </div>
+          </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Thumb</th>
-        <th><ColumnSort col_label={"Url"} col_name={"url"} {handleSort} {sortedBy} {sortAscending}/></th>
-        {#if showSourceColumn}
-          <th><ColumnSort col_label={"Source"} col_name={"source"} {handleSort} {sortedBy} {sortAscending}/></th>
-        {/if}
-        {#if showOriginColumn}
-          <th>Data Origin</th>
-        {/if}
-        <th>Shape</th>
-        <th><ColumnSort col_label={"Data size"} col_name={"written"} {handleSort} {sortedBy} {sortAscending}/></th>
-        {#if showPlateColumns}
-          <th><ColumnSort col_label={"Wells"} col_name={"well_count"} {handleSort} {sortedBy} {sortAscending}/></th>
-          <th>Images</th>
-        {/if}
-        <th>Organism</th>
-        <th>Imaging</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each tableRows as row (row.url)}
-        <tr>
-          <td>
-            {#if row.image_attrs}
-              <Thumbnail attrs={row.image_attrs} source={row.image_url}></Thumbnail>
-            {/if}
-          </td>
-          <td
+          <div class="selectWrapper">
+            <select bind:value={organismFilter} on:change={filterOrganism}>
+              <option value=""
+                >{organismFilter == "" ? "Organism" : "All Organisms"}</option
+              >
+              <hr />
+              {#each Object.keys(organismIdsByName).sort() as name}
+                <option value={organismIdsByName[name]}>{name}</option>
+              {/each}
+            </select>
+            <div>
+              <button
+                title="Clear Filter"
+                style="visibility: {organismFilter !== ''
+                  ? 'visible'
+                  : 'hidden'}"
+                on:click={filterOrganism}
+                >&times;
+              </button>
+            </div>
+          </div>
+
+          <div class="selectWrapper">
+            <select
+              bind:value={imagingModalityFilter}
+              on:change={filterImagingModality}
             >
-            {#if row.csv_row_count && row.csv}
-              <a
-                href="{window.location.origin}?csv={row.csv}"
-                target="_blank"
-                >{row.csv.split("/").pop()} ({row.csv_row_count})</a
+              <option value=""
+                >{imagingModalityFilter == ""
+                  ? "Imaging Modality"
+                  : "All Modalities"}</option
               >
-            {:else}
-              <a
-                href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={row.url}"
-                target="_blank">{linkText(row.url)}</a
-              >
-            {/if}
-            </td
-          >
-          {#if showSourceColumn}
-            <td>{row.source || ""}</td>
-          {/if}
-          {#if showOriginColumn}
-            <td>
-              {#if row.origin}<a href={row.origin} target="_blank">...{row.origin.slice(-10)}</a>{/if}
-            </td>
-          {/if}
-          <td>{row.load_failed ? "x" : row.shape || ""}</td>
-          <td>{filesizeformat(row.written)}</td>
-          {#if showPlateColumns}
-            <td>{row.well_count || ""}</td>
-            <td>{row.well_count ? row.well_count * row.field_count : ""}</td>
-          {/if}
-          <td title="{row.organism_id || ''}">
-            {#if row.organism_id}
-              {organismLookup[row.organism_id] || loadOrganism(row.organism_id)}
-            {/if}
-          </td>
-          <td title="{row.fbbi_id || ''}">
-            {#if row.fbbi_id}
-              {organismLookup[row.fbbi_id] || loadImagingModality(row.fbbi_id)}
-            {/if}
-          </td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
-</main>
+              <hr />
+              {#each Object.keys(imagingModalityIdsByName).sort() as name (name)}
+                <option value={imagingModalityIdsByName[name]}>{name}</option>
+              {/each}
+            </select>
+            <div>
+              <button
+                title="Clear Filter"
+                style="visibility: {imagingModalityFilter !== ''
+                  ? 'visible'
+                  : 'hidden'}"
+                on:click={filterImagingModality}
+                >&times;
+              </button>
+            </div>
+          </div>
+
+          <div class="clear"></div>
+        </div>
+        Sort by:
+        <div class="sortButtons">
+          <!-- <ColumnSort
+            col_label={"Rating"}
+            col_name={"rating"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          /> -->
+          <ColumnSort
+            col_label={"X"}
+            col_name={"size_x"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"Y"}
+            col_name={"size_y"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"Z"}
+            col_name={"size_z"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"C"}
+            col_name={"size_c"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"T"}
+            col_name={"size_t"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+        </div>
+        <div class="sortButtons">
+          <ColumnSort
+            col_label={"Chunks"}
+            col_name={"chunk_pixels"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"Shards"}
+            col_name={"shard_pixels"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+          <ColumnSort
+            col_label={"Data size"}
+            col_name={"written"}
+            {handleSort}
+            {sortedBy}
+            {sortAscending}
+          />
+        </div>
+      </div>
+
+      <div class="results">
+        <h3 style="margin-left: 15px">Showing {tableRows.length} images</h3>
+        <ImageList {tableRows} {textFilter} {sortedBy} />
+      </div>
+    </div>
+  </main>
+</div>
 
 <style>
+  .clear {
+    clear: left;
+  }
+  .sidebarContainer {
+    display: flex;
+    flex-direction: row;
+  }
 
-  .title {
-    z-index: 10;
-    position: relative;
-    margin-bottom: 10px;
+  .sidebar {
+    flex: 250px 0 0;
+    padding: 10px;
   }
-  .summary {
-    margin-bottom: 2em;
+  .results {
+    flex: auto 1 1;
   }
-  table {
-    border-collapse: collapse;
+
+  input[name="textFilter"] {
     width: 100%;
-    background-color: white;
+    flex: auto 1 1;
+    border: solid var(--border-color) 1px;
+    border-radius: 16px;
+    padding: 8px 8px 6px 8px;
+    font-size: 1rem;
+    background-color: var(--light-background);
     position: relative;
-    z-index: 10;
-    -webkit-box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
-    -moz-box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
-    box-shadow: 7px 6px 20px -8px rgba(115,115,115,1);
+    display: block;
   }
-  @media (prefers-color-scheme: dark) {
-    table {
-      background-color: #333;
+  /* Add a X over the input */
+  input[name="textFilter"]::before {
+    content: "Where is this going?";
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: block;
+  }
+
+  @media (max-width: 800px) {
+    .sidebarContainer {
+      flex-direction: column;
     }
   }
-
-  td, th {
-    border: lightgrey 1px solid;
-    padding: 0.5em;
-    text-align: center;
-  }
-  progress {
+  select {
+    display: block;
     width: 100%;
-  }
-  .stats {
-    font-size: 48px;
+    padding: 0.3rem 2.25rem 0.3rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    appearance: none;
+    background-color: var(--light-background);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    margin: 3px 0;
+    float: left;
+    background-image: var(--form-select-bg-img);
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
   }
 
-  .loadrocrate {
-    font-size: 12px;
-    background-color:aliceblue;
+  .selectWrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+  }
+  .selectWrapper > select {
+    flex: auto 1 1;
+  }
+  .selectWrapper > div {
+    flex: 0 0 20px;
+    cursor: pointer;
+  }
+  .selectWrapper button, .textInputWrapper button {
+    background: transparent;
+    border: none;
+    padding: 2px;
+    font-size: 24px;
+  }
+  .textInputWrapper {
+    position: relative;
+  }
+  .textInputWrapper button {
+    position: absolute;
+    right: 7px;
+    top: -1px;
+  }
+
+  .source:has(input:checked) {
+    border: solid #ccc 1px;
+    background-color: var(--selected-background);
+  }
+  .clear {
+    /* background-color: #333; */
+  }
+  .sources {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 5px;
+  }
+  .source {
+    border: solid var(--border-color) 1px;
+    float: left;
+    position: relative;
+    padding: 3px;
     border-radius: 5px;
-    border-color: coral;
-    vertical-align: middle;
-    margin-bottom: 7px;
-    color: #222;
+    cursor: pointer;
+  }
+  .source label {
+    display: block;
+    position: relative;
+    padding: 5px;
+    cursor: pointer;
+  }
+  input[type="radio"] {
+    visibility: hidden;
+    width: 0;
+    margin: 0;
+  }
+  .app {
+    margin: 0;
+    padding: 0;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .filters {
+    gap: 10px;
+    margin: 5px 0;
+  }
+  main {
+    flex: auto 1 1;
+    overflow: scroll;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .summary {
+    top: 0;
+    z-index: 20;
+    padding: 10px;
+    flex: auto 0 0;
+  }
+  .summary h2 {
+    margin: 5px 0 10px 0;
+  }
+  .results h3 {
+    margin: 10px;
+  }
+
+  .sortButtons {
+    display: flex;
+    flex-direction: row;
+    border: solid var(--border-color) 1px;
+    border-radius: 5px;
+    width: fit-content;
+    margin: 5px 0;
   }
 </style>
