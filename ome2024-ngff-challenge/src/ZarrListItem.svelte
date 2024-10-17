@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { filesizeformat } from "./util";
-  import { loadMultiscales } from "./tableStore";
+  import { loadMultiscales, ngffTable } from "./tableStore";
   import Thumbnail from "./Thumbnail.svelte";
   import { onDestroy } from "svelte";
 
@@ -33,6 +33,11 @@
     return currentUrl + "?csv=" + rowData.csv;
   }
 
+  function handleThumbClick() {
+    console.log("Clicked on thumbnail");
+    ngffTable.setSelectedRow(rowData);
+  }
+
   onMount(async () => {
     let zarrUrl = rowData.url;
     // If we know the path to first series, add it
@@ -54,7 +59,7 @@
 </script>
 
 <div class="zarr-list-item">
-  <div class="thumbWrapper">
+  <div class="thumbWrapper" on:click={handleThumbClick}>
     {#if imgAttrs}
       <Thumbnail source={imgUrl} attrs={imgAttrs} max_size={2000} {thumbDatasetIndex} {thumbAspectRatio}/>
     {/if}
@@ -102,6 +107,7 @@
   .thumbWrapper {
     width: 120px;
     height: 120px;
+    cursor: pointer;
   }
   .zarr-list-item {
     padding: 10px;

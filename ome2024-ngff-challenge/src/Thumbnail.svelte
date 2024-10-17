@@ -10,19 +10,18 @@
     getDefaultColors,
   } from "./util";
 
-  const MAX_LENGTH = 120;
-
   // source is e.g. https://s3.embassy.ebi.ac.uk/idr/zarr/v0.4/6001240.zarr
   export let source;
   export let attrs;
   export let thumbDatasetIndex = undefined;
   export let thumbAspectRatio = 1;
+  export let cssSize = 120;
   // if the lowest resolution is above this size (squared), we don't try to load thumbnails
   export let max_size = 512;
 
   let canvas;
-  let width = 120;
-  let height = 120;
+  let width = cssSize;
+  let height = cssSize;
   if (thumbAspectRatio > 1) {
     height = width / thumbAspectRatio;
   } else if (thumbAspectRatio < 1) {
@@ -102,9 +101,9 @@
 
     width = shape.at(-1);
     height = shape.at(-2);
-    let scale = width / MAX_LENGTH;
+    let scale = width / cssSize;
     if (height > width) {
-      scale = height / MAX_LENGTH;
+      scale = height / cssSize;
     }
 
     cssWidth = width / scale;

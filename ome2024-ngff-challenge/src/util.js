@@ -187,7 +187,8 @@ export function renderTo8bitArray(ndChunks, minMaxValues, colors) {
     offset += 1;
   }
   // if iterating pixels is fast, check histogram and boost contrast if needed
-  if (performance.now() - start < 5) {
+  // Thumbnails are less than 5 millisecs. 512x512 is 10-20 millisecs.
+  if (performance.now() - start < 100) {
     let hist = getHistogram(rgba, 5);
     if (hist[4] < 1) {
       // If few pixels in top bin, boost contrast

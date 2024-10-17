@@ -3,6 +3,7 @@
   import { organismStore, imagingModalityStore } from "./ontologyStore";
   import ColumnSort from "./ColumnSort.svelte";
   import ImageList from "./ImageList.svelte";
+  import PreviewPopup from "./PreviewPopup.svelte";
   import form_select_bg_img from "/selectCaret.svg";
 
   import { SAMPLES_HOME, filesizeformat, loadCsv } from "./util";
@@ -161,6 +162,7 @@
 
 <div class="app" style="--form-select-bg-img: url('{form_select_bg_img}')">
   <Nav />
+  <PreviewPopup />
 
   <main>
     <!-- <h1 class="title">OME 2024 NGFF Challenge</h1> -->

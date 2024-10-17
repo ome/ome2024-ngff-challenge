@@ -37,6 +37,7 @@ export async function loadMultiscales(url, signal) {
 class NgffTable {
   constructor(sortBy = "rating", sortAscending = false) {
     this.store = writable([]);
+    this.selectedRow = writable(null);
 
     this.sortColumn = sortBy;
     this.sortAscending = sortAscending;
@@ -365,6 +366,18 @@ class NgffTable {
 
   getRows() {
     return get(this.store);
+  }
+
+  getRow(index) {
+    return get(this.store)[index];
+  }
+
+  subscribeSelectedRow(run) {
+    return this.selectedRow.subscribe(run);
+  }
+
+  setSelectedRow(rowData) {
+    this.selectedRow.set(rowData);
   }
 }
 
