@@ -85,4 +85,10 @@
     overflow: auto;
     box-shadow: 5px 4px 10px -5px #737373;
   }
+
+  @media (max-width: 800px) {
+    #mypopover {
+      width: 100%;
+    }
+  }
 </style>

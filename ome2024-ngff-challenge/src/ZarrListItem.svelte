@@ -38,6 +38,10 @@
     ngffTable.setSelectedRow(rowData);
   }
 
+  function formatUrlToName(url) {
+    return url.split("/").pop();
+  }
+
   onMount(async () => {
     let zarrUrl = rowData.url;
     // If we know the path to first series, add it
@@ -64,42 +68,51 @@
       <Thumbnail source={imgUrl} attrs={imgAttrs} max_size={2000} {thumbDatasetIndex} {thumbAspectRatio}/>
     {/if}
   </div>
-  <table>
-    {#each ["t", "c", "z", "y", "x"] as dim}
-      {#if rowData[`size_${dim}`] !== undefined}
-        <tr><td>{dim.toUpperCase()}</td><td>{rowData[`size_${dim}`]}</td></tr>
-      {/if}
-    {/each}
-    {#if sortedBy == "chunk_pixels" }
-      <tr><td>Chunks</td><td>{rowData.chunks}</td></tr>
-    {:else if sortedBy == "shard_pixels" }
-      <tr><td>Shards</td><td>{rowData.shards}</td></tr>
-    {:else}
-      <tr><td>Size</td><td style="white-space: nowrap">{filesizeformat(rowData.written)}</td></tr>
-    {/if}
-  </table>
   <div>
+    <div><strong>{formatUrlToName(rowData.url)}</strong></div>
     <div>{@html rowData.name ? rowData.name.replaceAll(textFilter, `<mark>${textFilter}</mark>`) : ""}</div>
     <div>{@html description.replaceAll(textFilter, `<mark>${textFilter}</mark>`)}</div>
     {#if rowData.source }
       <div>
-        Data from {rowData.source}{#if rowData.csv}: <a href={csvUrl(rowData)} target="_blank">{rowData.csv?.split("/").pop()}</a>{/if}
+        Data
+        {#if rowData.csv}
+          from collection
+          <a title="Show collection in a new tab" href={csvUrl(rowData)} target="_blank">{rowData.csv?.split("/").pop().replace(".csv", "")}</a>
+        {/if}
+        provided by <strong style="color:grey">{rowData.source}</strong>.
       </div>
     {/if}
-    {#if rowData.origin }
-      <div><a
-        title="Link to original data: {rowData.origin}"
-        href={rowData.origin}
-        target="_blank"
-        >Original data
-      </a></div>
-    {/if}
-    <a
+    <div>
+      Open in <a
       title="Open in Validator: {rowData.url}"
       href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={rowData.url}"
       target="_blank"
-      >OME-Validator
+      >OME-Validator.
     </a>
+
+    {#if rowData.origin }
+      Browse <a
+        title="Link to original data: {rowData.origin}"
+        href={rowData.origin}
+        target="_blank"
+        >Original data</a>.
+    {/if}
+    </div>
+    <div>
+      Image size:
+      {#each ["t", "c", "z", "y", "x"] as dim}
+        {#if rowData[`size_${dim}`] !== undefined}
+          {dim.toUpperCase()}:{rowData[`size_${dim}`]} &nbsp;
+        {/if}
+      {/each}
+    </div>
+    {#if sortedBy == "chunk_pixels" }
+      <div>Chunk shape: {rowData.chunks}</div>
+    {:else if sortedBy == "shard_pixels" }
+      <div>Shard shape: {rowData.shards}</div>
+    {:else}
+      <div>Data size: {filesizeformat(rowData.written)}</div>
+    {/if}
   </div>
 </div>
 
