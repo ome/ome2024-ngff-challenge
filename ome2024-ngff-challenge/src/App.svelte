@@ -193,8 +193,9 @@
         {#each zarrSources as source}
           <SourcePanel {source} handleFilter={filterSource} />
         {/each}
-        {#if sourceFilter !== ""}
-          <div class="source clear">
+      </div>
+      {#if sourceFilter !== ""}
+          <div class="clearTextFilter">
             <label>
               <input
                 on:change={filterSource}
@@ -202,11 +203,10 @@
                 name="source"
                 value=""
               />
-              &#10060 Clear Source Filter
+              &#10060 Clear
             </label>
           </div>
         {/if}
-      </div>
     </div>
 
     <!-- start left side-bar (moves to top for mobile) -->
@@ -398,9 +398,6 @@
 </div>
 
 <style>
-  .clear {
-    clear: left;
-  }
   .sidebarContainer {
     display: flex;
     flex-direction: row;
@@ -412,6 +409,7 @@
   }
   .results {
     flex: auto 1 1;
+    position: relative;
   }
 
   input[name="textFilter"] {
@@ -435,6 +433,12 @@
     top: 0;
     bottom: 0;
     display: block;
+  }
+
+  .clearTextFilter {
+    position: absolute;
+    right: 10px;
+    bottom: -20px;
   }
 
   @media (max-width: 800px) {
@@ -494,9 +498,7 @@
     border: solid #ccc 1px;
     background-color: var(--selected-background);
   }
-  .clear {
-    /* background-color: #333; */
-  }
+
   .sources {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -546,9 +548,7 @@
     z-index: 20;
     padding: 0 10px 10px 10px;
     flex: auto 0 0;
-  }
-  .summary h2 {
-    margin: 5px 0 10px 0;
+    position: relative;
   }
   .results h3 {
     margin: 10px;
