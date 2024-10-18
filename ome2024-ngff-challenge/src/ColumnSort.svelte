@@ -16,14 +16,16 @@
 
 <style>
   button {
-    background-color: transparent;
-    border:none;
+    background-color: var(--light-background);
+    border: none;
     text-wrap: none;
     white-space: nowrap;
     position: relative;
     padding-right: 20px;
     padding-left: 5px;
     outline: none;
+    margin: 0;
+    border-radius: 0;
   }
   button:focus-visible {
    outline: 4px solid gold;

@@ -1,4 +1,4 @@
-url,written,written_human_readable,origin
-https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0054/Tonsil 1.zarr,94540970,90.16 MB,https://idr.openmicroscopy.org/webclient/?show=image-5025551
-https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0054/Tonsil 2.zarr,85014382,81.08 MB,https://idr.openmicroscopy.org/webclient/?show=image-5025552
-https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0054/Tonsil 3.zarr,127393780,121.49 MB,https://idr.openmicroscopy.org/webclient/?show=image-5025553
+url,written,written_human_readable,origin,shape,shards,chunks,dimension_names,license,name,description,organismId,fbbiId
+https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0054/Tonsil 1.zarr,94540970,90.16 MB,https://idr.openmicroscopy.org/webclient/?show=image-5025551,"1,27,1,2700,2702","1,1,1,3072,3072","1,1,1,1024,1024","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,idr0054,,NCBI:txid9606,NCIT_C182027
+https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0054/Tonsil 2.zarr,85014382,81.08 MB,https://idr.openmicroscopy.org/webclient/?show=image-5025552,"1,27,1,2701,2701","1,1,1,3072,3072","1,1,1,1024,1024","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,idr0054,,NCBI:txid9606,NCIT_C182027
+https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0054/Tonsil 3.zarr,127393780,121.49 MB,https://idr.openmicroscopy.org/webclient/?show=image-5025553,"1,27,1,2500,2500","1,1,1,3072,3072","1,1,1,1024,1024","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,idr0054,,NCBI:txid9606,NCIT_C182027
