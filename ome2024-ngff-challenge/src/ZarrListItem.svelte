@@ -59,7 +59,7 @@
     controller.abort();
   });
 
-  $: description = (textFilter != "" && rowData.description?.includes(textFilter)) ? rowData.description : "";
+  $: description = (textFilter != "" && rowData.description?.toLowerCase().includes(textFilter.toLowerCase())) ? rowData.description : "";
 </script>
 
 <div class="zarr-list-item">

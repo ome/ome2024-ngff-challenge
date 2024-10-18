@@ -113,11 +113,12 @@
         return row.fbbiId == imagingModalityFilter;
       });
     }
-    if (textFilter != "") {
+    if (textFilter && textFilter != "") {
+      let txt = textFilter.toLowerCase();
       rows = rows.filter((row) => {
         return (
-          row.description?.includes(textFilter) ||
-          row.name?.includes(textFilter)
+          row.description?.toLowerCase().includes(txt) ||
+          row.name?.toLowerCase().includes(txt)
         );
       });
     }
@@ -168,10 +169,25 @@
     <!-- <h1 class="title">OME 2024 NGFF Challenge</h1> -->
 
     <div class="summary">
-      <h2>
-        {totalZarrs} Zarr Images,
-        {filesizeformat(totalBytes)}{#if zarrSources.length > 0}, from {zarrSources.length} sources{/if}:
-      </h2>
+      <h3 style="text-align:center">
+        In the summer of 2024, the OME-NGFF project generated
+        <strong style="font-weight:600">{filesizeformat(totalBytes)}</strong> of data in Zarr v3 format
+      </h3>
+
+      <div class="textInputWrapper">
+        <input
+          bind:value={textFilter}
+          on:input={filterText}
+          placeholder="Filter by Name or Description"
+          name="textFilter"
+        />
+        <button
+          title="Clear Filter"
+          style="visibility: {textFilter !== '' ? 'visible' : 'hidden'}"
+          on:click={filterText}
+          >&times;
+        </button>
+      </div>
 
       <div class="sources">
         {#each zarrSources as source}
@@ -196,20 +212,6 @@
     <!-- start left side-bar (moves to top for mobile) -->
     <div class="sidebarContainer">
       <div class="sidebar">
-        <div class="textInputWrapper">
-          <input
-            bind:value={textFilter}
-            on:input={filterText}
-            placeholder="Filter by Name or Description"
-            name="textFilter"
-          />
-          <button
-            title="Clear Filter"
-            style="visibility: {textFilter !== '' ? 'visible' : 'hidden'}"
-            on:click={filterText}
-            >&times;
-          </button>
-        </div>
         <div class="filters">
           <div style="white-space: nowrap;">Filter by:</div>
           {#if sourceFilter !== "" && ngffTable.getCsvSourceList(sourceFilter).length > 0}
@@ -388,7 +390,7 @@
       </div>
 
       <div class="results">
-        <h3 style="margin-left: 15px">Showing {tableRows.length} images</h3>
+        <h3 style="margin-left: 15px">Showing {tableRows.length} out of {totalZarrs} images</h3>
         <ImageList {tableRows} {textFilter} {sortedBy} />
       </div>
     </div>
@@ -417,7 +419,7 @@
     flex: auto 1 1;
     border: solid var(--border-color) 1px;
     border-radius: 16px;
-    padding: 8px 8px 6px 8px;
+    padding: 8px 8px 6px 12px;
     font-size: 1rem;
     background-color: var(--light-background);
     position: relative;
@@ -479,6 +481,8 @@
   }
   .textInputWrapper {
     position: relative;
+    max-width: 600px;
+    margin: 0 auto 10px auto;
   }
   .textInputWrapper button {
     position: absolute;
@@ -534,12 +538,13 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+    max-width: 1200px;
+    margin: auto;
   }
 
   .summary {
-    top: 0;
     z-index: 20;
-    padding: 10px;
+    padding: 0 10px 10px 10px;
     flex: auto 0 0;
   }
   .summary h2 {
