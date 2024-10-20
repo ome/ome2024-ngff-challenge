@@ -73,16 +73,18 @@
   }
 
   let sortedBy = "";
-  let sortAscending = true;
-  function handleSort(colname) {
-    if (sortedBy === colname) {
-      sortAscending = !sortAscending;
+  let sortAscending = false;
+  function toggleSortAscending() {
+    sortAscending = !sortAscending;
+    ngffTable.sortTable(sortedBy, sortAscending);
+  }
+  function handleSort(event) {
+    sortedBy = event.target.value;
+    if (sortedBy === "") {
+      ngffTable.sortTable("index", true);
     } else {
-      // start by sorting descending (biggest first)
-      sortAscending = false;
+      ngffTable.sortTable(sortedBy, sortAscending);
     }
-    sortedBy = colname;
-    ngffTable.sortTable(colname, sortAscending);
   }
 
   // Main filtering function
@@ -318,74 +320,29 @@
           </div>
 
           <div class="clear"></div>
-        </div>
-        Sort by:
-        <div class="sortButtons">
-          <!-- <ColumnSort
-            col_label={"Rating"}
-            col_name={"rating"}
-            {handleSort}
-            {sortedBy}
-            {sortAscending}
-          /> -->
-          <ColumnSort
-            col_label={"X"}
-            col_name={"size_x"}
-            {handleSort}
-            {sortedBy}
-            {sortAscending}
-          />
-          <ColumnSort
-            col_label={"Y"}
-            col_name={"size_y"}
-            {handleSort}
-            {sortedBy}
-            {sortAscending}
-          />
-          <ColumnSort
-            col_label={"Z"}
-            col_name={"size_z"}
-            {handleSort}
-            {sortedBy}
-            {sortAscending}
-          />
-          <ColumnSort
-            col_label={"C"}
-            col_name={"size_c"}
-            {handleSort}
-            {sortedBy}
-            {sortAscending}
-          />
-          <ColumnSort
-            col_label={"T"}
-            col_name={"size_t"}
-            {handleSort}
-            {sortedBy}
-            {sortAscending}
-          />
-        </div>
-        <div class="sortButtons">
-          <ColumnSort
-            col_label={"Chunks"}
-            col_name={"chunk_pixels"}
-            {handleSort}
-            {sortedBy}
-            {sortAscending}
-          />
-          <ColumnSort
-            col_label={"Shards"}
-            col_name={"shard_pixels"}
-            {handleSort}
-            {sortedBy}
-            {sortAscending}
-          />
-          <ColumnSort
-            col_label={"Data size"}
-            col_name={"written"}
-            {handleSort}
-            {sortedBy}
-            {sortAscending}
-          />
+
+          <div>Sort by:</div>
+          <div class="selectWrapper">
+            <select
+              on:change={handleSort}
+            >
+              <option value="">--</option
+              >
+              <hr />
+              {#each ["x", "y", "z", "c", "t"] as dim}
+                <option value="size_{dim}">Size: {dim.toUpperCase()}</option>
+              {/each}
+              <hr />
+              <option value="written">Data Size (bytes)</option>
+              <option value="chunk_pixels">Chunk Size (pixels)</option>
+              <option value="shard_pixels">Shard Size (pixels)</option>
+            </select>
+            <div>
+              <ColumnSort
+                toggleAscending={toggleSortAscending}
+                sortAscending={sortAscending} />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -552,14 +509,5 @@
   }
   .results h3 {
     margin: 10px;
-  }
-
-  .sortButtons {
-    display: flex;
-    flex-direction: row;
-    border: solid var(--border-color) 1px;
-    border-radius: 5px;
-    width: fit-content;
-    margin: 5px 0;
   }
 </style>

@@ -35,7 +35,7 @@ export async function loadMultiscales(url, signal) {
 }
 
 class NgffTable {
-  constructor(sortBy = "rating", sortAscending = false) {
+  constructor(sortBy = "index", sortAscending = true) {
     this.store = writable([]);
     this.selectedRow = writable(null);
 
@@ -129,7 +129,7 @@ class NgffTable {
 
   addRows(rows) {
     // Each row is a dict {"url": "http...zarr"}
-    rows = rows.map((row) => {
+    rows = rows.map((row, index) => {
       // Validating csv files don't contain whitespaces
       // Object.entries(row).forEach(([key, value]) => {
       //   if (value?.startsWith && (value.startsWith(" ") || value?.endsWith(" ")) || (key && key.startsWith(" ") || key.endsWith(" "))) {
@@ -166,15 +166,10 @@ class NgffTable {
         let shards = row.shards.split(",").map((dim) => parseInt(dim));
         row.shard_pixels = shards.reduce((prev, curr) => prev * curr, 1);
       }
-      row.rating = Math.random() * 4;
+      // add index for sorting
+      row.index = Math.random() * (1 + index);
       return row;
     });
-
-    // Add a higher rating for a couple of samples within this collection
-    if (rows.length > 1) {
-      rows[getRandomInt(rows.length)].rating = 10 + Math.random() * 5;
-      rows[getRandomInt(rows.length)].rating = 5 + Math.random() * 5;
-    }
 
     console.log("Adding rows", rows);
 
@@ -336,6 +331,7 @@ class NgffTable {
   }
 
   sortTable(colName, ascending = true) {
+    console.log("sortTable", colName, ascending);
     this.sortColumn = colName;
     this.sortAscending = ascending;
     let isNumber = this.isColumnNumeric(colName);
