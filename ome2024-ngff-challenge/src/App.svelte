@@ -204,19 +204,6 @@
           <SourcePanel {source} handleFilter={filterSource} />
         {/each}
       </div>
-      {#if sourceFilter !== ""}
-          <div class="clearTextFilter">
-            <label>
-              <input
-                on:change={filterSource}
-                type="radio"
-                name="source"
-                value=""
-              />
-              &#10060 Clear
-            </label>
-          </div>
-        {/if}
     </div>
 
     <!-- start left side-bar (moves to top for mobile) -->
@@ -459,34 +446,12 @@
     top: -1px;
   }
 
-  .source:has(input:checked) {
-    border: solid #ccc 1px;
-    background-color: var(--selected-background);
-  }
-
   .sources {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
     gap: 5px;
-  }
-  .source {
-    border: solid var(--border-color) 1px;
-    float: left;
-    position: relative;
-    padding: 3px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  .source label {
-    display: block;
-    position: relative;
-    padding: 5px;
-    cursor: pointer;
-  }
-  input[type="radio"] {
-    visibility: hidden;
-    width: 0;
-    margin: 0;
+    max-width: 1200px;
+    margin: 0 auto;
   }
   .app {
     margin: 0;
@@ -505,7 +470,6 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    max-width: 1200px;
     margin: auto;
   }
 

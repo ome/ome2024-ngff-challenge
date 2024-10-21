@@ -14,23 +14,35 @@
       src={getSourceIcon(source.source)}
     />
     <div>
-    {source.source}
-    <br/>
-    <span title="{source.child_csv.length} collections"
-      >({source.total_count} images)</span
-    ><input
-    on:change={handleFilter}
-    type="radio"
-    name="source"
-    value={source.source}
-  />
-  </div>
+      {source.source}
+      <br />
+      <span title="{source.child_csv.length} collections"
+        >({source.total_count} images)</span
+      ><input
+        on:change={handleFilter}
+        class="source"
+        type="radio"
+        name="source"
+        value={source.source}
+      />
+    </div>
   </label>
+
+  <!-- This "clear" is hidden until the input above is checked..
+   Then it is shown over the whole panel, so that if the panel is clicked again, it clears the filter -->
+  <label class="clear">
+    <input
+      on:change={handleFilter}
+      type="radio"
+      name="source"
+      value=""
+    />
+    &times;
+    </label>
 </div>
 
-
 <style>
-  .source:has(input:checked) {
+  .source:has(input.source:checked) {
     border: solid #ccc 1px;
     background-color: var(--selected-background);
   }
@@ -64,5 +76,15 @@
     width: 0;
     margin: 0;
   }
-
+  .source .clear {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background-color: transparent;
+    opacity: 0.5;
+  }
+  .source:has(input.source:checked) .clear {
+    display: block;
+    text-align: right;
+  }
 </style>
