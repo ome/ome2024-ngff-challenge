@@ -1,5 +1,5 @@
 <script>
-  import { getSourceIcon } from "./util";
+  import { getSourceIcon, filesizeformat } from "./util";
 
   export let source;
   export let handleFilter;
@@ -17,7 +17,7 @@
       {source.source}
       <br />
       <span title="{source.child_csv.length} collections"
-        >({source.total_count} images)</span
+        >({filesizeformat(source.bytes)})</span
       ><input
         on:change={handleFilter}
         class="source"
@@ -25,6 +25,10 @@
         name="source"
         value={source.source}
       />
+      <div class="tooltip">
+        {#if source.plate_count }{source.plate_count} plates{/if}
+        {source.image_count} images
+      </div>
     </div>
   </label>
 
@@ -37,7 +41,9 @@
       name="source"
       value=""
     />
-    &times;
+    <span title="Clear filter">
+      &times;
+    </span>
     </label>
 </div>
 
@@ -86,5 +92,19 @@
   .source:has(input.source:checked) .clear {
     display: block;
     text-align: right;
+  }
+
+  .tooltip {
+    display: none;
+    top: 100%;
+    position: absolute;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px;
+    z-index: 1;
+  }
+  .source:hover .tooltip {
+    display: block;
   }
 </style>

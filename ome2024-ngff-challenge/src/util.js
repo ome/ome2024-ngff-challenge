@@ -76,7 +76,22 @@ export function loadCsv(csvUrl, ngffTable, parentRow = {}) {
       let childCsvRows = dataRows.filter((row) => row["url"]?.includes(".csv"));
 
       // register the csv in our hierarchy
-      ngffTable.addCsv(csvUrl, childCsvRows, zarrUrlRows.length);
+      let plate_count = zarrUrlRows.reduce(
+        (acc, row) => (row["wells"] ? acc + 1 : acc),
+        0,
+      );
+      let bytes = zarrUrlRows.reduce(
+        (acc, row) => acc + parseInt(row["written"] || 0),
+        0,
+      );
+      let image_count = zarrUrlRows.length;
+      if (plate_count > 0) {
+        image_count = zarrUrlRows.reduce(
+          (acc, row) => acc + parseInt(row["images"] || 1),
+          0,
+        );
+      }
+      ngffTable.addCsv(csvUrl, childCsvRows, image_count, plate_count, bytes);
 
       // add rows to the table - parsing strings to numbers etc...
       ngffTable.addRows(zarrUrlRows);

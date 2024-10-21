@@ -79,17 +79,21 @@ class NgffTable {
     }
     // lets summarise the image_count for each source
     let children = child.child_csv.map((src) => {
-      let count = src.image_count || 0;
+      let image_count = src.image_count || 0;
+      let plate_count = src.plate_count || 0;
+      let bytes = src.bytes || 0;
       for (let grandchild of src.child_csv) {
         // not recursive but OK for now
-        count += grandchild.image_count || 0;
+        image_count += grandchild.image_count || 0;
+        plate_count += grandchild.plate_count || 0;
+        bytes += grandchild.bytes || 0;
       }
-      return { ...src, total_count: count };
+      return { ...src, image_count, plate_count, bytes };
     });
     return children;
   }
 
-  addCsv(csvUrl, childCsvRows, zarrUrlRowCount) {
+  addCsv(csvUrl, childCsvRows, image_count, plate_count, bytes) {
     // childCsvRows is [{source: "uni2", url: "http://...csv"}]
     // make shallow copy of childCsvRows
     childCsvRows = childCsvRows.map((row) => ({ ...row, child_csv: [] }));
@@ -115,12 +119,16 @@ class NgffTable {
     }
     if (child) {
       // add to the existing child
-      child.image_count = zarrUrlRowCount;
+      child.image_count = image_count;
+      child.plate_count = plate_count;
+      child.bytes = bytes;
       child.child_csv = childCsvRows;
     } else {
       child = {
         url: csvUrl,
-        image_count: zarrUrlRowCount,
+        image_count,
+        plate_count,
+        bytes,
         child_csv: childCsvRows,
       };
       this.csvFiles.push(child);
