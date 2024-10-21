@@ -70,16 +70,19 @@
   </div>
   <div>
     <div><strong>{formatUrlToName(rowData.url)}</strong></div>
-    <div>{@html rowData.name ? rowData.name.replaceAll(textFilter, `<mark>${textFilter}</mark>`) : ""}</div>
+    <div class={textFilter == "" ? "hideOnSmall" : ""}>
+      <!-- If we're not filtering by text (name/description) then hide the name on small screen -->
+      {@html rowData.name ? rowData.name.replaceAll(textFilter, `<mark>${textFilter}</mark>`) : ""}
+    </div>
     <div>{@html description.replaceAll(textFilter, `<mark>${textFilter}</mark>`)}</div>
     {#if rowData.source }
       <div>
-        Data
+        <span class="hideOnSmall">Data</span>
         {#if rowData.csv}
-          from collection
+          <span class="hideOnSmall">from collection</span>
           <a title="Show collection in a new tab" href={csvUrl(rowData)} target="_blank">{rowData.csv?.split("/").pop().replace(".csv", "")}</a>
         {/if}
-        provided by <strong style="color:grey">{rowData.source}</strong>.
+        <span class="hideOnSmall">provided by</span> <strong style="color:grey">{rowData.source}</strong>.
       </div>
     {/if}
     <div>
@@ -130,12 +133,10 @@
     gap: 10px;
     background-color: var(--background-color);
   }
-  table {
-    margin-left: 10px;
-  }
-  td {
-    padding: 1px;
-    font-size: 80%;
-    line-height: normal;
+  @media (max-width: 800px) {
+    /* On small screen, hide name & description */
+    .hideOnSmall {
+      display: none;
+    }
   }
 </style>
