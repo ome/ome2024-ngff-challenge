@@ -173,14 +173,14 @@
       <h3 style="text-align:center">
         In the summer of 2024, the OME-NGFF project generated
         <strong style="font-weight:600">{filesizeformat(totalBytes)}</strong> of data in Zarr v3 format
-
-        {#if csvUrl != SAMPLES_HOME}
-          <h4>
-            Showing Collection: <strong>{formatCsv(csvUrl)}</strong>
-            <span style="color:grey">&nbsp | &nbsp</span>
-            <a href="{window.location.origin + window.location.pathname}">Show all collections</a>
-          </h4>
-        {/if}
+          <div style="font-size: 90%">
+            Showing Collection:
+            <a href="{csvUrl}">{csvUrl.split("/").pop()}</a>
+            {#if csvUrl != SAMPLES_HOME}
+              <span style="color:grey">&nbsp | &nbsp</span>
+              <a href="{window.location.origin + window.location.pathname}">Show all collections</a>
+            {/if}
+          </div>
       </h3>
 
       <div class="textInputWrapper">
