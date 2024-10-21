@@ -15,3 +15,5 @@ Crick,https://radosgw.public.os.wwu.de/n4bi-wp1/challenge/crick.csv
 NFDI4BIOIMAGE,https://radosgw.public.os.wwu.de/n4bi-wp1/challenge/n4bi.csv
 
 University of Muenster / NFDI4Bioimage,https://raw.githubusercontent.com/JensWendt/ome2024-ngff-challenge/refs/heads/main/samples/uni_muenster_samples.csv
+
+SSBD,https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/samples_viewer/samples/ssbd_samples.csv
