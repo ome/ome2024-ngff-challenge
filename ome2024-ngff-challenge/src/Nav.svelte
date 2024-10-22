@@ -8,7 +8,7 @@
   <a href="/"><h2>2024 NGFF Challenge</h2></a>
   <div style="flex: 1"></div>
 
-  <a href="/about/"> About </a>
+  <a href="about/"> About </a>
   <a class="github" title="Open in GitHub" target="_blank" href="https://github.com/ome/ome2024-ngff-challenge/">
     <img alt="GitHub Logo" src={githubLogo} />
   </a>
