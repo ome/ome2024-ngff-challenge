@@ -4,7 +4,7 @@ import idrLogo from "/idr-mark.svg";
 import nfdi4bioimage from "/nfdi4bioimage.png";
 
 export const SAMPLES_HOME =
-  "https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/ngff_samples.csv";
+  "https://raw.githubusercontent.com/ome/ome2024-ngff-challenge/main/samples/ngff_samples.csv";
 
 // Map of source to favicon domain
 let faviconDomains = {
