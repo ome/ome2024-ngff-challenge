@@ -1,18 +1,18 @@
 import { writable, get } from "svelte/store";
-import { range } from "./util.js";
+import { organismStore, imagingModalityStore } from "./ontologyStore";
+import { range, getRandomInt } from "./util.js";
 const BATCH_SIZE = 5;
 
-async function loadMultiscales(url) {
-  let zarrData = await fetch(`${url}/zarr.json`)
+export async function loadMultiscales(url, signal) {
+  // return the json data that includes multiscales
+  let zarrData = await fetch(`${url}/zarr.json`, { signal })
     .then((response) => {
-      console.log("loadMultiscales response", response.status);
       if (response.status === 404) {
         throw new Error(`${url}/zarr.json not found`);
       }
       return response.json();
     })
     .catch((error) => {
-      console.log(`----> Failed to load ${url}/zarr.json`, error);
       return [undefined, url];
     });
 
@@ -21,7 +21,7 @@ async function loadMultiscales(url) {
     return [undefined, url];
   }
   if (attributes.multiscales) {
-    return [attributes.multiscales, url];
+    return [attributes, url];
   } else if (attributes.plate) {
     let well = attributes.plate.wells[0];
     // assume the first image in the well is under "/0"
@@ -35,28 +35,163 @@ async function loadMultiscales(url) {
 }
 
 class NgffTable {
-  constructor() {
+  constructor(sortBy = "index", sortAscending = true) {
     this.store = writable([]);
+    this.selectedRow = writable(null);
+
+    this.sortColumn = sortBy;
+    this.sortAscending = sortAscending;
+
+    // [{source: "uni1",
+    //  url: "http://...csv",
+    //  image_count: 10,
+    //  "child_csv": [{source: "uni2", url: "http://...csv"}]}
+    // ]
+    this.csvFiles = [];
+  }
+
+  getCsvSourceList(sourceName) {
+    let child;
+    if (!sourceName) {
+      child = this.csvFiles[0];
+    } else {
+      for (let csv of this.csvFiles) {
+        if (csv.source === sourceName) {
+          child = csv;
+          break;
+        }
+        for (let childCsv of csv.child_csv) {
+          if (childCsv.source === sourceName) {
+            child = childCsv;
+            break;
+          }
+          for (let grandchildCsv of childCsv.child_csv) {
+            if (grandchildCsv.source === sourceName) {
+              child = grandchildCsv;
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (!child) {
+      return [];
+    }
+    // lets summarise the image_count for each source
+    let children = child.child_csv.map((src) => {
+      let image_count = src.image_count || 0;
+      let plate_count = src.plate_count || 0;
+      let bytes = src.bytes || 0;
+      for (let grandchild of src.child_csv) {
+        // not recursive but OK for now
+        image_count += grandchild.image_count || 0;
+        plate_count += grandchild.plate_count || 0;
+        bytes += grandchild.bytes || 0;
+      }
+      return { ...src, image_count, plate_count, bytes };
+    });
+    return children;
+  }
+
+  addCsv(csvUrl, childCsvRows, image_count, plate_count, bytes) {
+    // childCsvRows is [{source: "uni2", url: "http://...csv"}]
+    // make shallow copy of childCsvRows
+    childCsvRows = childCsvRows.map((row) => ({ ...row, child_csv: [] }));
+    // find the child_csv with the same url
+    let child;
+    for (let csv of this.csvFiles) {
+      if (csv.url === csvUrl) {
+        child = csv;
+        break;
+      }
+      for (let childCsv of csv.child_csv) {
+        if (childCsv.url === csvUrl) {
+          child = childCsv;
+          break;
+        }
+        for (let grandchildCsv of childCsv.child_csv) {
+          if (grandchildCsv.url === csvUrl) {
+            child = grandchildCsv;
+            break;
+          }
+        }
+      }
+    }
+    if (child) {
+      // add to the existing child
+      child.image_count = image_count;
+      child.plate_count = plate_count;
+      child.bytes = bytes;
+      child.child_csv = childCsvRows;
+    } else {
+      child = {
+        url: csvUrl,
+        image_count,
+        plate_count,
+        bytes,
+        child_csv: childCsvRows,
+      };
+      this.csvFiles.push(child);
+    }
   }
 
   addRows(rows) {
     // Each row is a dict {"url": "http...zarr"}
+    rows = rows.map((row, index) => {
+      // Validating csv files don't contain whitespaces
+      // Object.entries(row).forEach(([key, value]) => {
+      //   if (value?.startsWith && (value.startsWith(" ") || value?.endsWith(" ")) || (key && key.startsWith(" ") || key.endsWith(" "))) {
+      //     console.log("whitespace", row.url, key, value);
+      //   }
+      // });
+
+      if (row.written) {
+        row.written = parseFloat(row.written);
+      }
+      if (row.shape) {
+        let shape = row.shape.split(",").map((dim) => parseInt(dim));
+        let dim_names;
+        if (row.dimension_names) {
+          // e.g "t,c,z,y,x"
+          dim_names = row.dimension_names.split(",");
+        } else if (shape.length == 5) {
+          dim_names = ["t", "c", "z", "y", "x"];
+        }
+        if (dim_names && dim_names.length == shape.length) {
+          dim_names.forEach((dim, idx) => (row["size_" + dim] = shape[idx]));
+        }
+        // count the number of dimensions with size > 1
+        row.dim_count = shape.reduce(
+          (prev, curr) => prev + (curr > 1 ? 1 : 0),
+          0,
+        );
+      }
+      if (row.chunks) {
+        let chunks = row.chunks.split(",").map((dim) => parseInt(dim));
+        row.chunk_pixels = chunks.reduce((prev, curr) => prev * curr, 1);
+      }
+      if (row.shards) {
+        let shards = row.shards.split(",").map((dim) => parseInt(dim));
+        row.shard_pixels = shards.reduce((prev, curr) => prev * curr, 1);
+      }
+      // add index for sorting
+      row.index = Math.random() * (1 + index);
+      return row;
+    });
+
+    console.log("Adding rows", rows);
+
     this.store.update((table) => {
       table.push(...rows);
-      // Load metadata for each row - 5 at a time
-      async function loadMetadata(rows) {
-        for (let i = 0; i < rows.length; i = i + BATCH_SIZE) {
-          let promises = range(i, Math.min(i + BATCH_SIZE, rows.length)).map(
-            (j) => {
-              return this.loadNgffMetadata(rows[j].url);
-            },
-          );
-          await Promise.all(promises);
-        }
-      }
-      loadMetadata.bind(this)(rows);
+      table.sort((a, b) => this.compareRows(a, b, true));
       return table;
     });
+
+    let organismIds = rows.map((row) => row.organismId);
+    organismStore.addTerms(organismIds);
+
+    let fbbiIds = rows.map((row) => row.fbbiId);
+    imagingModalityStore.addTerms(fbbiIds);
   }
 
   populateRow(zarrUrl, rowValues) {
@@ -64,7 +199,6 @@ class NgffTable {
       table = table.map((row) => {
         if (row.url === zarrUrl) {
           row = { ...row, ...rowValues };
-          console.log("populateRow", rowValues, row);
         }
         return row;
       });
@@ -123,37 +257,37 @@ class NgffTable {
     });
   }
 
-  async loadRocrateJson(zarrUrl) {
-    await fetch(`${zarrUrl}/ro-crate-metadata.json`)
-      .then((response) => {
-        console.log("loadMultiscales response", response.status);
-        if (response.status === 404) {
-          throw new Error(`${zarrUrl}/ro-crate-metadata.json not found`);
-        }
-        return response.json();
-      })
-      .then((jsonData) => {
-        // parse ro-crate json...
-        let biosample = jsonData["@graph"].find(
-          (item) => item["@type"] === "biosample",
-        );
-        let organism_id = biosample?.organism_classification?.["@id"];
-        let image_acquisition = jsonData["@graph"].find(
-          (item) => item["@type"] === "image_acquisition",
-        );
-        let fbbi_id = image_acquisition?.fbbi_id?.["@id"];
+  // async loadRocrateJson(zarrUrl) {
+  //   await fetch(`${zarrUrl}/ro-crate-metadata.json`)
+  //     .then((response) => {
+  //       console.log("loadMultiscales response", response.status);
+  //       if (response.status === 404) {
+  //         throw new Error(`${zarrUrl}/ro-crate-metadata.json not found`);
+  //       }
+  //       return response.json();
+  //     })
+  //     .then((jsonData) => {
+  //       // parse ro-crate json...
+  //       let biosample = jsonData["@graph"].find(
+  //         (item) => item["@type"] === "biosample",
+  //       );
+  //       let organism_id = biosample?.organism_classification?.["@id"];
+  //       let image_acquisition = jsonData["@graph"].find(
+  //         (item) => item["@type"] === "image_acquisition",
+  //       );
+  //       let fbbi_id = image_acquisition?.fbbi_id?.["@id"];
 
-        // I guess we could store more JSON data in the table, but let's keep columns to strings/IDs for now...
-        this.populateRow(zarrUrl, {
-          organism_id,
-          fbbi_id,
-          rocrate_loaded: true,
-        });
-      })
-      .catch((error) => {
-        console.log("Failed to load ro-crate-metadata.json", error);
-      });
-  }
+  //       // I guess we could store more JSON data in the table, but let's keep columns to strings/IDs for now...
+  //       this.populateRow(zarrUrl, {
+  //         organism_id,
+  //         fbbi_id,
+  //         rocrate_loaded: true,
+  //       });
+  //     })
+  //     .catch((error) => {
+  //       console.log("Failed to load ro-crate-metadata.json", error);
+  //     });
+  // }
 
   async loadRocrateJsonAllRows() {
     let rows = get(this.store);
@@ -167,9 +301,26 @@ class NgffTable {
     }
   }
 
-  compareRows(a, b) {
+  compareRows(a, b, isNumber = false) {
     let aVal = a[this.sortColumn];
     let bVal = b[this.sortColumn];
+
+    // Handle number...
+    if (isNumber) {
+      if (aVal === undefined) {
+        aVal = 0;
+      }
+      if (bVal === undefined) {
+        bVal = 0;
+      }
+      if (aVal < bVal) {
+        return this.sortAscending ? -1 : 1;
+      } else if (aVal > bVal) {
+        return this.sortAscending ? 1 : -1;
+      }
+      return 0;
+    }
+
     if (aVal === undefined) {
       aVal = "";
     }
@@ -179,7 +330,7 @@ class NgffTable {
 
     let comp = 0;
     // TODO: handle specific column names, e.g. shape
-    if (typeof aVal === "number") {
+    if (isNumber) {
       comp = aVal - bVal;
     } else {
       comp = aVal.localeCompare(bVal);
@@ -188,12 +339,25 @@ class NgffTable {
   }
 
   sortTable(colName, ascending = true) {
+    console.log("sortTable", colName, ascending);
     this.sortColumn = colName;
     this.sortAscending = ascending;
+    let isNumber = this.isColumnNumeric(colName);
     this.store.update((table) => {
-      table.sort((a, b) => this.compareRows(a, b));
+      table.sort((a, b) => this.compareRows(a, b, isNumber));
       return table;
     });
+  }
+
+  isColumnNumeric(colName) {
+    // return true if first non-empty value is a number
+    let rows = get(this.store);
+    for (let row of rows) {
+      let val = row[colName];
+      if (val !== undefined && val !== "") {
+        return !isNaN(val);
+      }
+    }
   }
 
   emptyTable() {
@@ -202,6 +366,22 @@ class NgffTable {
 
   subscribe(run) {
     return this.store.subscribe(run);
+  }
+
+  getRows() {
+    return get(this.store);
+  }
+
+  getRow(index) {
+    return get(this.store)[index];
+  }
+
+  subscribeSelectedRow(run) {
+    return this.selectedRow.subscribe(run);
+  }
+
+  setSelectedRow(rowData) {
+    this.selectedRow.set(rowData);
   }
 }
 

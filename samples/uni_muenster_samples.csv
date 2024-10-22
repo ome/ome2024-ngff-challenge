@@ -1,18 +1,18 @@
-﻿url,written,written_human_readable
-https://radosgw.public.os2.wwu.de/ngff/WSI_resaved.zarr/,498120172966,463.91 GB
-https://radosgw.public.os2.wwu.de/ngff/1904_resaved.zarr/,4221870813,3.93 GB
-https://radosgw.public.os2.wwu.de/ngff/1905_resaved.zarr/,2438301998,2.27 GB
-https://radosgw.public.os2.wwu.de/ngff/1906_resaved.zarr/,2570062064,2.39 GB
-https://radosgw.public.os2.wwu.de/ngff/1907_resaved.zarr/,1323898847,1.23 GB
-https://radosgw.public.os2.wwu.de/ngff/1908_resaved.zarr/,8665647682,8.07 GB
-https://radosgw.public.os2.wwu.de/ngff/1909_resaved.zarr/,1052266620,1 GB
-https://radosgw.public.os2.wwu.de/ngff/1910_resaved.zarr/,1239241414,1.15 GB
-https://radosgw.public.os2.wwu.de/ngff/1911_resaved.zarr/,1176435434,1.10 GB
-https://radosgw.public.os2.wwu.de/ngff/1912_resaved.zarr/,1159752973,1.08 GB
-https://radosgw.public.os2.wwu.de/ngff/1913_resaved.zarr/,1145470070,1.07 GB
-https://radosgw.public.os2.wwu.de/ngff/1914_resaved.zarr/,1145918231,1.07 GB
-https://radosgw.public.os2.wwu.de/ngff/1915_resaved.zarr/,1141676275,1.06 GB
-https://radosgw.public.os2.wwu.de/ngff/1916_resaved.zarr/,1048493572,1 GB
-https://radosgw.public.os2.wwu.de/ngff/1917_resaved.zarr/,4575927026,4.26 GB
-https://radosgw.public.os2.wwu.de/ngff/1918_resaved.zarr/,1145717119,1.07 GB
-https://radosgw.public.os2.wwu.de/ngff/1919_resaved.zarr/,1144491226,1.07 GB
+url,written,written_human_readable,shape,shards,chunks,dimension_names,license,name,description,organismId,fbbiId
+https://radosgw.public.os2.wwu.de/ngff/WSI_resaved.zarr,498120172966,463.91 GB,"1,3,1,244215,522693","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,Burkhard Kasper,"Historical whole slide scan of focal cortical dysplasia (FCD) Type II, HE staining",NCBI:txid9606,FBbi:00000243
+https://radosgw.public.os2.wwu.de/ngff/1904_resaved.zarr,4221870813,3.93 GB,"2,2048,2048","2,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,"Training Set for NonPunctate Classes (Vacuolar membrane, Nucleus, Nucleolus, Nuclear periphery, Mitochondria, Eisosomes, Cell periphery, Cytosol, Vacuole, ER, Bud neck, Bud tip",NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1905_resaved.zarr,2438301998,2.27 GB,"2,2048,2048","2,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,MiniLib_normal_Punctate_Training_1,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1906_resaved.zarr,2570062064,2.39 GB,"2,2048,2048","2,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,MiniLib_normal_Punctate_Training_2,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1907_resaved.zarr,1323898847,1.23 GB,"2,2048,2048","2,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,MiniLib_normal_Punctate_Training_3,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1908_resaved.zarr,8665647682,8.07 GB,"2,2048,2048","2,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,MiniLib_highDilution_NonPunctate_Training,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1909_resaved.zarr,1052266620,1 GB,"2,2048,2048","2,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,MiniLib_highDilution_Punctate_Training,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1910_resaved.zarr,1239241414,1.15 GB,"9,2048,2048","9,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,Instance Training,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1911_resaved.zarr,1176435434,1.10 GB,"7,2048,2048","7,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,Instance_training_highDilution,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1912_resaved.zarr,1159752973,1.08 GB,"4,2048,2048","4,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,Instance_training_highAndLowDilution,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1913_resaved.zarr,1145470070,1.07 GB,"3,2048,2048","3,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,Punctate_Classification,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1914_resaved.zarr,1145918231,1.07 GB,"3,2048,2048","3,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,NonPunctate_with_Punctate,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1915_resaved.zarr,1141676275,1.06 GB,"3,2048,2048","3,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,Punctate_with_NonPunctate,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1916_resaved.zarr,1048493572,1 GB,"2,2048,2048","2,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,MiniLib_lowIllumation_Punctate_Training,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1917_resaved.zarr,4575927026,4.26 GB,"2,2048,2048","2,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,MiniLib_lowIllumination_NonPunctate_Training,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1918_resaved.zarr,1145717119,1.07 GB,"3,2048,2048","3,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,NonPunctate_lowIllumination,NCBI:txid4932,obo:FBbi:00000246
+https://radosgw.public.os2.wwu.de/ngff/1919_resaved.zarr,1144491226,1.07 GB,"3,2048,2048","3,2048,2048","1,1024,1024","c,y,x",https://creativecommons.org/licenses/by-nc/4.0/,Maria Bohnert,Punctate_lowIllumination,NCBI:txid4932,obo:FBbi:00000246

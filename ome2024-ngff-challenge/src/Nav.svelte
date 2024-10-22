@@ -1,31 +1,40 @@
-
 <script>
-  import omeMainNav from "/ome-main-nav.svg"
+  import omeMainNav from "/ome-main-nav.svg";
+  import githubLogo from "/github-mark-white.svg";
+  let base = import.meta.env.BASE_URL;
 
+  console.log('Nav base', base);
 </script>
 
-<nav>
-  <img style="height: 30px" alt="OME Logo" src={omeMainNav} />
-  <h2>2024 NGFF Challenge</h2>
+<!-- base element used to define relative links -->
+<base href="{base}" />
 
-  <ul>
-    <li>
-      <a href="https://github.com/ome/ome2024-ngff-challenge/" target="_blank">
-        About
-    </li>
-  </ul>
+<nav>
+  <a class="logolink" href="{base}"><img alt="OME Logo" src={omeMainNav} /></a>
+  <a href="{base}"><h2>2024 NGFF Challenge</h2></a>
+  <div style="flex: 1"></div>
+
+  <a href="about/"> About </a>
+  <a class="github" title="Open in GitHub" target="_blank" href="https://github.com/ome/ome2024-ngff-challenge/">
+    <img alt="GitHub Logo" src={githubLogo} />
+  </a>
 </nav>
 
 <style>
   nav {
-    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
     display: flex;
     flex-direction: row;
     margin: 0;
     padding: 5px 15px;
     background-color: #202428;
-    z-index: 10;
+    z-index: 20;
     align-items: center;
+    box-sizing: border-box;
+    flex: auto 0 0;
+    gap: 5px;
   }
 
   h2 {
@@ -33,25 +42,18 @@
     font-weight: 300;
     margin: 5px 15px;
   }
-
-  ul {
-    list-style: none;
-    color: white;
-    position: absolute;
-    right: 0;
-    top: 0;
-    margin: 10px 15px;
-  }
-
-  li {
-    float: right;
-    list-style-type: none;
-    margin: 0 10px;
-  }
   a {
     color: white;
     text-decoration: none;
-    line-height: 2.3;
+    display: block;
   }
-
+  .logolink, img {
+    height: 30px;
+  }
+  .github img, .github {
+    height: 20px;
+  }
+  .github {
+    margin: 0 10px;
+  }
 </style>

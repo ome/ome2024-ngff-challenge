@@ -1,30 +1,27 @@
 <script>
-  export let col_name;
-  export let col_label;
-  export let handleSort;
-  export let sortedBy;
+  export let toggleAscending;
   export let sortAscending;
 </script>
 
-<button on:click={() => handleSort(col_name)}>
-  {col_label}
-
-  <span class="acc" class:strong={sortedBy==col_name && sortAscending}>^</span>
-  <span class="dec" class:strong={sortedBy==col_name && !sortAscending}>^</span>
-
+<button on:click={() => toggleAscending()}>
+  <span class="acc" class:strong={sortAscending}>^</span>
+  <span class="dec" class:strong={!sortAscending}>^</span>
 </button>
 
 <style>
   button {
-    background-color: transparent;
-    border:none;
+    background-color: var(--light-background);
+    border: solid var(--border-color) 1px;
+    border-radius: 5px;
     text-wrap: none;
     white-space: nowrap;
     position: relative;
-    padding-right: 20px;
-    padding-left: 5px;
+    padding: 9px 10px 11px 10px;
     outline: none;
+    margin: 0;
+    height: 35px;
   }
+
   button:focus-visible {
    outline: 4px solid gold;
 }

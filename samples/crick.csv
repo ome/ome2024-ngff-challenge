@@ -1,0 +1,2 @@
+url,written,written_human_readable,origin,shape,shards,chunks,dimension_names,license,name,description,organismId,fbbiId
+https://radosgw.public.os.wwu.de/n4bi-wp1/challenge/crick/EM04534_04_dU_SBF_8bits_aligned_z4-136_7-7-50nm_v3.zarr,10785929889.0,10.8 GB,https://www.ebi.ac.uk/empiar/EMPIAR-11666/,"1,1,133,9845,10717","1,1,1,2048,2048","1,1,1,1024,1024","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,Benchmark SBF SEM data of HeLa cells,,NCBI:txid9606,obo:FBbi_00000585

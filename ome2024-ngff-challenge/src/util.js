@@ -1,10 +1,41 @@
 import Papa from "papaparse";
 
-export const SAMPLES_HOME =
-  "https://raw.githubusercontent.com/ome/ome2024-ngff-challenge/refs/heads/main/samples/ngff_samples.csv";
+import idrLogo from "/idr-mark.svg";
+import nfdi4bioimage from "/nfdi4bioimage.png";
 
-export function loadCsv(csvUrl, ngffTable, parentRow = {}, childCount) {
-  csvUrl = csvUrl + "?_=" + Date.now(); // prevent caching
+export const SAMPLES_HOME =
+  "https://raw.githubusercontent.com/will-moore/ome2024-ngff-challenge/hierarchy_browser/samples/ngff_samples.csv";
+
+// Map of source to favicon domain
+let faviconDomains = {
+  IDR: "https://idr.openmicroscopy.org",
+  Webknossos: "https://scalableminds.com",
+  JAX: "http://jax.org",
+  "BioImage Archive": "https://www.ebi.ac.uk",
+  Crick: "https://www.crick.ac.uk/",
+  // Several sources from NFDI4Bioimage
+  "University of Muenster": "https://nfdi4bioimage.de/",
+  Göttingen: "https://nfdi4bioimage.de/",
+  Jülich: "https://nfdi4bioimage.de/",
+  NFDI4BIOIMAGE: "https://nfdi4bioimage.de/",
+};
+
+export function getSourceIcon(source) {
+  if (source === "IDR") {
+    return idrLogo;
+  }
+  let domain = faviconDomains[source];
+  if (!domain) {
+    return null;
+  }
+  if (domain === "https://nfdi4bioimage.de/") {
+    return nfdi4bioimage;
+  }
+  return `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${domain}&size=24`;
+}
+
+export function loadCsv(csvUrl, ngffTable, parentRow = {}) {
+  // csvUrl = csvUrl + "?_=" + Date.now(); // prevent caching
   Papa.parse(csvUrl, {
     header: false,
     download: true,
@@ -41,31 +72,36 @@ export function loadCsv(csvUrl, ngffTable, parentRow = {}, childCount) {
       });
       zarrUrlRows = Object.values(zarrRowsByUrl);
 
-      // limit number of Zarrs to load
-      if (childCount) {
-        let childRowCount = zarrUrlRows.length;
-        let totalWritten = zarrUrlRows.reduce((acc, row) => {
-          return acc + parseInt(row["written"]) || 0;
-        }, 0);
-        // add the original row count to the remaining row(s)
-        zarrUrlRows = zarrUrlRows.slice(0, childCount).map((row) => {
-          return {
-            ...row,
-            csv_row_count: childRowCount,
-            written: totalWritten,
-          };
-        });
-      }
-      ngffTable.addRows(zarrUrlRows);
-
       // recursively load child CSVs
       let childCsvRows = dataRows.filter((row) => row["url"]?.includes(".csv"));
+
+      // register the csv in our hierarchy
+      let plate_count = zarrUrlRows.reduce(
+        (acc, row) => (row["wells"] ? acc + 1 : acc),
+        0,
+      );
+      let bytes = zarrUrlRows.reduce(
+        (acc, row) => acc + parseInt(row["written"] || 0),
+        0,
+      );
+      let image_count = zarrUrlRows.length;
+      if (plate_count > 0) {
+        image_count = zarrUrlRows.reduce(
+          (acc, row) => acc + parseInt(row["images"] || 1),
+          0,
+        );
+      }
+      ngffTable.addCsv(csvUrl, childCsvRows, image_count, plate_count, bytes);
+
+      // add rows to the table - parsing strings to numbers etc...
+      ngffTable.addRows(zarrUrlRows);
+
       childCsvRows.forEach((childCsvRow) => {
         let csvUrl = childCsvRow["url"];
-        childCsvRow["url"] = undefined;
+        // childCsvRow["url"] = undefined;
         childCsvRow["csv"] = csvUrl;
         // Only load a single child CSV
-        loadCsv(csvUrl, ngffTable, childCsvRow, 1);
+        loadCsv(csvUrl, ngffTable, childCsvRow);
       });
     },
   });
@@ -73,6 +109,10 @@ export function loadCsv(csvUrl, ngffTable, parentRow = {}, childCount) {
 
 export async function getJson(url) {
   return await fetch(url).then((rsp) => rsp.json());
+}
+
+export function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
 }
 
 export async function lookupOrganism(taxonId) {
@@ -139,8 +179,9 @@ export function renderTo8bitArray(ndChunks, minMaxValues, colors) {
   }
 
   // let rgb = [255, 255, 255];
+  let start = performance.now();
 
-  const rgba = new Uint8ClampedArray(4 * height * width).fill(0);
+  let rgba = new Uint8ClampedArray(4 * height * width).fill(0);
   let offset = 0;
   for (let y = 0; y < pixels; y++) {
     for (let p = 0; p < ndChunks.length; p++) {
@@ -160,7 +201,45 @@ export function renderTo8bitArray(ndChunks, minMaxValues, colors) {
     rgba[offset * 4 + 3] = 255; // alpha
     offset += 1;
   }
+  // if iterating pixels is fast, check histogram and boost contrast if needed
+  // Thumbnails are less than 5 millisecs. 512x512 is 10-20 millisecs.
+  if (performance.now() - start < 100) {
+    let hist = getHistogram(rgba, 5);
+    if (hist[4] < 1) {
+      // If few pixels in top bin, boost contrast
+      rgba = boostContrast(rgba, 2);
+    }
+  }
   return rgba;
+}
+
+function boostContrast(rgba, factor) {
+  // Increase contrast by factor
+  for (let pixel = 0; pixel < rgba.length / 4; pixel++) {
+    for (let i = 0; i < 3; i++) {
+      let v = rgba[pixel * 4 + i];
+      v = Math.min(255, v * factor);
+      rgba[pixel * 4 + i] = v;
+    }
+  }
+  return rgba;
+}
+
+function getHistogram(uint8array, bins = 5) {
+  // Create histogram from uint8array
+  let hist = new Array(bins).fill(0);
+  const binSize = 256 / bins;
+  let pixelCount = uint8array.length / 4;
+  for (let i = 0; i < pixelCount; i++) {
+    let maxV = uint8array[i * 4];
+    maxV = Math.max(uint8array[i * 4 + 1], maxV);
+    maxV = Math.max(uint8array[i * 4 + 2], maxV);
+    let bin = Math.floor(maxV / binSize);
+    hist[bin] += 1;
+  }
+  // Normalize
+  hist = hist.map((v) => (100 * v) / pixelCount);
+  return hist;
 }
 
 export function getMinMaxValues(chunk2d) {
