@@ -39,6 +39,22 @@
   }
 
   function formatUrlToName(url) {
+    if (textFilter && url.toLowerCase().includes(textFilter.toLowerCase())) {
+      const MAX_LENGTH = 50;
+      // find first occurrence of textFilter in url and highlight it
+      let urlLc = url.toLowerCase();
+      let filterLc = textFilter.toLowerCase();
+      let startMatch = urlLc.indexOf(filterLc);
+      // let endMatch = start + filterLc.length;
+      let start = Math.max(0, Math.min(startMatch, url.length - MAX_LENGTH));
+
+      let result = url.substring(start, startMatch);
+      result += "<mark>";
+      result += url.substring(startMatch, startMatch + filterLc.length);
+      result += "</mark>";
+      result += url.substring(startMatch + filterLc.length);
+      return result;
+    }
     return url.split("/").pop();
   }
 
@@ -69,7 +85,7 @@
     {/if}
   </div>
   <div>
-    <div><strong>{formatUrlToName(rowData.url)}</strong></div>
+    <div title="{rowData.url}"><strong>{@html formatUrlToName(rowData.url)}</strong></div>
     <div class={textFilter == "" ? "hideOnSmall" : ""}>
       <!-- If we're not filtering by text (name/description) then hide the name on small screen -->
       {@html rowData.name ? rowData.name.replaceAll(textFilter, `<mark>${textFilter}</mark>`) : ""}

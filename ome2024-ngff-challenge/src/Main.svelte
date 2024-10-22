@@ -119,6 +119,7 @@
       let txt = textFilter.toLowerCase();
       rows = rows.filter((row) => {
         return (
+          row.url.toLowerCase().includes(txt) ||
           row.description?.toLowerCase().includes(txt) ||
           row.name?.toLowerCase().includes(txt)
         );
