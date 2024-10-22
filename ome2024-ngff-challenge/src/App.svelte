@@ -11,16 +11,11 @@
 <div class="app">
   <Nav />
 
-{#if pathname === "/"}
-  <Main />
-{:else if pathname === "/about/"}
-  <About />
-{:else}
-  <div>
-    <h1>404</h1>
-    <p>Page not found</p>
-  </div>
-{/if}
+  {#if pathname.endsWith("/about/")}
+    <About />
+  {:else}
+    <Main />
+  {/if}
 
 </div>
 
