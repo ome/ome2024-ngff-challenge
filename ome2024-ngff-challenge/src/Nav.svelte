@@ -1,11 +1,17 @@
 <script>
   import omeMainNav from "/ome-main-nav.svg";
   import githubLogo from "/github-mark-white.svg";
+  let base = import.meta.env.BASE_URL;
+
+  console.log('Nav base', base);
 </script>
 
+<!-- base element used to define relative links -->
+<base href="{base}" />
+
 <nav>
-  <a class="logolink" href="/"><img alt="OME Logo" src={omeMainNav} /></a>
-  <a href="/"><h2>2024 NGFF Challenge</h2></a>
+  <a class="logolink" href="{base}"><img alt="OME Logo" src={omeMainNav} /></a>
+  <a href="{base}"><h2>2024 NGFF Challenge</h2></a>
   <div style="flex: 1"></div>
 
   <a href="about/"> About </a>

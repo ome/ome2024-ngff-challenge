@@ -4,16 +4,10 @@
   import Nav from "./Nav.svelte";
   import About from "./About.svelte";
 
-  let base = import.meta.env.BASE_URL;
-
-  console.log('base', base);
-
   let pathname = window.location.pathname;
 </script>
 
 <div class="app">
-  <!-- base element used to define relative links -->
-  <base href="{base}" />
 
   <Nav />
 
