@@ -1,11 +1,10 @@
-url,written,written_human_readable
-https://radosgw.public.os.wwu.de/ta3-bucket/150715_DBE_Drosi_CherryCAAX_nSybGal4/L3_nsybG4xcherryCAAXmerged.ims.zarr,2217337815,2.1G
-https://radosgw.public.os.wwu.de/ta3-bucket/150421_DBE_L3_C155xCherryDlgS97/stiched_1.ims.zarr,4846235826,4.6G
-https://radosgw.public.os.wwu.de/ta3-bucket/2014_07_04_Drosi_hole_larve_GFP/Larve_2_20x095_Z1_4096_BAPP_with_cslip.lif.zarr,1631354605,1.6G
-https://radosgw.public.os.wwu.de/ta3-bucket/2014_07_04_Drosi_hole_larve_GFP/Larve_2_20x095_Z2_2048_BAPP_wo_cslip.lif.zarr,1127129565,1.1G
-https://radosgw.public.os.wwu.de/ta3-bucket/150709_DBE_Drosi_CherryCAAX_OK371/DBE_Drosi_L3_OK371xcherryCAAX_merged.ims.zarr,5541964433,5.2G
-https://radosgw.public.os.wwu.de/ta3-bucket/140721_Drosi_whole_larve_BABB/Drosi_holeLarve_20x095_2048_Z1.lif.zarr,29151733841,28G
-https://radosgw.public.os.wwu.de/ta3-bucket/Larvae_2_10x_Z1_25_2048.lif.zarr,9860876320,9.2G
-https://radosgw.public.os.wwu.de/ta3-bucket/Drosi_Larvae_Tiles_2.lif.zarr,9731243347,9.1G
-https://radosgw.public.os.wwu.de/ta3-bucket/a114.zarr,37860247330,36G
-https://radosgw.public.os.wwu.de/ta3-bucket/a115.zarr,35816681857,34G
+https://radosgw.public.os.wwu.de/ta3-bucket/150715_DBE_Drosi_CherryCAAX_nSybGal4/L3_nsybG4xcherryCAAXmerged.ims.zarr,2217337815,2.1G,"1,1,707,4127,12497","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,,,NCBI:txid7227,obo:FBbi_00000369
+https://radosgw.public.os.wwu.de/ta3-bucket/150421_DBE_L3_C155xCherryDlgS97/stiched_1.ims.zarr,4846235826,4.6G,"1,2,367,6097,9665","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,dataset name,dataset description,NCBI:txid7227,obo:FBbi_00000369
+https://radosgw.public.os.wwu.de/ta3-bucket/2014_07_04_Drosi_hole_larve_GFP/Larve_2_20x095_Z1_4096_BAPP_with_cslip.lif.zarr,1631354605,1.6G,"1,1,316,4096,4096","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,,,NCBI:txid7227,obo:FBbi_00000369
+https://radosgw.public.os.wwu.de/ta3-bucket/2014_07_04_Drosi_hole_larve_GFP/Larve_2_20x095_Z2_2048_BAPP_wo_cslip.lif.zarr,1127129565,1.1G,"1,2,155,2048,2048","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,,,NCBI:txid7227,obo:FBbi_00000369
+https://radosgw.public.os.wwu.de/ta3-bucket/150709_DBE_Drosi_CherryCAAX_OK371/DBE_Drosi_L3_OK371xcherryCAAX_merged.ims.zarr,5541964433,5.2G,"1,1,701,4224,15308","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,dataset name,dataset description,NCBI:txid7227,obo:FBbi_00000369
+https://radosgw.public.os.wwu.de/ta3-bucket/140721_Drosi_whole_larve_BABB/Drosi_holeLarve_20x095_2048_Z1.lif.zarr,29151733841,28G,"1,1,1,3912,849","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,dataset name,dataset description,NCBI:txid7227,obo:FBbi_00000369
+https://radosgw.public.os.wwu.de/ta3-bucket/Larvae_2_10x_Z1_25_2048.lif.zarr,9860876320,9.2G,"1,1,490,2048,2048","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,,,NCBI:txid7227,obo:FBbi_00000369
+https://radosgw.public.os.wwu.de/ta3-bucket/Drosi_Larvae_Tiles_2.lif.zarr,9731243347,9.1G,"1,1,525,4096,4096","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,,,NCBI:txid7227,obo:FBbi_00000369
+https://radosgw.public.os.wwu.de/ta3-bucket/a114.zarr,37860247330,36G,"1,2,4065,2048,2048","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,Rat brain,Rat brain cleared using 3DISCO protocol and imaged using light sheet microscopy.,obo:NCBITaxon_10117,obo:OBI_0003098
+https://radosgw.public.os.wwu.de/ta3-bucket/a115.zarr,35816681857,34G,"1,2,3996,2048,2048","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,Rat brain,Rat brain cleared using 3DISCO protocol and imaged using light sheet microscopy.,obo:NCBITaxon_10117,obo:OBI_0003098
