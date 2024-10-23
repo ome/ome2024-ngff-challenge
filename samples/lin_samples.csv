@@ -1,3 +1,4 @@
+url,written,written_human_readable,shape,shards,chunks,dimension_names,license,name,description,organismId,fbbiId
 https://radosgw.public.os.wwu.de/ta3-bucket/150715_DBE_Drosi_CherryCAAX_nSybGal4/L3_nsybG4xcherryCAAXmerged.ims.zarr,2217337815,2.1G,"1,1,707,4127,12497","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,,,NCBI:txid7227,obo:FBbi_00000369
 https://radosgw.public.os.wwu.de/ta3-bucket/150421_DBE_L3_C155xCherryDlgS97/stiched_1.ims.zarr,4846235826,4.6G,"1,2,367,6097,9665","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,dataset name,dataset description,NCBI:txid7227,obo:FBbi_00000369
 https://radosgw.public.os.wwu.de/ta3-bucket/2014_07_04_Drosi_hole_larve_GFP/Larve_2_20x095_Z1_4096_BAPP_with_cslip.lif.zarr,1631354605,1.6G,"1,1,316,4096,4096","1,1,1,2048,2048","1,1,1,256,256","t,c,z,y,x",https://creativecommons.org/licenses/by/4.0/,,,NCBI:txid7227,obo:FBbi_00000369
