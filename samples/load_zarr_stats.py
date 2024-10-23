@@ -181,6 +181,7 @@ parser.add_argument("csv_name", help="csv file to process")
 args = parser.parse_args()
 
 csv_name = args.csv_name
+temp_csv = csv_name.replace(".csv", "_temp.csv")
 output_csv = csv_name.replace(".csv", "_output.csv")
 
 column_names = []
@@ -238,7 +239,7 @@ with Path(csv_name).open(newline="") as csvfile:
         column_data.append(row)
 
         # in case script fails mid-way, we write as we go...
-        with Path(output_csv).open("a", newline="") as outfile:
+        with Path(temp_csv).open("a", newline="") as outfile:
             csvwriter = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
             csvwriter.writerow(row)
 
@@ -257,8 +258,9 @@ if "license" not in column_names:
         "fbbiId",
     ]
 
-with Path(output_csv).open("a", newline="") as csvfile:
+# write the final output csv file...
+with Path(output_csv).open("w", newline="") as csvfile:
     csvwriter = csv.writer(csvfile, delimiter=",", quoting=csv.QUOTE_MINIMAL)
-    # csvwriter.writerow(column_names)
-    # for row in column_data:
-    #     csvwriter.writerow(row)
+    csvwriter.writerow(column_names)
+    for row in column_data:
+        csvwriter.writerow(row)
