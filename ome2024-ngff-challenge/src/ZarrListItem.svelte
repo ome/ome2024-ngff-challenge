@@ -104,7 +104,7 @@
     <div>
       Open in <a
       title="Open in Validator: {rowData.url}"
-      href="https://deploy-preview-36--ome-ngff-validator.netlify.app/?source={rowData.url}"
+      href="https://will-moore.github.io/ome-ngff-validator/?source={rowData.url}"
       target="_blank"
       >OME-Validator.
     </a>
