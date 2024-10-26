@@ -444,9 +444,9 @@
 
   .sources {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 5px;
-    max-width: 1200px;
+    max-width: 1330px;
     margin: 0 auto;
   }
   .filters {

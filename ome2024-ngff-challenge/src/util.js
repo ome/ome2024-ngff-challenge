@@ -18,6 +18,7 @@ let faviconDomains = {
   Göttingen: "https://nfdi4bioimage.de/",
   Jülich: "https://nfdi4bioimage.de/",
   NFDI4BIOIMAGE: "https://nfdi4bioimage.de/",
+  RIKEN: "https://www.riken.jp/",
 };
 
 export function getSourceIcon(source) {
