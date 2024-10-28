@@ -62,7 +62,7 @@
     To make the collection as accessible as possible, the
   <a href="https://ome.github.io/ome2024-ngff-challenge">OME-NGFF Challenge Viewer</a>,
     was built which uses a CSV with locations of
-    datasets to enable collection statistics, browsing of thumbnails, and opening 
+    datasets to enable collection statistics, browsing of thumbnails, and opening
     the datasets with the OME NGFF Validator, for metadata
     validation and viewing. Please let us know on image.sc or GitHub if you have any issues
     or ideas.
