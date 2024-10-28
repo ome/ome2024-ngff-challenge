@@ -173,8 +173,9 @@
     <div class="summary">
       <h3 style="text-align:center">
         {#if csvUrl == SAMPLES_HOME}
-          In the summer of 2024, the OME-NGFF project generated
-          <strong style="font-weight:600">{filesizeformat(totalBytes)}</strong> of data in Zarr v3 format
+          The OME-NGFF project has collected
+          <strong style="font-weight:600">{filesizeformat(totalBytes)}</strong>
+          of public bioimage data in Zarr v3 format.
           {/if}
           <div style="font-size: 90%">
             Showing Collection:
