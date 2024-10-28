@@ -176,8 +176,7 @@
           <strong style="font-weight:600">{filesizeformat(totalBytes)}</strong>
           of distributedly hosted public bioimage data in the next major version of OME-Zarr,
           based on Zarr v3 with sharding.
-          {/if}
-          <!--
+        {:else}
           <div style="font-size: 90%">
             Showing Collection:
             <a href="{csvUrl}">{csvUrl.split("/").pop()}</a>
@@ -187,7 +186,7 @@
               <a href="{window.location.origin + window.location.pathname}">Show all collections</a>
             {/if}
           </div>
-          -->
+        {/if}
       </h3>
 
       <div class="textInputWrapper">
