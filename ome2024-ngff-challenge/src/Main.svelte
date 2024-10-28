@@ -173,9 +173,11 @@
     <div class="summary">
       <h3 style="text-align:center">
         {#if csvUrl == SAMPLES_HOME}
-          The OME-NGFF project has collected
+          This site makes
           <strong style="font-weight:600">{filesizeformat(totalBytes)}</strong>
-          of public bioimage data in Zarr v3 format.
+          of public bioimage data available in the Zarr v3 format.
+          The OME-NGFF community converted and now hosts
+          this federated collection of the next version OME-Zarr.
           {/if}
           <div style="font-size: 90%">
             Showing Collection:
