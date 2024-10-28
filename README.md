@@ -27,7 +27,7 @@
 Project planning and material repository for the 2024 challenge to generate 1 PB
 of OME-Zarr data.
 
-UPDATE (20th October 2024): The data converted for the challenge can now be
+**UPDATE (20th October 2024)**: The data converted for the challenge can now be
 browsed and searched at
 [https://ome.github.io/ome2024-ngff-challenge/](https://ome.github.io/ome2024-ngff-challenge/).
 
