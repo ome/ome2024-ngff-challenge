@@ -61,10 +61,12 @@
   <p>
     To make the collection as accessible as possible, the
   <a href="https://ome.github.io/ome2024-ngff-challenge">OME-NGFF Challenge Viewer</a>,
-    was built which uses a CSV with locations of
-    datasets to enable collection statistics, browsing of thumbnails, and opening
-    the datasets with the OME NGFF Validator, for metadata
-    validation and viewing. Please let us know on image.sc or GitHub if you have any issues
+    parses submissions from contributors and provides a single view across
+    all Zarr files. Data can be searched by key-word,
+    filtered and sorted by various metadata and browsed with thumbnails,
+    all generated on the fly. Links allow opening of datasets with the OME NGFF
+    Validator for metadata validation and viewing.
+    Please let us know on image.sc or GitHub if you have any issues
     or ideas.
   </p>
   <p>
