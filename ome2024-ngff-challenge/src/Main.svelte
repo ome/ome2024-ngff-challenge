@@ -174,9 +174,8 @@
       <h3 style="text-align:center">
         {#if csvUrl == SAMPLES_HOME}
           <strong style="font-weight:600">{filesizeformat(totalBytes)}</strong>
-          of public bioimage data in the Zarr v3 format.
-          converted and now hosted by the federated OME-NGFF community
-          to demonstrate the next version OME-Zarr.
+          of distributedly hosted public bioimage data in the next major version of OME-Zarr,
+          based on Zarr v3 with sharding.
           {/if}
           <!--
           <div style="font-size: 90%">
