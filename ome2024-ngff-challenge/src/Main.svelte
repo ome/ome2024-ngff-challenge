@@ -173,9 +173,10 @@
     <div class="summary">
       <h3 style="text-align:center">
         {#if csvUrl == SAMPLES_HOME}
-          In the summer of 2024, the OME-NGFF project generated
-          <strong style="font-weight:600">{filesizeformat(totalBytes)}</strong> of data in Zarr v3 format
-          {/if}
+          <strong style="font-weight:600">{filesizeformat(totalBytes)}</strong>
+          of public bioimage data in the next major version of OME-Zarr,
+          including Zarr v3 and sharding, with distributed hosting.
+        {:else}
           <div style="font-size: 90%">
             Showing Collection:
             <a href="{csvUrl}">{csvUrl.split("/").pop()}</a>
@@ -185,6 +186,7 @@
               <a href="{window.location.origin + window.location.pathname}">Show all collections</a>
             {/if}
           </div>
+        {/if}
       </h3>
 
       <div class="textInputWrapper">
