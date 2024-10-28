@@ -70,8 +70,8 @@
   <p>
     Looking back, perhaps the most rewording outcome of the Challenge is that with a remarkably
     modest investment of time and cloud resources, we have almost inadvertently prototyped
-    a federated bioimage data system based on OME-Zarr. To our knowledge, this
-    is the largest federated bioimage data collection ever assembled.
+    a federated bioimage data system based on OME-Zarr, the largest one we know of.
+    We hope future challenges will continue to push the state-of-the-art forward.
   </p>
 </div>
 
