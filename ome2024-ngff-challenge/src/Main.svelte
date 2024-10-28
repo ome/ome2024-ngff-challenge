@@ -174,8 +174,8 @@
       <h3 style="text-align:center">
         {#if csvUrl == SAMPLES_HOME}
           <strong style="font-weight:600">{filesizeformat(totalBytes)}</strong>
-          of federated public bioimage data in the next major version of OME-Zarr,
-          based on Zarr v3 with sharding.
+          of public bioimage data in the next major version of OME-Zarr,
+          including Zarr v3 and sharding, with distributed hosting.
         {:else}
           <div style="font-size: 90%">
             Showing Collection:
