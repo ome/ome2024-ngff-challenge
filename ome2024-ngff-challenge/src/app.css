@@ -64,6 +64,7 @@ body {
     --bg-opacity: 0;
     background: black;
     color: #bbb;
+    --background-color: #222;
     --light-background: #222;
     --border-color: #333;
     --selected-background: #444;
