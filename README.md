@@ -25,7 +25,11 @@
 <!-- prettier-ignore-end -->
 
 Project planning and material repository for the 2024 challenge to generate 1 PB
-of OME-Zarr data
+of OME-Zarr data.
+
+**UPDATE (20th October 2024)**: The data converted for the challenge can now be
+browsed and searched at
+[https://ome.github.io/ome2024-ngff-challenge/](https://ome.github.io/ome2024-ngff-challenge/).
 
 ## Challenge overview
 
@@ -58,30 +62,26 @@ $ mc ls -r uk1anon/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr/
 [2024-08-01 14:24:28 CEST] 2.7KiB STANDARD zarr.json
 ```
 
-The dataset (from idr0062) can be inspected using a development version of the
-OME-NGFF Validator available at
-<https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr>
-
 Other samples:
 
-- [4496763.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/4496763.zarr)
+- [4496763.zarr](https://ome.github.io/ome-ngff-validator/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/4496763.zarr)
   Shape `4,25,2048,2048`, Size `589.81 MB`, from idr0047.
-- [9822152.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0083/9822152.zarr)
+- [9822152.zarr](https://ome.github.io/ome-ngff-validator/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0083/9822152.zarr)
   Shape `1,1,1,93184,144384`, Size `21.57 GB`, from idr0083.
-- [9846151.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0048/9846151.zarr)
+- [9846151.zarr](https://ome.github.io/ome-ngff-validator/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0048/9846151.zarr)
   Shape `1,3,1402,5192,2947`, Size `66.04 GB`, from idr0048.
-- [Week9_090907.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0035/Week9_090907.zarr)
+- [Week9_090907.zarr](https://ome.github.io/ome-ngff-validator/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0035/Week9_090907.zarr)
   plate from idr0035.
-- [l4_sample/color](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://data-humerus.webknossos.org/data/zarr3_experimental/scalable_minds/l4_sample/color)
+- [l4_sample/color](https://ome.github.io/ome-ngff-validator/?source=https://data-humerus.webknossos.org/data/zarr3_experimental/scalable_minds/l4_sample/color)
   from WebKnossos.
 - Plates from idr0090:
-  [190129.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190129.zarr)
+  [190129.zarr](https://ome.github.io/ome-ngff-validator/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190129.zarr)
   Size `1.0 TB`,
-  [190206.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190206.zarr)
+  [190206.zarr](https://ome.github.io/ome-ngff-validator/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190206.zarr)
   Size `485 GB`,
-  [190211.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190211.zarr)
+  [190211.zarr](https://ome.github.io/ome-ngff-validator/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0090/190211.zarr)
   Size `704 GB`.
-- [76-45.zarr](https://deploy-preview-36--ome-ngff-validator.netlify.app/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0010/76-45.zarr)
+- [76-45.zarr](https://ome.github.io/ome-ngff-validator/?source=https://uk1s3.embassy.ebi.ac.uk/idr/share/ome2024-ngff-challenge/idr0010/76-45.zarr)
   plate from idr0010
 
  <details><summary>Expand for more details on creation of these samples</summary>
