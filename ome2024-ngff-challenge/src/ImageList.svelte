@@ -59,6 +59,7 @@
     margin: auto;
     flex: auto 1 1;
     overflow: hidden;
+    background-color: var(--background-color);
   }
 
   .row {

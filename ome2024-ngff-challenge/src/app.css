@@ -14,7 +14,6 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -64,6 +63,7 @@ body {
     --bg-opacity: 0;
     background: black;
     color: #bbb;
+    --background-color: #222;
     --light-background: #222;
     --border-color: #333;
     --selected-background: #444;
