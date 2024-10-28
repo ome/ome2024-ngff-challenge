@@ -173,12 +173,12 @@
     <div class="summary">
       <h3 style="text-align:center">
         {#if csvUrl == SAMPLES_HOME}
-          This site makes
           <strong style="font-weight:600">{filesizeformat(totalBytes)}</strong>
-          of public bioimage data available in the Zarr v3 format.
-          The OME-NGFF community converted and now hosts
-          this federated collection of the next version OME-Zarr.
+          of public bioimage data in the Zarr v3 format.
+          converted and now hosted by the federated OME-NGFF community
+          to demonstrate the next version OME-Zarr.
           {/if}
+          <!--
           <div style="font-size: 90%">
             Showing Collection:
             <a href="{csvUrl}">{csvUrl.split("/").pop()}</a>
@@ -188,6 +188,7 @@
               <a href="{window.location.origin + window.location.pathname}">Show all collections</a>
             {/if}
           </div>
+          -->
       </h3>
 
       <div class="textInputWrapper">
