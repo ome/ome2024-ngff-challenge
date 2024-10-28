@@ -10,17 +10,17 @@
 
   <ul>
     <li>
-      Advance the status of OME-Zarr specification proposals —
+      Advancing the status of OME-Zarr specification proposals —
       <a href="https://ngff.openmicroscopy.org/rfc/">Requests for Comment (RFC)</a> —
       especially the adoption of the Zarr V3 specification
     </li>
     <li>
-      by collecting the URLs of converted examples of OME-Zarr from multiple modalities, use cases, and
+      Collecting the URLs of converted examples of OME-Zarr from multiple modalities, use cases, and
       institutions, all hosted by each participant themselves
     </li>
     <li>
-      in order to test the level of maturity of OME-Zarr conversion tools, image viewers,
-      and metadata in general.
+      Testing the level of maturity of OME-Zarr conversion tools, image viewers,
+      and metadata in general
     </li>
   </ul>
   <p>
