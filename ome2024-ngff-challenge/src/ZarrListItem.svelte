@@ -104,7 +104,7 @@
     <div>
       Open in <a
       title="Open in Validator: {rowData.url}"
-      href="https://will-moore.github.io/ome-ngff-validator/?source={rowData.url}"
+      href="https://ome.github.io/ome-ngff-validator/?source={rowData.url}"
       target="_blank"
       >OME-Validator.
     </a>
