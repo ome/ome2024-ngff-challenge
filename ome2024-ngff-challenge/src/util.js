@@ -2,6 +2,7 @@ import Papa from "papaparse";
 
 import idrLogo from "/idr-mark.svg";
 import nfdi4bioimage from "/nfdi4bioimage.png";
+import ssbdLogo from "/ssbd-logo.png";
 
 export const SAMPLES_HOME =
   "https://raw.githubusercontent.com/ome/ome2024-ngff-challenge/main/samples/ngff_samples.csv";
@@ -18,12 +19,14 @@ let faviconDomains = {
   Göttingen: "https://nfdi4bioimage.de/",
   Jülich: "https://nfdi4bioimage.de/",
   NFDI4BIOIMAGE: "https://nfdi4bioimage.de/",
-  RIKEN: "https://www.riken.jp/",
 };
 
 export function getSourceIcon(source) {
   if (source === "IDR") {
     return idrLogo;
+  }
+  if (source === "SSBD") {
+    return ssbdLogo;
   }
   let domain = faviconDomains[source];
   if (!domain) {
