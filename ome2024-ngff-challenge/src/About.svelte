@@ -84,8 +84,8 @@
 
   <table>
     <tr>
-      <td><img src="nfdi_rgb_Wortmarke_Zusatz_quer.png" width="30%"/></td>
-      <td><img src="czi-logo-chan-zuckerberg-initiative-logo.png" width="30%"/></td>/
+      <td><img src="nfdi_rgb_Wortmarke_Zusatz_quer.png" width="45%"/></td>
+      <td><img src="czi-logo-chan-zuckerberg-initiative-logo.png" width="45%"/></td>
     </tr>
   </table>
 
