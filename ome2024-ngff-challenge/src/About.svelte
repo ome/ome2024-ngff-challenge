@@ -82,8 +82,8 @@
   </p>
 
   <div>
-    <img src="public/nfdi_rgb_Wortmarke_Zusatz_quer.png"/>
-    <img src="public/czi-logo-chan-zuckerberg-initiative-logo.png"/>
+    <img src="nfdi_rgb_Wortmarke_Zusatz_quer.png"/>
+    <img src="czi-logo-chan-zuckerberg-initiative-logo.png"/>
   </div>
 
 </div>
