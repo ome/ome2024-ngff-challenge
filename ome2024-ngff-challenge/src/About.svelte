@@ -75,10 +75,21 @@
     a federated bioimage data system based on OME-Zarr, the largest one we know of.
     We hope future challenges will continue to push the state-of-the-art forward.
   </p>
+
+  <h2>Funding</h2>
+  <p>
+    Coordination of the challenge has been supported by:
+  </p>
+
+  <div>
+    <img src="public/nfdi_rgb_Wortmarke_Zusatz_quer.png"/>
+    <img src="public/czi-logo-chan-zuckerberg-initiative-logo.png"/>
+  </div>
+
 </div>
 
 <style>
   div {
-    margin: 15px;
+    margin: 20px;
   }
 </style>
