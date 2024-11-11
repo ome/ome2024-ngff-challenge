@@ -78,13 +78,16 @@
 
   <h2>Funding</h2>
   <p>
-    Coordination of the challenge has been supported by:
+    Coordination of the challenge has been supported by the <a href="https://www.nfdi.de/">German National Research Data
+    Initiative (NFDI)</a> and the <a href="https://chanzuckerberg.com/">Chan Zuckerberg Initiative</a>:
   </p>
 
-  <div>
-    <img src="nfdi_rgb_Wortmarke_Zusatz_quer.png"/>
-    <img src="czi-logo-chan-zuckerberg-initiative-logo.png"/>
-  </div>
+  <table>
+    <tr>
+      <td><img src="nfdi_rgb_Wortmarke_Zusatz_quer.png" width="30%"/></td>
+      <td><img src="czi-logo-chan-zuckerberg-initiative-logo.png" width="30%"/></td>/
+    </tr>
+  </table>
 
 </div>
 
