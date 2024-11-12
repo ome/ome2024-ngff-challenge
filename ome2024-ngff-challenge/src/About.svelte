@@ -1,3 +1,11 @@
+<script>
+  import nfdiLogo from "/nfdi_rgb_Wortmarke_Zusatz_quer.png";
+  import cziLogo from "/czi-logo-chan-zuckerberg-initiative-logo.png";
+  let base = import.meta.env.BASE_URL;
+</script>
+
+<!-- base element used to define relative links -->
+<base href="{base}" />
 <div>
   <h2>Introduction</h2>
   <p>
@@ -84,8 +92,8 @@
 
   <table>
     <tr>
-      <td><img src="nfdi_rgb_Wortmarke_Zusatz_quer.png" width="45%"/></td>
-      <td><img src="czi-logo-chan-zuckerberg-initiative-logo.png" width="45%"/></td>
+      <td><img src={nfdiLogo} width="45%"/></td>
+      <td><img src={cziLogo} width="45%"/></td>
     </tr>
   </table>
 
