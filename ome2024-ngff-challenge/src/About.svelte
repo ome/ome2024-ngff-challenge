@@ -84,7 +84,7 @@
     We hope future challenges will continue to push the state-of-the-art forward.
   </p>
 
-  <h2>Funding</h2>
+  <h2>Acknowledgements</h2>
   <p>
     Coordination of the challenge has been supported by the <a href="https://www.nfdi.de/">German National Research Data
     Initiative (NFDI)</a> and the <a href="https://chanzuckerberg.com/">Chan Zuckerberg Initiative</a>:
