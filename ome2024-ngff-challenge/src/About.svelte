@@ -1,3 +1,11 @@
+<script>
+  import nfdiLogo from "/nfdi_rgb_Wortmarke_Zusatz_quer.png";
+  import cziLogo from "/czi-logo-chan-zuckerberg-initiative-logo.png";
+  let base = import.meta.env.BASE_URL;
+</script>
+
+<!-- base element used to define relative links -->
+<base href="{base}" />
 <div>
   <h2>Introduction</h2>
   <p>
@@ -75,10 +83,24 @@
     a federated bioimage data system based on OME-Zarr, the largest one we know of.
     We hope future challenges will continue to push the state-of-the-art forward.
   </p>
+
+  <h2>Acknowledgements</h2>
+  <p>
+    Coordination of the challenge has been supported by the <a href="https://www.nfdi.de/">German National Research Data
+    Initiative (NFDI)</a> and the <a href="https://chanzuckerberg.com/">Chan Zuckerberg Initiative</a>:
+  </p>
+
+  <table>
+    <tr>
+      <td><img src={nfdiLogo} width="45%"/></td>
+      <td><img src={cziLogo} width="45%"/></td>
+    </tr>
+  </table>
+
 </div>
 
 <style>
   div {
-    margin: 15px;
+    margin: 20px;
   }
 </style>
