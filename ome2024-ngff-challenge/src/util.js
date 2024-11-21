@@ -10,7 +10,7 @@ export const SAMPLES_HOME =
 // Map of source to favicon domain
 let faviconDomains = {
   IDR: "https://idr.openmicroscopy.org",
-  Webknossos: "https://scalableminds.com",
+  Webknossos: "https://webknossos.org",
   JAX: "http://jax.org",
   "BioImage Archive": "https://www.ebi.ac.uk",
   Crick: "https://www.crick.ac.uk/",
