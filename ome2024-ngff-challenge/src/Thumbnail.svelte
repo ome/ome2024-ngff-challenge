@@ -1,7 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte";
   import * as zarr from "zarrita";
-  import { slice } from "@zarrita/indexing";
   import {
     renderTo8bitArray,
     getMinMaxValues,
@@ -81,7 +80,7 @@
         if (index == chDim) return chIndex;
         // x and y
         if (index >= dims - 2) {
-          return slice(0, dimSize);
+          return zarr.slice(0, dimSize);
         }
         // z
         if (axes[index] == "z") {
