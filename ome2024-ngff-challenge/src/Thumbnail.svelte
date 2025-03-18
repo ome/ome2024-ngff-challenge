@@ -1,13 +1,7 @@
 <script>
   import { onMount, onDestroy } from "svelte";
   import * as zarr from "zarrita";
-  import {
-    renderTo8bitArray,
-    getMinMaxValues,
-    getDefaultVisibilities,
-    hexToRGB,
-    getDefaultColors,
-  } from "./util";
+  import * as omezarr from "ome-zarr.js";
 
   // source is e.g. https://s3.embassy.ebi.ac.uk/idr/zarr/v0.4/6001240.zarr
   export let source;
@@ -18,7 +12,6 @@
   // if the lowest resolution is above this size (squared), we don't try to load thumbnails
   export let max_size = 512;
 
-  let canvas;
   let width = cssSize;
   let height = cssSize;
   if (thumbAspectRatio > 1) {
@@ -29,6 +22,8 @@
   let cssWidth = width;
   let cssHeight = height;
   let showSpinner = true;
+   // transparent gif is used as placeholder
+  let imgSrc = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
   const controller = new AbortController();
 
@@ -46,74 +41,15 @@
     const store = new zarr.FetchStore(source + "/" + path);
     const arr = await zarr.open.v3(store, { kind: "array" });
 
-    let chDim = axes.indexOf("c");
-
     let shape = arr.shape;
     if (shape.at(-1) * shape.at(-2) > max_size * max_size) {
       console.log("Lowest resolution too large for Thumbnail: ", shape, source);
       return;
     }
 
-    let dims = shape.length;
-
-    let channel_count = shape[chDim] || 1;
-    let visibilities;
-    let colors;
-    if (attrs?.omero?.channels) {
-      visibilities = attrs.omero.channels.map((ch) => ch.active);
-      colors = attrs.omero.channels.map((ch) => hexToRGB(ch.color));
-    } else {
-      visibilities = getDefaultVisibilities(channel_count);
-      colors = getDefaultColors(channel_count, visibilities);
-    }
-    // filter for active channels
-    colors = colors.filter((col, idx) => visibilities[idx]);
-
-    let activeChannels = visibilities.reduce((prev, active, index) => {
-      if (active) prev.push(index);
-      return prev;
-    }, []);
-
-    let promises = activeChannels.map((chIndex) => {
-      let slices = shape.map((dimSize, index) => {
-        // channel
-        if (index == chDim) return chIndex;
-        // x and y
-        if (index >= dims - 2) {
-          return zarr.slice(0, dimSize);
-        }
-        // z
-        if (axes[index] == "z") {
-          return parseInt(dimSize / 2 + "");
-        }
-        if (axes[index] == "t") {
-          return parseInt(dimSize / 2 + "");
-        }
-        return 0;
-      });
-      return zarr.get(arr, slices, { opts: { signal: controller.signal } });
-    });
-
-    let ndChunks = await Promise.all(promises);
-    let minMaxValues = ndChunks.map((ch) => getMinMaxValues(ch));
-    let rbgData = renderTo8bitArray(ndChunks, minMaxValues, colors);
-
-    width = shape.at(-1);
-    height = shape.at(-2);
-    let scale = width / cssSize;
-    if (height > width) {
-      scale = height / cssSize;
-    }
-
-    cssWidth = width / scale;
-    cssHeight = height / scale;
-
-    // wait for the canvas to be ready (after setting the dimensions)
-    setTimeout(() => {
-      const ctx = canvas.getContext("2d");
-      showSpinner = false;
-      ctx.putImageData(new ImageData(rbgData, width, height), 0, 0);
-    }, 100);
+    let src = await omezarr.renderImage(arr, attrs.multiscales[0].axes, attrs.omero);
+    imgSrc = src;
+    showSpinner = false;
   }
 
   onMount(() => {
@@ -127,19 +63,16 @@
 
 <!-- Need a wrapper to show spinner -->
 <div class="canvasWrapper" style="width: {cssWidth}px; height:{cssHeight}px;" class:spinner={showSpinner}>
-<canvas
-  style="width: {cssWidth}px; height:{cssHeight}px; background-color: lightgrey"
-  bind:this={canvas}
-  {height}
-  {width}
-/></div>
+  <img src={imgSrc} alt="Thumbnail" style="width: {cssWidth}px; height:{cssHeight}px;" />
+</div>
 
 <style>
   .canvasWrapper {
     position: relative;
   }
-  canvas {
+  img {
     box-shadow: 5px 4px 10px -5px #737373;
+    background: lightgrey;
   }
 
   @keyframes spinner {
