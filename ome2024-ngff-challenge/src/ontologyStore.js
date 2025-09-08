@@ -15,7 +15,7 @@ class OntologyMetadataField {
       // cleanup variation
       numericId = numericId.replace("obo:NCBITaxon_", "");
       ontologyId = "NCBITaxon";
-    } 
+    };
     
     if (termId.includes("FBbi")) {
       numericId = termId.replace("obo:FBbi_", "");
@@ -23,28 +23,28 @@ class OntologyMetadataField {
       numericId = numericId.replace("FBbi:", "");
       numericId = numericId.replace("obo:FBbi:", "");
       ontologyId = "FBbi";
-    }
+    };
     
     // Other ontologies have been used in the FBBI ID field, e.g. NCIT, OBI or MI
     if (termId.includes("NCIT_")){
-      numericId = numericId.replace("NCIT_", "");
+      numericId = termId.replace("NCIT_", "");
       ontologyId = "NCIT";
     };
 
     if (termId.includes("obo:MI_")){
-      numericId = numericId.replace("obo:MI_", "");
+      numericId = termId.replace("obo:MI_", "");
       ontologyId = "MI";
     };
 
     if (termId.includes("obo:OBI_")){
-      numericId = numericId.replace("obo:OBI_", "");
+      numericId = termId.replace("obo:OBI_", "");
       ontologyId = "OBI";
     };
 
     let curie = ontologyId + "_" + numericId;
     let lowerCaseOntologyId = ontologyId.toLowerCase();
     let olsURL = `https://www.ebi.ac.uk/ols4/api/ontologies/${lowerCaseOntologyId}/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F${curie}`;
-
+    console.log(olsURL);
     const termLookupJson = await getJson(olsURL);
     return termLookupJson.label || termId;
   }
