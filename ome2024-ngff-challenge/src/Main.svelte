@@ -46,19 +46,18 @@
     }, 0);
   });
 
-  organismStore.subscribe((orgOntology) => {
-    // iterate over orgOntology key, values
+  organismStore.subscribe((ontologyTerm) => {
+    // iterate over ontologyTerm key, values
     let temp = {};
-    for (const [orgId, name] of Object.entries(orgOntology)) {
+    for (const [orgId, name] of Object.entries(ontologyTerm)) {
       temp[name] = orgId;
     }
     organismIdsByName = temp;
   });
 
-  imagingModalityStore.subscribe((orgOntology) => {
-    // iterate over orgOntology key, values
+  imagingModalityStore.subscribe((ontologyTerm) => {
     let temp = {};
-    for (const [orgId, name] of Object.entries(orgOntology)) {
+    for (const [orgId, name] of Object.entries(ontologyTerm)) {
       temp[name] = orgId;
     }
     imagingModalityIdsByName = temp;
