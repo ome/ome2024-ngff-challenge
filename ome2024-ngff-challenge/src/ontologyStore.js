@@ -20,8 +20,8 @@ class OntologyMetadataField {
     if (termId.includes("FBbi")) {
       numericId = termId.replace("obo:FBbi_", "");
       //cleanup variations like
-      numericId = numericId.replace("FBbi:", "");
       numericId = numericId.replace("obo:FBbi:", "");
+      numericId = numericId.replace("FBbi:", "");
       ontologyId = "FBbi";
     };
     
