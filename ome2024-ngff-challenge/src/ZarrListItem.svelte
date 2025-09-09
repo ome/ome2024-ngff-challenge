@@ -5,7 +5,8 @@
   import Thumbnail from "./Thumbnail.svelte";
   import { onDestroy } from "svelte";
   import copyImage from "/copy.png";
-  import checkImage from "/check.png";
+  import checkImage from "/ome-logomark.svg";
+  import externalDataImage from "/original-data.svg";
   export let rowData;
   export let textFilter;
   export let sortedBy = undefined;
@@ -142,14 +143,15 @@
 
       <a title="Validate NGFF with 'ome-ngff-validator' in new browser tab" target="_blank"
                     href="https://ome.github.io/ome-ngff-validator/?source={rowData.url}">
-                    <img class="icon" style="opacity: 0.5" src={checkImage}/></a>
+                    <img class="icon" style="opacity: 0.9" src={checkImage}/></a>
 
     {#if rowData.origin }
-      Browse <a
-        title="Link to original data: {rowData.origin}"
+
+          <a title="Link to original data: {rowData.origin}"
         href={rowData.origin}
-        target="_blank"
-        >Original data</a>.
+        target="_blank">
+                <img class="icon" style="opacity: 0.9" src={externalDataImage}/></a>
+
     {/if}
     </div>
     <div>
@@ -191,6 +193,16 @@
     }
   }
 
+
+  :root {
+  --icon-size: 20px;
+}
+
+  .icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    aspect-ratio: 1 / 1;
+  }
     .no_border {
     border: none;
     background: none;
