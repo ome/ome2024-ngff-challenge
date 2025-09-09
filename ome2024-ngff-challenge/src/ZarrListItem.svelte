@@ -4,7 +4,8 @@
   import { loadMultiscales, ngffTable } from "./tableStore";
   import Thumbnail from "./Thumbnail.svelte";
   import { onDestroy } from "svelte";
-
+  import copyImage from "/copy.png";
+  import checkImage from "/check.png";
   export let rowData;
   export let textFilter;
   export let sortedBy = undefined;
@@ -76,6 +77,31 @@
   });
 
   $: description = (textFilter != "" && rowData.description?.toLowerCase().includes(textFilter.toLowerCase())) ? rowData.description : "";
+
+  let isShaking = false;
+  // Adapted from https://github.com/IDR/ome-ngff-samples/blob/main/index.md
+  function copyTextToClipboard(text) {
+    var textArea = document.createElement("textarea");
+    // Place in the top-left corner of screen regardless of scroll position.
+    textArea.style.position = 'fixed';
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    let successful = false;
+    try {
+      successful = document.execCommand("copy");
+    } catch (err) {
+      console.log("Oops, unable to copy");
+    }
+    document.body.removeChild(textArea);
+
+    if (successful) {
+      // trigger shake for 1s
+      isShaking = true;
+      setTimeout(() => (isShaking = false), 1000);
+    }
+};
 </script>
 
 <div class="zarr-list-item">
@@ -85,7 +111,9 @@
     {/if}
   </div>
   <div>
-    <div title="{rowData.url}"><strong>{@html formatUrlToName(rowData.url)}</strong></div>
+    <div title="{rowData.url}"><strong>{@html formatUrlToName(rowData.url)} </strong>
+
+  </div>
     <div class={textFilter == "" ? "hideOnSmall" : ""}>
       <!-- If we're not filtering by text (name/description) then hide the name on small screen -->
       {@html rowData.name ? rowData.name.replaceAll(textFilter, `<mark>${textFilter}</mark>`) : ""}
@@ -102,12 +130,19 @@
       </div>
     {/if}
     <div>
-      Open in <a
-      title="Open in Validator: {rowData.url}"
-      href="https://ome.github.io/ome-ngff-validator/?source={rowData.url}"
-      target="_blank"
-      >OME-Validator.
-    </a>
+      <button
+    class="no_border"
+    class:shake={isShaking}
+    title="Copy S3 URL to clipboard"
+    on:click={(event) => copyTextToClipboard(rowData.url)
+    }
+    >
+    <img class="icon" src={copyImage} />    
+    </button>
+
+      <a title="Validate NGFF with 'ome-ngff-validator' in new browser tab" target="_blank"
+                    href="https://ome.github.io/ome-ngff-validator/?source={rowData.url}">
+                    <img class="icon" style="opacity: 0.5" src={checkImage}/></a>
 
     {#if rowData.origin }
       Browse <a
@@ -155,4 +190,17 @@
       display: none;
     }
   }
+
+    .no_border {
+    border: none;
+    background: none;
+    padding: 0;
+    }
+
+   .shake {
+        animation: 0.1s linear 0s infinite alternate seesaw;
+    }
+
+    @keyframes seesaw { from { transform: rotate(-0.05turn) } to { transform: rotate(0.05turn); }  }
+
 </style>
