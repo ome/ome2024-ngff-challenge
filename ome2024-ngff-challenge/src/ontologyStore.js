@@ -44,7 +44,6 @@ class OntologyMetadataField {
     let curie = ontologyId + "_" + numericId;
     let lowerCaseOntologyId = ontologyId.toLowerCase();
     let olsURL = `https://www.ebi.ac.uk/ols4/api/ontologies/${lowerCaseOntologyId}/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252F${curie}`;
-    console.log(olsURL);
     const termLookupJson = await getJson(olsURL);
     return termLookupJson.label || termId;
   }
