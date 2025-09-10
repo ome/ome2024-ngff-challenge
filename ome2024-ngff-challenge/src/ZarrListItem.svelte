@@ -138,7 +138,7 @@
     on:click={(event) => copyTextToClipboard(rowData.url)
     }
     >
-    <img class="icon" src={copyImage} />    
+    <img class="icon" src={copyImage} />
     </button>
 
       <a title="Validate NGFF with 'ome-ngff-validator' in new browser tab" target="_blank"
