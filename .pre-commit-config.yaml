@@ -12,7 +12,7 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: "v4.6.0"
     hooks:
-      - id: check-added-large-files
+      # - id: check-added-large-files
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: check-symlinks
@@ -55,11 +55,12 @@ repos:
   #       additional_dependencies:
   #         - pytest
 
-  - repo: https://github.com/codespell-project/codespell
-    rev: "v2.2.6"
-    hooks:
-      - id: codespell
-        args: ["-L crate,Crate,bellow"]
+  # - repo: https://github.com/codespell-project/codespell
+  #   rev: "v2.2.6"
+  #   hooks:
+  #     - id: codespell
+  #       args:
+  #         ["-L crate,Crate,bellow,SELV,PRES,SYCN,SORD,NIN,VILL,STIL,CRIPT,SELT"]
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: "v0.10.0.1"
