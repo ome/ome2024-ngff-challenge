@@ -49,7 +49,7 @@ You can example the contents of a sample dataset by using
 [the minio client](https://github.com/minio/mc):
 
 ```
-$ mc config host add uk1anon https://uk1s3.embassy.ebi.ac.uk "" ""
+$ mc alias set uk1anon https://uk1s3.embassy.ebi.ac.uk "" ""
 Added `uk1anon` successfully.
 $ mc ls -r uk1anon/idr/share/ome2024-ngff-challenge/0.0.5/6001240.zarr/
 [2024-08-01 14:24:35 CEST]  24MiB STANDARD 0/c/0/0/0/0
