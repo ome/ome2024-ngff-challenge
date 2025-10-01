@@ -1,12 +1,12 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import * as zarr from "zarrita";
+  // import * as zarr from "zarrita";
   import * as omezarr from "ome-zarr.js";
 
   // source is e.g. https://s3.embassy.ebi.ac.uk/idr/zarr/v0.4/6001240.zarr
   export let source;
-  export let attrs;
-  export let thumbDatasetIndex = undefined;
+  // export let attrs;
+  // export let thumbDatasetIndex = undefined;
   export let thumbAspectRatio = 1;
   export let cssSize = 120;
   // if the lowest resolution is above this size (squared), we don't try to load thumbnails
@@ -28,26 +28,7 @@
   const controller = new AbortController();
 
   async function loadThumbnail() {
-    let paths = attrs.multiscales[0].datasets.map((d) => d.path);
-    let axes = attrs.multiscales[0].axes.map((a) => a.name);
-
-    // By default, we use the smallest thumbnail path (last dataset)
-    let path = paths.at(-1);
-    if (thumbDatasetIndex != undefined && thumbDatasetIndex < paths.length) {
-      // but if we have a valid dataset index, use that...
-      path = paths[thumbDatasetIndex];
-    }
-
-    const store = new zarr.FetchStore(source + "/" + path);
-    const arr = await zarr.open.v3(store, { kind: "array" });
-
-    let shape = arr.shape;
-    if (shape.at(-1) * shape.at(-2) > max_size * max_size) {
-      console.log("Lowest resolution too large for Thumbnail: ", shape, source);
-      return;
-    }
-
-    let src = await omezarr.renderImage(arr, attrs.multiscales[0].axes, attrs.omero);
+    let src = await omezarr.renderThumbnail(source, cssSize, true, max_size);
     imgSrc = src;
     showSpinner = false;
   }

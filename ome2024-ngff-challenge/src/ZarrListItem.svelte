@@ -13,18 +13,11 @@
   let imgUrl;
   let plateAttrs;
 
-  let thumbDatasetIndex;
+  // let thumbDatasetIndex;
   let thumbAspectRatio = 1;
   const controller = new AbortController();
   // If we have shape info
   if (rowData.size_x && rowData.size_y) {
-    let longestSide = Math.max(rowData.size_x, rowData.size_y);
-    // We want max target size of e.g. 256 pixels
-    thumbDatasetIndex = 0;
-    while (longestSide > 256) {
-      thumbDatasetIndex += 1;
-      longestSide = longestSide / 2;
-    }
     thumbAspectRatio = rowData.size_x / rowData.size_y;
   }
 
@@ -81,7 +74,7 @@
 <div class="zarr-list-item">
   <div class="thumbWrapper" on:click={handleThumbClick}>
     {#if imgAttrs}
-      <Thumbnail source={imgUrl} attrs={imgAttrs} max_size={2000} {thumbDatasetIndex} {thumbAspectRatio}/>
+      <Thumbnail source={imgUrl} max_size={2000} {thumbAspectRatio}/>
     {/if}
   </div>
   <div>
