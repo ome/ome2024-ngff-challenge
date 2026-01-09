@@ -10,36 +10,36 @@ class OntologyMetadataField {
     let numericId = "";
     let ontologyId = "";
 
-    if (termId.includes("NCBITaxon") | termId.includes("NCBI:txid")){
+    if (termId.includes("NCBITaxon") | termId.includes("NCBI:txid")) {
       numericId = termId.replace("NCBI:txid", "");
       // cleanup variation
       numericId = numericId.replace("obo:NCBITaxon_", "");
       ontologyId = "NCBITaxon";
-    };
-    
+    }
+
     if (termId.includes("FBbi")) {
       numericId = termId.replace("obo:FBbi_", "");
       //cleanup variations like
       numericId = numericId.replace("obo:FBbi:", "");
       numericId = numericId.replace("FBbi:", "");
       ontologyId = "FBbi";
-    };
-    
+    }
+
     // Other ontologies have been used in the FBBI ID field, e.g. NCIT, OBI or MI
-    if (termId.includes("NCIT_")){
+    if (termId.includes("NCIT_")) {
       numericId = termId.replace("NCIT_", "");
       ontologyId = "NCIT";
-    };
+    }
 
-    if (termId.includes("obo:MI_")){
+    if (termId.includes("obo:MI_")) {
       numericId = termId.replace("obo:MI_", "");
       ontologyId = "MI";
-    };
+    }
 
-    if (termId.includes("obo:OBI_")){
+    if (termId.includes("obo:OBI_")) {
       numericId = termId.replace("obo:OBI_", "");
       ontologyId = "OBI";
-    };
+    }
 
     let curie = ontologyId + "_" + numericId;
     let lowerCaseOntologyId = ontologyId.toLowerCase();
