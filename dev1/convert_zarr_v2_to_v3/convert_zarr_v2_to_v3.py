@@ -100,7 +100,7 @@ def convert_ome_zarr_v2_to_v3(input_url, output_url):
 
 if __name__ == "__main__":
     # input_url = 'D:/slides/6001240.zarr'
-    input_url = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr"
+    input_url = "https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr"
     output_url = "D:/slides/test/" + os.path.basename(input_url)
 
     # convert_zarr_v2_to_v3(input_url, output_url)

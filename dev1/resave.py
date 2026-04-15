@@ -15,7 +15,7 @@ ns = parser.parse_args()
 
 
 # remote fails - see below
-# path = "https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr"
+# path = "https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr"
 
 if os.path.exists(ns.output_path):
     print(f"{ns.output_path} exists. Exiting")

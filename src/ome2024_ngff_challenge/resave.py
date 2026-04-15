@@ -639,7 +639,7 @@ REMOTE (S3)
     Read from IDR's bucket:                  {cmd} --cc-by bucket-path/in.zarr out.zarr \\
                                                    --input-anon \\
                                                    --input-bucket=idr \\
-                                                   --input-endpoint=https://uk1s3.embassy.ebi.ac.uk
+                                                   --input-endpoint=https://livingobjects.ebi.ac.uk
 
 ADVANCED
 

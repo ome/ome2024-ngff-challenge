@@ -125,7 +125,7 @@ def test_rocrate_full_example(tmp_path):
 
 IDR_BUCKET = (
     "--input-bucket=idr",
-    "--input-endpoint=https://uk1s3.embassy.ebi.ac.uk",
+    "--input-endpoint=https://livingobjects.ebi.ac.uk",
     "--input-anon",
 )
 
