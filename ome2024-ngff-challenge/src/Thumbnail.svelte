@@ -1,16 +1,8 @@
 <script>
   import { onMount, onDestroy } from "svelte";
-  import * as zarr from "zarrita";
-  import { slice } from "@zarrita/indexing";
-  import {
-    renderTo8bitArray,
-    getMinMaxValues,
-    getDefaultVisibilities,
-    hexToRGB,
-    getDefaultColors,
-  } from "./util";
+  import * as omezarr from "ome-zarr.js";
 
-  // source is e.g. https://s3.embassy.ebi.ac.uk/idr/zarr/v0.4/6001240.zarr
+  // source is e.g. https://livingobjects.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr
   export let source;
   export let attrs;
   export let thumbDatasetIndex = undefined;
@@ -30,91 +22,25 @@
   let cssWidth = width;
   let cssHeight = height;
   let showSpinner = true;
+  let imgSrc;
 
   const controller = new AbortController();
 
   async function loadThumbnail() {
     let paths = attrs.multiscales[0].datasets.map((d) => d.path);
-    let axes = attrs.multiscales[0].axes.map((a) => a.name);
 
     // By default, we use the smallest thumbnail path (last dataset)
-    let path = paths.at(-1);
-    if (thumbDatasetIndex != undefined && thumbDatasetIndex < paths.length) {
-      // but if we have a valid dataset index, use that...
-      path = paths[thumbDatasetIndex];
+    let dsIndex = -1;
+    if (thumbDatasetIndex != undefined) {
+      dsIndex = Math.min(thumbDatasetIndex, paths.length - 1);
     }
 
-    const store = new zarr.FetchStore(source + "/" + path);
-    const arr = await zarr.open.v3(store, { kind: "array" });
-
-    let chDim = axes.indexOf("c");
-
-    let shape = arr.shape;
-    if (shape.at(-1) * shape.at(-2) > max_size * max_size) {
-      console.log("Lowest resolution too large for Thumbnail: ", shape, source);
-      return;
-    }
-
-    let dims = shape.length;
-
-    let channel_count = shape[chDim] || 1;
-    let visibilities;
-    let colors;
-    if (attrs?.omero?.channels) {
-      visibilities = attrs.omero.channels.map((ch) => ch.active);
-      colors = attrs.omero.channels.map((ch) => hexToRGB(ch.color));
-    } else {
-      visibilities = getDefaultVisibilities(channel_count);
-      colors = getDefaultColors(channel_count, visibilities);
-    }
-    // filter for active channels
-    colors = colors.filter((col, idx) => visibilities[idx]);
-
-    let activeChannels = visibilities.reduce((prev, active, index) => {
-      if (active) prev.push(index);
-      return prev;
-    }, []);
-
-    let promises = activeChannels.map((chIndex) => {
-      let slices = shape.map((dimSize, index) => {
-        // channel
-        if (index == chDim) return chIndex;
-        // x and y
-        if (index >= dims - 2) {
-          return slice(0, dimSize);
-        }
-        // z
-        if (axes[index] == "z") {
-          return parseInt(dimSize / 2 + "");
-        }
-        if (axes[index] == "t") {
-          return parseInt(dimSize / 2 + "");
-        }
-        return 0;
-      });
-      return zarr.get(arr, slices, { opts: { signal: controller.signal } });
-    });
-
-    let ndChunks = await Promise.all(promises);
-    let minMaxValues = ndChunks.map((ch) => getMinMaxValues(ch));
-    let rbgData = renderTo8bitArray(ndChunks, minMaxValues, colors);
-
-    width = shape.at(-1);
-    height = shape.at(-2);
-    let scale = width / cssSize;
-    if (height > width) {
-      scale = height / cssSize;
-    }
-
-    cssWidth = width / scale;
-    cssHeight = height / scale;
-
-    // wait for the canvas to be ready (after setting the dimensions)
-    setTimeout(() => {
-      const ctx = canvas.getContext("2d");
-      showSpinner = false;
-      ctx.putImageData(new ImageData(rbgData, width, height), 0, 0);
-    }, 100);
+    let ngffImg = await omezarr.NgffImage.load(source, {
+      attrs: {ome: attrs},
+      datasetIndex: dsIndex,
+      signal: controller.signal});
+    imgSrc = await ngffImg.render({arrayPathOrIndex: dsIndex, maxSize: max_size, signal: controller.signal});
+    showSpinner = false;
   }
 
   onMount(() => {
@@ -128,18 +54,19 @@
 
 <!-- Need a wrapper to show spinner -->
 <div class="canvasWrapper" style="width: {cssWidth}px; height:{cssHeight}px;" class:spinner={showSpinner}>
-<canvas
+{#if imgSrc}
+  <img
+  alt="Thumbnail"
   style="width: {cssWidth}px; height:{cssHeight}px; background-color: lightgrey"
-  bind:this={canvas}
-  {height}
-  {width}
-/></div>
+  src={imgSrc}
+/>
+{/if}
+</div>
 
 <style>
   .canvasWrapper {
     position: relative;
-  }
-  canvas {
+    background-color: lightgrey;
     box-shadow: 5px 4px 10px -5px #737373;
   }
 
