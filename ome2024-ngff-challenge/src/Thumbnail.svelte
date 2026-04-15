@@ -11,7 +11,6 @@
   // if the lowest resolution is above this size (squared), we don't try to load thumbnails
   export let max_size = 512;
 
-  let canvas;
   let width = cssSize;
   let height = cssSize;
   if (thumbAspectRatio > 1) {
@@ -28,18 +27,16 @@
 
   async function loadThumbnail() {
     let paths = attrs.multiscales[0].datasets.map((d) => d.path);
-
-    // By default, we use the smallest thumbnail path (last dataset)
     let dsIndex = -1;
     if (thumbDatasetIndex != undefined) {
       dsIndex = Math.min(thumbDatasetIndex, paths.length - 1);
     }
-
-    let ngffImg = await omezarr.NgffImage.load(source, {
-      attrs: {ome: attrs},
-      datasetIndex: dsIndex,
-      signal: controller.signal});
-    imgSrc = await ngffImg.render({arrayPathOrIndex: dsIndex, maxSize: max_size, signal: controller.signal});
+    // TODO: omezarr.render() doesn't support datasetIndex yet, so we can't use
+    // thumbDatasetIndex to select pre-calculated size.
+    // Default to the lowest resolution, which works fine for most images.
+    let targetSize = undefined;
+    imgSrc = await omezarr.render(source, targetSize, {
+      autoBoost: true, attrs: {ome: attrs}, signal: controller.signal, maxSize: max_size});
     showSpinner = false;
   }
 
