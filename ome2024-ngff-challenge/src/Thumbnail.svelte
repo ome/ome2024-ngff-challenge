@@ -35,6 +35,11 @@
     // thumbDatasetIndex to select pre-calculated size.
     // Default to the lowest resolution, which works fine for most images.
     let targetSize = undefined;
+    // If we have reasonable size cssSize (preview Thumbnail) we can afford to
+    // make an extra call to get a thumbnail of the right size.
+    if (cssSize > 200) {
+      targetSize = cssSize * 2; // we can afford to load a bigger thumbnail for better quality
+    }
     imgSrc = await omezarr.render(source, targetSize, {
       autoBoost: true, attrs: {ome: attrs}, signal: controller.signal, maxSize: max_size});
     showSpinner = false;
