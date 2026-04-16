@@ -29,19 +29,15 @@
     let paths = attrs.multiscales[0].datasets.map((d) => d.path);
     let dsIndex = -1;
     if (thumbDatasetIndex != undefined) {
+      // requested resolution may be smaller than actually exists...
       dsIndex = Math.min(thumbDatasetIndex, paths.length - 1);
     }
-    // TODO: omezarr.render() doesn't support datasetIndex yet, so we can't use
-    // thumbDatasetIndex to select pre-calculated size.
-    // Default to the lowest resolution, which works fine for most images.
-    let targetSize = undefined;
-    // If we have reasonable size cssSize (preview Thumbnail) we can afford to
-    // make an extra call to get a thumbnail of the right size.
-    if (cssSize > 200) {
-      targetSize = cssSize * 2; // we can afford to load a bigger thumbnail for better quality
-    }
-    imgSrc = await omezarr.render(source, targetSize, {
-      autoBoost: true, attrs: {ome: attrs}, signal: controller.signal, maxSize: max_size});
+    imgSrc = await omezarr.render(source, undefined, {
+      datasetIndex: dsIndex,
+      autoBoost: true,
+      attrs: {ome: attrs},
+      signal: controller.signal,
+      maxSize: max_size});
     showSpinner = false;
   }
 
