@@ -14,7 +14,7 @@
     "vite": "^5.4.1"
   },
   "dependencies": {
-    "ome-zarr.js": "^0.0.18",
+    "ome-zarr.js": "^0.0.19",
     "papaparse": "^5.4.1",
     "svelte-tiny-virtual-list": "^2.1.2",
     "zarrita": "^0.4.0-next.15"
