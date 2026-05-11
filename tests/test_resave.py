@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import boto3
 import pytest
+from moto import mock_aws
 
 from ome2024_ngff_challenge import dispatch
+
+from .test_utils import mock_aio_aws
 
 #
 # Helpers
@@ -120,7 +124,7 @@ def test_rocrate_full_example(tmp_path):
 
 
 #
-# Remote testing
+# Remote read testing
 #
 
 IDR_BUCKET = (
@@ -164,6 +168,83 @@ def test_remote_simple_with_download(tmp_path):
             "--output-chunks=1,1,256,256",
         ]
     )
+
+
+#
+# Remote write testing
+#
+
+# Use dummy AWS credentials
+AWS_REGION = "us-west-2"
+AWS_ACCESS_KEY_ID = "dummy_AWS_ACCESS_KEY_ID"
+AWS_SECRET_ACCESS_KEY = "dummy_AWS_SECRET_ACCESS_KEY"
+
+
+@pytest.fixture()
+def aws_credentials(monkeypatch):
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID)
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", AWS_SECRET_ACCESS_KEY)
+    monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
+
+
+@pytest.fixture(scope="session")
+def aws_region():
+    return AWS_REGION
+
+
+AWS_BUCKET = (
+    "--output-bucket=test-bucket",
+    "--output-region=us-west-2",
+)
+
+
+OVERWRITE = ["--output-overwrite"]
+
+
+@pytest.mark.parametrize(
+    ("first_flags", "second_flags", "expected_pass"),
+    [
+        pytest.param([], [], False, id="simple-twice-fail"),
+        pytest.param([], OVERWRITE, True, id="proper-usage-pass"),
+        pytest.param(OVERWRITE, OVERWRITE, True, id="double-safe-pass"),
+    ],
+)
+@mock_aws
+@pytest.mark.filterwarnings("ignore:datetime.datetime.utcnow")
+def test_remote_two_writes(first_flags, second_flags, expected_pass, monkeypatch):
+    with mock_aio_aws(monkeypatch):
+        s3 = boto3.client("s3", region_name="us-east-1")
+        s3.create_bucket(Bucket="test-bucket")
+
+        # First
+        converted = dispatch(
+            [
+                "resave",
+                "--cc-by",
+                "--output-script",  # By pass tensorstore
+                "data/2d.zarr",
+                "path/in/bucket/out.zarr",
+                *AWS_BUCKET,
+                *first_flags,
+            ]
+        )
+        assert converted
+
+        # Second
+        cmd = [
+            "resave",
+            "--cc-by",
+            "data/2d.zarr",
+            "path/in/bucket/out.zarr",
+            *AWS_BUCKET,
+            *second_flags,
+        ]
+        if expected_pass:
+            assert dispatch(cmd)
+        else:
+            with pytest.raises(Exception) as e_info:
+                dispatch(cmd)
 
 
 #
