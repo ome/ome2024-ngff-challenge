@@ -14,7 +14,7 @@ class ZarrCrate(ROCrate):
             "channel": "https://www.openmicroscopy.org/Schemas/Documentation/Generated/OME-2016-06/ome_xsd.html#Channel",
             "obo": "http://purl.obolibrary.org/obo/",
             "FBcv": "http://ontobee.org/ontology/FBcv/",
-            "acquisiton_method": {
+            "acquisition_method": {
                 "@reverse": "https://schema.org/result",
                 "@type": "@id",
             },
